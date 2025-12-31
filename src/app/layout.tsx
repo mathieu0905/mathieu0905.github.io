@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Your Name - Academic Homepage",
-  description: "Personal academic homepage",
+  title: "Zhihao Lin (林智灏) - Academic Homepage",
+  description: "Ph.D. student at Beihang University, researching AI for Software Engineering",
 };
 
 export default function RootLayout({
