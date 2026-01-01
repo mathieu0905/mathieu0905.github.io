@@ -1,22 +1,21 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FaEnvelope, FaGithub, FaGoogleScholar, FaAward, FaFileLines, FaUsers } from "react-icons/fa6";
-import { AboutResearchDirections } from "./components/AboutResearchDirections";
-import { ResearchCards } from "./components/ResearchCard";
 import { acceptedPapers, acceptedPapers2025, papers } from "@/data/papers";
 import { news } from "@/data/news";
 import { collaborators } from "@/data/collaborators";
+import { AboutResearchDirectionsZh } from "../components/AboutResearchDirectionsZh";
+import { ResearchCards } from "../components/ResearchCard";
 
 function pdfHref(pdfFile?: string) {
   if (!pdfFile) return undefined;
   return `/papers/${encodeURIComponent(pdfFile)}`;
 }
 
-export default function Home() {
+export default function HomeZh() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900">
       <main className="max-w-5xl mx-auto px-6 py-12">
-        {/* Hero Section */}
         <header className="relative overflow-hidden rounded-3xl bg-white dark:bg-gray-800 shadow-xl p-8 mb-8">
           <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           <div className="relative flex flex-col md:flex-row gap-8 items-center md:items-start">
@@ -34,163 +33,88 @@ export default function Home() {
               <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent mb-2">
                 林智灏 (Zhihao Lin)
               </h1>
-              <p className="text-xl text-blue-600 dark:text-blue-400 font-medium mb-3">
-                Ph.D. Student @ Beihang University
-              </p>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
-                SMAT Laboratory | AI for Software Engineering
-              </p>
-              <div className="flex gap-3 justify-center md:justify-start">
-                <a href="mailto:mathieulin@buaa.edu.cn" className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors" aria-label="Email">
+              <p className="text-xl text-blue-600 dark:text-blue-400 font-medium mb-3">北航博士生 | 北航 SMAT 实验室</p>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">研究方向：AI for Software Engineering</p>
+              <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+                <a
+                  href="mailto:mathieulin@buaa.edu.cn"
+                  className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors"
+                  aria-label="Email"
+                >
                   <FaEnvelope className="text-xl text-gray-700 dark:text-gray-300" />
                 </a>
-                <a href="https://github.com/mathieu0905" className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" aria-label="GitHub">
+                <a
+                  href="https://github.com/mathieu0905"
+                  className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  aria-label="GitHub"
+                >
                   <FaGithub className="text-xl text-gray-700 dark:text-gray-300" />
                 </a>
-                <a href="https://scholar.google.co.uk/citations?user=iPrIsSUAAAAJ" className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-green-100 dark:hover:bg-green-900 transition-colors" aria-label="Google Scholar">
+                <a
+                  href="https://scholar.google.co.uk/citations?user=iPrIsSUAAAAJ"
+                  className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-green-100 dark:hover:bg-green-900 transition-colors"
+                  aria-label="Google Scholar"
+                >
                   <FaGoogleScholar className="text-xl text-gray-700 dark:text-gray-300" />
                 </a>
-                <Link
-                  href="/papers"
-                  className="px-4 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors text-sm font-medium"
-                >
-                  Paper PDFs
+                <Link href="/zh/papers" className="px-4 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors text-sm font-medium">
+                  论文 PDF
                 </Link>
                 <Link
-                  href="/zh"
+                  href="/"
                   className="px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
                 >
-                  中文
+                  EN
                 </Link>
               </div>
             </div>
           </div>
         </header>
 
-        {/* 2025 Year in Review */}
         <section className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <span className="text-3xl">🎉</span> 2025 Year in Review
+            <span className="text-3xl">🎉</span> 2025 年度总结
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg">
               <FaFileLines className="text-3xl mb-2 opacity-80" />
               <div className="text-4xl font-bold">{acceptedPapers2025.length}</div>
-              <div className="text-blue-100">Papers Accepted in 2025</div>
+              <div className="text-blue-100">2025 已接收论文</div>
             </div>
             <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
               <FaAward className="text-3xl mb-2 opacity-80" />
-              <div className="text-4xl font-bold">
-                {new Set(acceptedPapers2025.map((p) => p.venue).filter(Boolean)).size}
-              </div>
-              <div className="text-purple-100">Venues Covered</div>
+              <div className="text-4xl font-bold">{new Set(acceptedPapers2025.map((p) => p.venue).filter(Boolean)).size}</div>
+              <div className="text-purple-100">覆盖会议/期刊</div>
             </div>
             <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-lg">
               <FaUsers className="text-3xl mb-2 opacity-80" />
               <div className="text-4xl font-bold">6</div>
-              <div className="text-green-100">Research Directions</div>
-            </div>
-          </div>
-          <div className="mt-4 bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-            <div className="grid md:grid-cols-3 gap-6">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Publication Highlights</h3>
-                <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
-                  {acceptedPapers2025.map((p) => (
-                    <li key={p.id} className="flex items-start gap-2">
-                      <span className="mt-[6px] h-1.5 w-1.5 rounded-full bg-blue-500 flex-shrink-0" />
-                      <span className="min-w-0">
-                        <span className="font-medium">{p.title}</span>
-                        {(p.venue || p.year) && (
-                          <span className="text-gray-500 dark:text-gray-400"> — {[p.venue, p.year].filter(Boolean).join(" ")}</span>
-                        )}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-3">
-                  <Link href="/papers" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
-                    Browse PDFs →
-                  </Link>
-                </div>
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Research Focus (2025)</h3>
-                <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
-                  <li>AI for Software Engineering with LLM-centered tooling</li>
-                  <li>Program repair & OpenHarmony ecosystem analysis</li>
-                  <li>Static analysis + agentic workflows for debugging</li>
-                  <li>LLM security evaluation and robustness</li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Collaboration & Community</h3>
-                <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
-                  <li>Ongoing collaboration with Huawei</li>
-                  <li>Ongoing collaboration with Singapore Management University (SMU)</li>
-                  <li>Building research artifacts for reproducibility (datasets/tools)</li>
-                </ul>
-              </div>
+              <div className="text-green-100">研究方向</div>
             </div>
           </div>
         </section>
 
-        {/* About Me - Full Width */}
         <section className="mb-8">
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">About Me</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">关于我</h2>
             <div className="space-y-4 text-gray-600 dark:text-gray-300 leading-relaxed">
               <p>
-                I am a first-year Ph.D. student at <strong className="text-gray-900 dark:text-white">Beihang University</strong>,
-                working in the <strong className="text-gray-900 dark:text-white">SMAT Laboratory</strong> under the supervision of
-                Prof. <strong className="text-gray-900 dark:text-white">Li Li (黎立)</strong>.
+                我是<strong className="text-gray-900 dark:text-white">北京航空航天大学</strong>博士生，隶属于
+                <strong className="text-gray-900 dark:text-white"> SMAT 实验室</strong>，导师为
+                <strong className="text-gray-900 dark:text-white">黎立</strong>教授。
               </p>
-              <p>
-                My research focuses on <strong className="text-blue-600 dark:text-blue-400">AI for Software Engineering (AI4SE)</strong>,
-                combining Large Language Models (LLMs) with static analysis techniques to solve complex problems in software engineering.
-              </p>
+              <p>研究聚焦于将大语言模型（LLM）与程序分析技术结合，构建更可靠、更安全的软件工程智能工具。</p>
 
               <div className="mt-6 space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Research Directions</h3>
-
-                <AboutResearchDirections />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">研究方向（可点击展开）</h3>
+                <AboutResearchDirectionsZh />
               </div>
-
-              <p className="mt-4">
-                I collaborate closely with researchers from <strong className="text-gray-900 dark:text-white">Huawei</strong> and
-                <strong className="text-gray-900 dark:text-white"> Singapore Management University (SMU)</strong>.
-                My work has been published at top SE venues including <strong className="text-gray-900 dark:text-white">ICSE</strong>,
-                <strong className="text-gray-900 dark:text-white"> FSE</strong>, and <strong className="text-gray-900 dark:text-white">TOSEM</strong>.
-              </p>
             </div>
           </div>
         </section>
 
-        {/* Research Interests Tags */}
         <section className="mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Research Interests</h2>
-            <div className="flex flex-wrap gap-2">
-              {["Program Repair", "LLM Security", "Static Analysis", "Code Generation", "OpenHarmony", "Jailbreak Defense", "Knowledge Graph", "Prompt Engineering", "Low-resource Languages"].map(tag => (
-                <span key={tag} className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium">
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Ongoing Research */}
-        <section className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <span className="text-2xl">🔬</span> Research Directions
-          </h2>
-          <ResearchCards />
-        </section>
-
-        {/* Timeline News */}
-        <section className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">What&apos;s New</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">最新动态</h2>
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
             <div className="space-y-4">
               {news.map((item) => {
@@ -217,10 +141,10 @@ export default function Home() {
                     <div className="min-w-0">
                       <div className="text-gray-700 dark:text-gray-300">
                         <span className="font-medium">{paper.title}</span>
-                        {paper.venue && paper.year && <span className="text-gray-500 dark:text-gray-400"> — accepted at {paper.venue} {paper.year}</span>}
+                        {paper.venue && paper.year && <span className="text-gray-500 dark:text-gray-400"> — 已接收于 {paper.venue} {paper.year}</span>}
                       </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        {paper.authors && paper.authors.length > 0 ? paper.authors.join(", ") : "Authors: (to be added)"}
+                        {paper.authors && paper.authors.length > 0 ? paper.authors.join(", ") : "作者信息待补充"}
                       </div>
                     </div>
                   </div>
@@ -230,12 +154,11 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Publications */}
         <section className="mb-8">
           <div className="flex items-end justify-between gap-4 mb-4">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Accepted Papers (PDF)</h2>
-            <Link href="/papers" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
-              View all →
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">已接收论文（PDF）</h2>
+            <Link href="/zh/papers" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+              查看全部 →
             </Link>
           </div>
           <div className="space-y-4">
@@ -259,7 +182,7 @@ export default function Home() {
                       </a>
                     ) : (
                       <span className="flex-shrink-0 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-sm">
-                        No PDF
+                        无 PDF
                       </span>
                     )}
                   </div>
@@ -269,9 +192,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Collaborations */}
         <section className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Collaborations</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">合作</h2>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md">
               <div className="flex items-center gap-3 mb-3">
@@ -280,11 +202,11 @@ export default function Home() {
                 </div>
                 <div>
                   <div className="font-medium text-gray-900 dark:text-white">Huawei</div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">OpenHarmony / mobile app reliability</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">OpenHarmony / 移动应用质量</div>
                 </div>
               </div>
               <div className="text-sm text-gray-700 dark:text-gray-300">
-                <div className="font-semibold text-gray-900 dark:text-white mb-2">People</div>
+                <div className="font-semibold text-gray-900 dark:text-white mb-2">相关人员</div>
                 <ul className="space-y-1">
                   {collaborators
                     .filter((c) => c.org === "Huawei")
@@ -303,12 +225,6 @@ export default function Home() {
                       </li>
                     ))}
                 </ul>
-                <div className="font-semibold text-gray-900 dark:text-white mt-4 mb-2">Topics</div>
-                <ul className="space-y-1 text-gray-600 dark:text-gray-400">
-                  <li>• OpenHarmony defect detection & repair</li>
-                  <li>• UI performance (rendering) analysis</li>
-                  <li>• Tooling feedback loop with practitioners</li>
-                </ul>
               </div>
             </div>
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md">
@@ -318,11 +234,11 @@ export default function Home() {
                 </div>
                 <div>
                   <div className="font-medium text-gray-900 dark:text-white">Singapore Management University (SMU)</div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">AI for software engineering</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">AI for SE</div>
                 </div>
               </div>
               <div className="text-sm text-gray-700 dark:text-gray-300">
-                <div className="font-semibold text-gray-900 dark:text-white mb-2">People</div>
+                <div className="font-semibold text-gray-900 dark:text-white mb-2">相关人员</div>
                 <ul className="space-y-1">
                   {collaborators
                     .filter((c) => c.org === "SMU")
@@ -341,18 +257,18 @@ export default function Home() {
                       </li>
                     ))}
                 </ul>
-                <div className="font-semibold text-gray-900 dark:text-white mt-4 mb-2">Topics</div>
-                <ul className="space-y-1 text-gray-600 dark:text-gray-400">
-                  <li>• LLM-based agents for code analysis</li>
-                  <li>• Program analysis + learning hybrid methods</li>
-                  <li>• Robust evaluation and benchmarks</li>
-                </ul>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Footer */}
+        <section className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <span className="text-2xl">🔬</span> 进行中的研究（详细）
+          </h2>
+          <ResearchCards />
+        </section>
+
         <footer className="text-center text-gray-400 dark:text-gray-500 text-sm py-8">
           <p>&copy; 2024-2025 Zhihao Lin | Built with Next.js & Tailwind CSS</p>
         </footer>
@@ -360,3 +276,4 @@ export default function Home() {
     </div>
   );
 }
+
