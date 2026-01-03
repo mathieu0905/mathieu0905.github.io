@@ -16,6 +16,29 @@ interface ResearchProject {
   relatedPapers?: string[];
 }
 
+const uiText = {
+  en: {
+    methods: "methods",
+    moreDetails: "More details",
+    clickDetails: "Click for details →",
+    highlights: "Highlights",
+    methodsTitle: "Methods",
+    outcomes: "Expected Outcomes",
+    relatedPubs: "Related Publications",
+    close: "Close",
+  },
+  zh: {
+    methods: "个方法",
+    moreDetails: "更多详情",
+    clickDetails: "点击查看详情 →",
+    highlights: "亮点",
+    methodsTitle: "方法",
+    outcomes: "预期成果",
+    relatedPubs: "相关发表",
+    close: "关闭",
+  },
+};
+
 export const researchProjects: ResearchProject[] = [
   {
     id: "llm-code-understanding",
@@ -169,6 +192,159 @@ We are investigating techniques to automatically detect and adapt prompts when m
   },
 ];
 
+export const researchProjectsZh: ResearchProject[] = [
+  {
+    id: "llm-code-understanding",
+    title: "LLM 代码理解",
+    summary: "研究大语言模型如何理解代码语法和语义，以改进代码分析任务。",
+    highlights: [
+      "LLM 捕获的内容：语法、控制流、API 意图",
+      "评估方式：基准测试 + 探针分析 + 任务指标",
+    ],
+    methods: ["基准设计", "表示探针", "基于 Agent 的评估"],
+    outcomes: ["数据集与评估套件", "SE 工具构建的洞察"],
+    detail: `该方向研究大语言模型如何表示和推理代码结构与语义，以及这如何影响下游软件工程任务。
+
+核心研究问题：
+• LLM 如何内部表示代码语法（AST、控制流）？
+• LLM 从代码上下文中捕获了哪些语义信息？
+• 如何设计更好的基准来评估代码理解能力？
+
+典型工作流程：
+• 设计隔离特定能力的基准（如数据流、API 意图、不变量）
+• 跨任务和提示探测模型表示和行为
+• 构建模拟真实工具使用的 Agent 评估
+
+预期产出：
+• 精选数据集 + 评估套件
+• 失败模式分析，指导更安全可靠的 SE 工具`,
+    tags: [{ label: "代码智能", color: "blue" }],
+    borderColor: "border-blue-500",
+  },
+  {
+    id: "code-localization",
+    title: "智能代码定位",
+    summary: "通过整合静态分析与基于 LLM 的 Agent 来提高缺陷定位准确性。",
+    highlights: [
+      "混合信号：静态事实（图/流）+ LLM 探索",
+      "目标：缩小搜索空间，加速调试",
+    ],
+    methods: ["静态分析（调用/数据流）", "Agent 搜索", "排序与重排序"],
+    outcomes: ["可复用的定位流程", "大型代码库案例研究"],
+    detail: `准确的故障定位对高效调试至关重要。该项目结合传统静态分析与现代 LLM 能力，减少大型代码库中的搜索空间。
+
+研究重点：
+• 将程序分析技术（调用图、数据流）与 LLM 推理相结合
+• 设计基于 Agent 的迭代代码探索方法
+• 提高大规模代码库中的定位精度
+
+工作原理：
+• 从静态分析构建轻量级程序切片/依赖视图
+• 让 Agent 迭代检查候选项，提出针对性问题，更新假设
+• 用可解释的证据对可疑实体（文件/函数/行）进行排序
+
+最终目标：
+• 一个实用的流程，提高真实项目的调试速度和一致性`,
+    tags: [{ label: "故障定位", color: "purple" }],
+    borderColor: "border-purple-500",
+  },
+  {
+    id: "openharmony-defect",
+    title: "OpenHarmony 缺陷检测",
+    summary: "为 OpenHarmony 生态系统扩展自动修复工具的缺陷检测能力。",
+    highlights: [
+      "基于 HapRepair 提升 OpenHarmony 应用质量",
+      "针对 ArkTS/HarmonyOS API 的缺陷检测规则",
+    ],
+    methods: ["规则挖掘", "静态分析", "修复与验证循环"],
+    outcomes: ["OpenHarmony 生态工具", "来自实践的工程反馈"],
+    detail: `基于我们的 FSE 2025 工作（HapRepair），我们将研究扩展到 OpenHarmony 应用的主动缺陷检测和生态特定分析。
+
+当前进展：
+• 核心修复框架已发表于 FSE Industry 2025
+• 正在开发针对 OpenHarmony 特定缺陷的新静态分析规则
+• 准备 TOSEM 期刊扩展
+
+OpenHarmony 的特殊性：
+• ArkTS 语言特性和 HarmonyOS API 模式
+• 应用框架约束和平台特定的生命周期规则
+
+我们构建的内容：
+• 基于平台语义的缺陷检查器和修复提示
+• 易于集成到实际工程流程的工具`,
+    tags: [
+      { label: "程序修复", color: "green" },
+      { label: "期刊扩展", color: "yellow" },
+    ],
+    borderColor: "border-green-500",
+    status: "扩展至 TOSEM",
+    relatedPapers: ["HapRepair (FSE Industry 2025)"],
+  },
+  {
+    id: "change-impact",
+    title: "变更影响分析",
+    summary: "利用代码知识图谱分析和预测代码变更在大型代码库中的影响。",
+    highlights: [
+      "建模超越文件的依赖：符号、调用、数据边",
+      "在合并/审查前预测连锁反应",
+    ],
+    methods: ["代码知识图谱", "图遍历与学习", "影响查询"],
+    outcomes: ["可解释的影响报告", "CI/审查优先级信号"],
+    detail: `理解代码变更如何在代码库中传播对安全的软件演进至关重要。
+
+研究方法：
+• 构建统一的代码知识图谱，捕获结构和语义关系
+• 开发跨模块边界追踪变更影响的算法
+• 在真实世界的大规模软件系统上评估
+
+该工作旨在帮助开发者在提交前理解其变更的连锁效应，减少回归缺陷并提高代码审查效率。`,
+    tags: [{ label: "影响分析", color: "orange" }],
+    borderColor: "border-orange-500",
+  },
+  {
+    id: "codebase-health",
+    title: "代码库健康管理",
+    summary: "探索在迭代开发过程中维护代码库质量的结构化方法。",
+    highlights: [
+      "及早检测冗余、死代码和风险漂移",
+      "使维护可度量、可自动化",
+    ],
+    methods: ["静态分析", "软件仓库挖掘", "质量仪表板"],
+    outcomes: ["健康信号与告警", "维护建议"],
+    detail: `随着代码库演进，技术债务不断累积。该研究探索自动化方法来维护代码健康。
+
+核心思路：
+• 将代码库视为结构化数据库进行系统分析
+• 在开发过程中识别和移除死代码/冗余代码
+• 平衡新功能开发与代码库维护
+
+我们正在开发无缝集成到开发流程的技术，帮助团队在不牺牲速度的情况下保持高代码质量。`,
+    tags: [{ label: "代码质量", color: "pink" }],
+    borderColor: "border-pink-500",
+  },
+  {
+    id: "prompt-robustness",
+    title: "提示词鲁棒性",
+    summary: "解决模型更新和时间漂移导致的提示词退化问题。",
+    highlights: [
+      "检测模型更新后提示词的静默退化",
+      "自动化提示词适配以保持行为稳定",
+    ],
+    methods: ["提示词回归测试", "漂移检测", "提示词重写策略"],
+    outcomes: ["稳定性基准", "提示词维护工具"],
+    detail: `基于 LLM 的工具经常遭受"提示词漂移"——在一个模型版本上运行良好的提示词可能在更新后退化。
+
+研究问题：
+• 模型更新可能静默破坏现有的基于提示词的应用
+• 手动提示词调优耗时且不可扩展
+• 需要自动化方法来维护提示词有效性
+
+我们正在研究当模型行为变化时自动检测和适配提示词的技术，确保跨模型版本的稳定性能。`,
+    tags: [{ label: "提示词工程", color: "cyan" }],
+    borderColor: "border-cyan-500",
+  },
+];
+
 const colorMap: Record<string, { bg: string; text: string; darkBg: string; darkText: string }> = {
   blue: { bg: "bg-blue-100", text: "text-blue-700", darkBg: "dark:bg-blue-900", darkText: "dark:text-blue-300" },
   purple: { bg: "bg-purple-100", text: "text-purple-700", darkBg: "dark:bg-purple-900", darkText: "dark:text-purple-300" },
@@ -179,13 +355,15 @@ const colorMap: Record<string, { bg: string; text: string; darkBg: string; darkT
   cyan: { bg: "bg-cyan-100", text: "text-cyan-700", darkBg: "dark:bg-cyan-900", darkText: "dark:text-cyan-300" },
 };
 
-export function ResearchCards() {
+export function ResearchCards({ locale = "en" }: { locale?: "en" | "zh" }) {
   const [selectedProject, setSelectedProject] = useState<ResearchProject | null>(null);
+  const projects = locale === "zh" ? researchProjectsZh : researchProjects;
+  const t = uiText[locale];
 
   return (
     <>
       <div className="grid md:grid-cols-2 gap-4">
-        {researchProjects.map((project) => (
+        {projects.map((project) => (
           <div
             key={project.id}
             onClick={() => setSelectedProject(project)}
@@ -218,9 +396,9 @@ export function ResearchCards() {
             )}
             <div className="mt-3 flex items-center justify-between gap-3">
               <span className="text-xs text-gray-400 dark:text-gray-500">
-                {project.methods?.length ? `${project.methods.length} methods` : "More details"}
+                {project.methods?.length ? `${project.methods.length} ${t.methods}` : t.moreDetails}
               </span>
-              <span className="text-xs text-blue-500">Click for details →</span>
+              <span className="text-xs text-blue-500">{t.clickDetails}</span>
             </div>
           </div>
         ))}
@@ -270,7 +448,7 @@ export function ResearchCards() {
                   <div className="grid md:grid-cols-3 gap-4">
                     {selectedProject.highlights?.length ? (
                       <div>
-                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Highlights</h4>
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{t.highlights}</h4>
                         <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                           {selectedProject.highlights.map((item) => (
                             <li key={item}>• {item}</li>
@@ -280,7 +458,7 @@ export function ResearchCards() {
                     ) : null}
                     {selectedProject.methods?.length ? (
                       <div>
-                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Methods</h4>
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{t.methodsTitle}</h4>
                         <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                           {selectedProject.methods.map((item) => (
                             <li key={item}>• {item}</li>
@@ -290,7 +468,7 @@ export function ResearchCards() {
                     ) : null}
                     {selectedProject.outcomes?.length ? (
                       <div>
-                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Expected Outcomes</h4>
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{t.outcomes}</h4>
                         <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                           {selectedProject.outcomes.map((item) => (
                             <li key={item}>• {item}</li>
@@ -303,7 +481,7 @@ export function ResearchCards() {
               )}
               {selectedProject.relatedPapers && (
                 <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Related Publications</h4>
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{t.relatedPubs}</h4>
                   <ul className="text-sm text-gray-600 dark:text-gray-400">
                     {selectedProject.relatedPapers.map((paper) => (
                       <li key={paper}>• {paper}</li>
@@ -317,7 +495,7 @@ export function ResearchCards() {
                 onClick={() => setSelectedProject(null)}
                 className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >
-                Close
+                {t.close}
               </button>
             </div>
           </div>

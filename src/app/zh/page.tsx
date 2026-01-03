@@ -266,11 +266,11 @@ export default function HomeZh() {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <span className="text-2xl">🔬</span> 进行中的研究（详细）
           </h2>
-          <ResearchCards />
+          <ResearchCards locale="zh" />
         </section>
 
         <footer className="text-center text-gray-400 dark:text-gray-500 text-sm py-8">
-          <p>&copy; 2024-2025 Zhihao Lin | Built with Next.js & Tailwind CSS</p>
+          <p>&copy; 2024-2025 Zhihao Lin | 使用 Next.js & Tailwind CSS 构建</p>
         </footer>
       </main>
     </div>
