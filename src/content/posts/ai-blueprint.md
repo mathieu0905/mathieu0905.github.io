@@ -51,7 +51,7 @@ description: "如果我们不再仅仅向 AI 提供原始文本，而是给它�
 
 这对软件工程来说是一个重大转变。这些"确定性锚点"使 Agent 的行为更加一致、可检查和可信。
 
-这种机制是可测量的：通过提供结构标签，研究人员观察到 AI 的"链接跟随率"从基线的 0.15-0.18 提高到 0.21-0.24。这个简单的改变可以将中等规模项目中 Agent 行为的**运行间方差大致减半**。
+这种效果是可观察的：通过提供结构标签，AI 的"链接跟随率"会显著提升。这个简单的改变可以大幅降低中等规模项目中 Agent 行为的**运行间方差**。
 
 Agent 的导航不再是每次运行都走完全不同的路径来解决同一问题，而是变得更有纪律性，更扎根于代码的实际结构。
 
@@ -67,7 +67,7 @@ Agent 的导航不再是每次运行都走完全不同的路径来解决同一�
 - **遗漏必要的更改**（假阴性）可能导致灾难性的生产故障
 - **标记一个额外的不必要文件**供开发者审查（假阳性）只会花费少量时间
 
-一篇论文用一个有力的真实案例说明了这一点：
+一个真实的案例说明了这一点：
 
 > 一位开发者做了一个简单的配置更改，降低了 Redis 缓存的生存时间（TTL）。这个看似微小的优化在系统中级联传播，间接改变了数据库连接池，触发了更频繁的健康检查，并增加了负载均衡器的敏感度。结果形成了一个**"致命的循环反馈"环**，导致支付系统宕机数小时，损失数百万美元——所有这些都因为一行代码更改的完整影响链没有被理解。
 
@@ -86,7 +86,7 @@ Agent 的导航不再是每次运行都走完全不同的路径来解决同一�
 - 一个隐式的数据流耦合
 - 另一个代表未来维护风险的架构"代码异味"
 
-这一观点有数据支持：一项研究发现，系统标记的**73% 的"假阳性"文件**实际上*"表现出与更改代码的某种程度的耦合，代表了合理的影响关注区域，而非随机噪音。"*
+实践表明，系统标记的**大多数"假阳性"文件**实际上都表现出与更改代码的某种程度的耦合，代表了合理的影响关注区域，而非随机噪音。
 
 这样，AI 的输出就变成了一条**自动化审计轨迹**，让开发者更深入地了解系统隐藏的复杂性。它将 AI 从一个简单的对错判断工具转变为一个**战略合作伙伴**，能够揭示关于代码库健康状况的令人不安但必要的真相。
 
@@ -147,7 +147,7 @@ Perhaps the most significant finding is what researchers term the **"determinist
 
 This is a game-changer for software engineering. These "deterministic anchors" make an agent's behavior more consistent, inspectable, and trustworthy.
 
-The mechanism is measurable: by providing structural tags, researchers saw the AI's "link-following rate" increase from a baseline of 0.15–0.18 to 0.21–0.24. This simple change can roughly **halve the run-to-run variance** in the agent's behavior on medium-scale projects.
+The effect is observable: by providing structural tags, the AI's "link-following rate" increases significantly. This simple change can substantially **reduce the run-to-run variance** in the agent's behavior on medium-scale projects.
 
 Instead of taking a completely different path to solve the same problem on each run, the agent's navigation becomes more disciplined and grounded in the code's actual structure.
 
@@ -163,7 +163,7 @@ In this context, the risk is **highly asymmetric**:
 - **Missing a required change** (a false negative) can lead to catastrophic production failures
 - **Flagging an extra, unnecessary file** for a developer to review (a false positive) costs only a small amount of time
 
-One paper illustrates this with a powerful real-world example:
+A real-world example illustrates this:
 
 > A developer made a single configuration change, reducing a Redis cache Time-To-Live (TTL). This seemingly minor optimization cascaded through the system, indirectly altering the database connection pool, triggering more frequent health checks, and increasing load balancer sensitivity. The result was a **"deadly circular feedback" loop** that caused a multi-hour payment system outage and millions of dollars in losses—all because the full impact chain of that one-line change was not understood.
 
@@ -182,7 +182,7 @@ When an AI system flags a file that doesn't need an immediate change, it's often
 - An implicit data-flow coupling
 - Another architectural "code smell" that represents a future maintenance risk
 
-This claim is backed by data: one study found that **73% of the "false positive" files** flagged by the system did, in fact, *"exhibit some degree of coupling to changed code, representing legitimate areas of impact concern rather than random noise."*
+In practice, **the majority of "false positive" files** flagged by these systems do, in fact, exhibit some degree of coupling to changed code, representing legitimate areas of impact concern rather than random noise.
 
 In this way, the AI's output becomes an **automated audit trail**, giving developers deeper insight into their system's hidden complexities. It moves the AI from being a simple tool that is either right or wrong into a **strategic partner** that can reveal uncomfortable but necessary truths about a codebase's health.
 
