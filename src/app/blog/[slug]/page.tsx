@@ -1,8 +1,16 @@
 import Link from 'next/link';
-import { getPostContent } from '@/lib/blog';
+import { getPostContent, getPostMetadata } from '@/lib/blog';
 import ReactMarkdown from 'react-markdown';
 import { FaArrowLeft } from 'react-icons/fa6';
 import { notFound } from 'next/navigation';
+
+// Generate static params for all blog posts (required for static export)
+export async function generateStaticParams() {
+  const posts = getPostMetadata();
+  return posts.map((post) => ({
+    slug: post.slug,
+  }));
+}
 
 interface Props {
   params: Promise<{ slug: string }>;
