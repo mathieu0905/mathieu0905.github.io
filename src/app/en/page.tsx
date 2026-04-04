@@ -67,7 +67,13 @@ export default function HomeEn() {
                       <div className="flex-shrink-0 w-20 text-sm font-mono text-blue-600 dark:text-blue-400">{item.date}</div>
                       <div className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-blue-500" />
                       <div className="min-w-0">
-                        <div className="text-gray-700 dark:text-gray-300">{item.title}</div>
+                        <div className="text-gray-700 dark:text-gray-300">
+                          {item.link ? (
+                            <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">{item.title}</a>
+                          ) : (
+                            item.title
+                          )}
+                        </div>
                         {item.detail && <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">{item.detail}</div>}
                       </div>
                     </div>
@@ -154,6 +160,78 @@ export default function HomeEn() {
             <span className="text-2xl">🔬</span> Research Directions
           </h2>
           <ResearchCards />
+        </section>
+
+        {/* Open-Source Tools */}
+        <section id="tools" className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Open-Source Tools</h2>
+          <div className="grid md:grid-cols-3 gap-4">
+            <a
+              href="https://github.com/ArkAnalyzer-HapRay"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] group"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">🔍</span>
+                <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">HapRay</h3>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Performance analysis tool for OpenHarmony apps, detecting Phantom Rendering issues in UI.</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="px-2 py-0.5 bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 rounded text-xs font-medium">FSE 2026</span>
+                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">GitHub</span>
+              </div>
+            </a>
+            <a
+              href="https://gitcode.com/openharmony-sig/homecheck"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] group"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">🔧</span>
+                <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">HomeCheck</h3>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Static checker and auto-repair tool for OpenHarmony apps. Core module of HapRepair with rule-driven defect detection.</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded text-xs font-medium">FSE Industry 2025</span>
+                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">GitCode</span>
+              </div>
+            </a>
+            <a
+              href="https://gitcode.com/ArkAnalyzer/HomeTrans"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] group"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">🔄</span>
+                <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">HomeTrans</h3>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Android → OpenHarmony migration tool, helping developers automatically convert Android apps to the HarmonyOS ecosystem.</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">Migration</span>
+                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">GitCode</span>
+              </div>
+            </a>
+            <a
+              href="https://github.com/Noietch/ResearchClaw"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] group"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">📚</span>
+                <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">ResearchClaw</h3>
+                <span className="px-1.5 py-0.5 bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 rounded text-xs font-medium">⭐ 59</span>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">AI-powered research desktop app combining literature management, smart reading notes, and research idea generation. Supports arXiv discovery, PDF AI chat, semantic search, and citation networks.</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded text-xs font-medium">Electron + TypeScript</span>
+                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">GitHub</span>
+              </div>
+            </a>
+          </div>
         </section>
 
         {/* Publications */}

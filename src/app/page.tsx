@@ -78,7 +78,13 @@ export default function Home() {
                       <div className="flex-shrink-0 w-20 text-sm font-mono text-blue-600 dark:text-blue-400">{item.date}</div>
                       <div className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-blue-500" />
                       <div className="min-w-0">
-                        <div className="text-gray-700 dark:text-gray-300">{item.title}</div>
+                        <div className="text-gray-700 dark:text-gray-300">
+                          {item.link ? (
+                            <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">{item.title}</a>
+                          ) : (
+                            item.title
+                          )}
+                        </div>
                         {item.detail && <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">{item.detail}</div>}
                       </div>
                     </div>
@@ -296,6 +302,78 @@ export default function Home() {
             <span className="text-2xl">🔬</span> 研究方向
           </h2>
           <ResearchCards locale="zh" />
+        </section>
+
+        {/* 开源工具 */}
+        <section id="tools" className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">开源工具</h2>
+          <div className="grid md:grid-cols-3 gap-4">
+            <a
+              href="https://github.com/ArkAnalyzer-HapRay"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] group"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">🔍</span>
+                <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">HapRay</h3>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">OpenHarmony 应用性能分析工具，用于检测 UI 中的 Phantom Rendering（幽灵渲染）问题。</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="px-2 py-0.5 bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 rounded text-xs font-medium">FSE 2026</span>
+                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">GitHub</span>
+              </div>
+            </a>
+            <a
+              href="https://gitcode.com/openharmony-sig/homecheck"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] group"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">🔧</span>
+                <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">HomeCheck</h3>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">OpenHarmony 应用静态检查与自动修复工具，HapRepair 的核心模块，支持规则驱动的缺陷检测。</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded text-xs font-medium">FSE Industry 2025</span>
+                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">GitCode</span>
+              </div>
+            </a>
+            <a
+              href="https://gitcode.com/ArkAnalyzer/HomeTrans"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] group"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">🔄</span>
+                <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">HomeTrans</h3>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Android → OpenHarmony 应用迁移工具，辅助开发者将安卓应用自动转换为鸿蒙生态。</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">迁移工具</span>
+                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">GitCode</span>
+              </div>
+            </a>
+            <a
+              href="https://github.com/Noietch/ResearchClaw"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] group"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">📚</span>
+                <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">ResearchClaw</h3>
+                <span className="px-1.5 py-0.5 bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 rounded text-xs font-medium">⭐ 59</span>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">AI 驱动的科研桌面应用，集文献管理、智能阅读笔记、Research Idea 生成于一体，支持 arXiv 论文发现、PDF AI 对话、语义搜索与引用网络。</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded text-xs font-medium">Electron + TypeScript</span>
+                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">GitHub</span>
+              </div>
+            </a>
+          </div>
         </section>
 
         {/* 已接收论文 */}
