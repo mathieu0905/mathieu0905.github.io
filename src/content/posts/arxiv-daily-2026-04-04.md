@@ -2,6 +2,9 @@
 title: "arXiv 每日速递 2026-04-04"
 date: "2026-04-04"
 description: "每日精选 arXiv 论文推荐：AI × Software Engineering 最新研究动态"
+tags: ["arXiv速递", "论文推荐"]
+series: "arXiv每日速递"
+coverColor: "from-emerald-500 to-teal-600"
 ---
 
 # arXiv 每日速递 2026-04-04

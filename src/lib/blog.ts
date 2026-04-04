@@ -10,10 +10,23 @@ export interface BlogPost {
   date: string;
   description: string;
   content: string;
+  tags?: string[];
+  series?: string;
+  coverColor?: string;
+  readingTime: number; // minutes
 }
 
-export function getPostMetadata(): Omit<BlogPost, 'content'>[] {
-  // Check if directory exists
+export type BlogPostMeta = Omit<BlogPost, 'content'>;
+
+function estimateReadingTime(content: string): number {
+  const cjkChars = (content.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g) || []).length;
+  const words = content.replace(/[\u4e00-\u9fff\u3400-\u4dbf]/g, '').split(/\s+/).filter(Boolean).length;
+  // ~500 CJK chars/min, ~250 English words/min
+  const minutes = cjkChars / 500 + words / 250;
+  return Math.max(1, Math.round(minutes));
+}
+
+export function getPostMetadata(): BlogPostMeta[] {
   if (!fs.existsSync(postsDirectory)) {
     return [];
   }
@@ -23,33 +36,24 @@ export function getPostMetadata(): Omit<BlogPost, 'content'>[] {
   const allPostsData = fileNames
     .filter((fileName) => fileName.endsWith('.md'))
     .map((fileName) => {
-      // Remove ".md" from file name to get slug
       const slug = fileName.replace(/\.md$/, '');
-
-      // Read markdown file as string
       const fullPath = path.join(postsDirectory, fileName);
       const fileContents = fs.readFileSync(fullPath, 'utf8');
-
-      // Use gray-matter to parse the post metadata section
       const matterResult = matter(fileContents);
 
-      // Combine the data with the id
       return {
         slug,
         title: matterResult.data.title,
         date: matterResult.data.date,
         description: matterResult.data.description,
+        tags: matterResult.data.tags || [],
+        series: matterResult.data.series,
+        coverColor: matterResult.data.coverColor,
+        readingTime: estimateReadingTime(matterResult.content),
       };
     });
 
-  // Sort posts by date
-  return allPostsData.sort((a, b) => {
-    if (a.date < b.date) {
-      return 1;
-    } else {
-      return -1;
-    }
-  });
+  return allPostsData.sort((a, b) => (a.date < b.date ? 1 : -1));
 }
 
 export function getPostContent(slug: string): BlogPost | null {
@@ -67,6 +71,21 @@ export function getPostContent(slug: string): BlogPost | null {
     title: matterResult.data.title,
     date: matterResult.data.date,
     description: matterResult.data.description,
+    tags: matterResult.data.tags || [],
+    series: matterResult.data.series,
+    coverColor: matterResult.data.coverColor,
+    readingTime: estimateReadingTime(matterResult.content),
     content: matterResult.content,
   };
+}
+
+export function getAllTags(): string[] {
+  const posts = getPostMetadata();
+  const tagSet = new Set<string>();
+  posts.forEach((p) => p.tags?.forEach((t) => tagSet.add(t)));
+  return Array.from(tagSet).sort();
+}
+
+export function getSeriesPosts(series: string): BlogPostMeta[] {
+  return getPostMetadata().filter((p) => p.series === series);
 }
