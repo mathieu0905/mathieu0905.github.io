@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import MusicPlayer from "./components/MusicPlayer";
+import { Navbar } from "./components/Navbar";
 
 export const metadata: Metadata = {
   title: "Zhihao Lin (林智灏) - Academic Homepage",
@@ -13,10 +15,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className="antialiased"
-      >
+      <body className="antialiased">
+        <Navbar />
         {children}
+        <MusicPlayer />
       </body>
     </html>
   );

@@ -1,18 +1,22 @@
 import Link from 'next/link';
 import { getPostMetadata } from '@/lib/blog';
 import { FaArrowLeft } from 'react-icons/fa6';
+import { NewPostButton } from '@/app/components/AdminActions';
 
 export default function BlogIndex() {
   const posts = getPostMetadata();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900">
-      <main className="max-w-3xl mx-auto px-6 py-12">
+      <main className="max-w-5xl mx-auto px-6 py-12">
         <div className="mb-8">
           <Link href="/" className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline mb-4">
              <FaArrowLeft /> Back to Home
           </Link>
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Blog</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Blog</h1>
+            <NewPostButton />
+          </div>
           <p className="text-gray-600 dark:text-gray-400">Thoughts, updates, and experiments.</p>
         </div>
 

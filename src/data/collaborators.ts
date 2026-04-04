@@ -12,8 +12,7 @@ export const collaborators: Collaborator[] = [
     name: "Wei Ma",
     org: "SMU",
     links: [
-      // TODO: replace with Wei Ma's personal Google Scholar URL
-      { label: "Google Scholar (search)", href: "https://scholar.google.com/scholar?q=Wei+Ma+Singapore+Management+University" },
+      { label: "Google Scholar", href: "https://scholar.google.com/citations?user=ZubTNs0AAAAJ" },
     ],
   },
   { name: "Chi Chen", org: "Huawei" },
