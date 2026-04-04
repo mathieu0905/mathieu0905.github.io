@@ -103,7 +103,7 @@ export default function Home() {
                     <div className="min-w-0">
                       <div className="text-gray-700 dark:text-gray-300">
                         {href ? (
-                          <a href={href} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-600 dark:text-blue-400 hover:underline">{paper.title}</a>
+                          <a href={href} className="font-medium text-blue-600 dark:text-blue-400 hover:underline">{paper.title}</a>
                         ) : (
                           <span className="font-medium">{paper.title}</span>
                         )}

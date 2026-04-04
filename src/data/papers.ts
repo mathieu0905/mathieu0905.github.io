@@ -108,7 +108,7 @@ export const papers: Paper[] = [
     id: "llm-code-syntax-semantics",
     title: "LLMs: Understanding Code Syntax and Semantics for Code Analysis",
     venue: "TOSEM",
-    authors: ["Wei Ma", "Shangqing Liu", "Zhihao Lin", "Wenhan Wang", "Qiang Hu", "Cen Zhang", "Ye Liu", "Li Li", "Liming Nie", "Yang Liu"],
+    authors: ["Wei Ma*", "Zhihao Lin*", "Shangqing Liu", "Qiang Hu", "Ye Liu", "Wenhan Wang", "Cen Zhang", "Liming Nie", "Li Li", "Yang Liu", "Lingxiao Jiang"],
     tags: ["Static Analysis"],
     status: "manuscript",
     abstract: "A systematic study evaluating LLMs' capabilities for code syntax and semantics understanding, including AST, CFG, and call graph comprehension across multiple languages.",
@@ -117,7 +117,7 @@ export const papers: Paper[] = [
   {
     id: "eager-parallel-execution",
     title: "Executing as You Generate: Hiding Execution Latency in LLM Code Generation",
-    authors: ["Zhensu Sun", "Zhihao Lin", "Zhi Chen", "Chengran Yang", "Mingyi Zhou", "Li Li", "David Lo"],
+    authors: ["Zhensu Sun*", "Zhihao Lin*", "Zhi Chen", "Chengran Yang", "Mingyi Zhou", "Li Li", "David Lo"],
     status: "manuscript",
     abstract: "Proposes EAGER, a parallel execution paradigm for LLM code generation that overlaps code generation and execution, reducing end-to-end latency by up to 55%.",
     pdfFile: "2604.00491v1.pdf",
