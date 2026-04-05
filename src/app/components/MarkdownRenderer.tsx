@@ -2,11 +2,30 @@
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import type { Components } from "react-markdown";
 
 const components: Components = {
+  img({ src, alt, ...props }) {
+    return (
+      <figure className="my-6">
+        <img
+          src={src}
+          alt={alt || ""}
+          loading="lazy"
+          className="rounded-xl shadow-md mx-auto max-w-full"
+          {...props}
+        />
+        {alt && (
+          <figcaption className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2 italic">
+            {alt}
+          </figcaption>
+        )}
+      </figure>
+    );
+  },
   code({ className, children, ...props }) {
     const match = /language-(\w+)/.exec(className || "");
     const code = String(children).replace(/\n$/, "");
@@ -46,7 +65,7 @@ const components: Components = {
 
 export function MarkdownRenderer({ content }: { content: string }) {
   return (
-    <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={components}>
       {content}
     </ReactMarkdown>
   );

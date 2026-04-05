@@ -79,8 +79,11 @@ function parseArxivXml(xml) {
 function formatPapers(papers) {
   return papers
     .map(
-      (p, i) =>
-        `[${i + 1}] ${p.title}\n    Authors: ${p.authors.join(", ")}\n    Categories: ${p.categories.join(", ")}\n    Link: ${p.id}\n    Published: ${p.published}\n    Abstract: ${p.summary}`
+      (p, i) => {
+        const arxivId = p.id.replace(/^https?:\/\/arxiv\.org\/abs\//, "").replace(/v\d+$/, "");
+        const ar5ivUrl = `https://ar5iv.labs.arxiv.org/html/${arxivId}`;
+        return `[${i + 1}] ${p.title}\n    Authors: ${p.authors.join(", ")}\n    Categories: ${p.categories.join(", ")}\n    Link: ${p.id}\n    ar5iv: ${ar5ivUrl}\n    Published: ${p.published}\n    Abstract: ${p.summary}`;
+      }
     )
     .join("\n\n---\n\n");
 }

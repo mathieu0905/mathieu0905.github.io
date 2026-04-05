@@ -33,7 +33,7 @@ node scripts/daily-arxiv.mjs
 # Step 3: 用 Claude Code agent 生成博客文章
 echo "[2/4] Running Claude Code agent..."
 claude -p "$(cat scripts/arxiv-agent-prompt.md)" \
-  --allowedTools "Read,Write,Bash(rm .arxiv-today.txt)"
+  --allowedTools "Read,Write,WebFetch,Bash(rm .arxiv-today.txt)"
 
 # Step 4: 清理临时文件
 rm -f .arxiv-today.txt
