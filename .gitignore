@@ -36,6 +36,13 @@ yarn-error.log*
 # arxiv daily temp
 .arxiv-today.txt
 
+# Paper PDFs are synced locally from ../mypaper via scripts/sync-papers.mjs
+# (only files listed in src/data/papers.ts are copied). Keep PDFs out of git by
+# default — already-tracked PDFs remain tracked; new accepted PDFs require
+# explicit `git add -f public/papers/<name>.pdf` to avoid "opening champagne"
+# on under-review drafts.
+public/papers/*.pdf
+
 # vercel
 .vercel
 
