@@ -59,6 +59,7 @@ export const papers: Paper[] = [
     authors: ["Zhihao Lin", "Mingyi Zhou", "Han Hu", "Bo Sun", "Gang Fan", "Li Li"],
     tags: ["Performance"],
     status: "accepted",
+    pdfFile: "hapray_fse.pdf",
   },
   {
     id: "maze-breaker-icse-2026",
