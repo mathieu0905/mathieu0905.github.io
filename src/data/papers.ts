@@ -109,10 +109,11 @@ export const papers: Paper[] = [
     id: "llm-code-syntax-semantics",
     title: "LLMs: Understanding Code Syntax and Semantics for Code Analysis",
     venue: "TOSEM",
+    year: 2026,
+    acceptedYear: 2026,
     authors: ["Wei Ma*", "Zhihao Lin*", "Shangqing Liu", "Qiang Hu", "Ye Liu", "Wenhan Wang", "Cen Zhang", "Liming Nie", "Li Li", "Yang Liu", "Lingxiao Jiang"],
     tags: ["Static Analysis"],
-    status: "manuscript",
-    abstract: "A systematic study evaluating LLMs' capabilities for code syntax and semantics understanding, including AST, CFG, and call graph comprehension across multiple languages.",
+    status: "accepted",
     pdfFile: "2305.12138v4.pdf",
   },
   {
