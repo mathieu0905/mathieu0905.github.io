@@ -4,7 +4,7 @@ import { FaEnvelope, FaGithub, FaGoogleScholar } from "react-icons/fa6";
 import { AboutResearchDirections } from "../components/AboutResearchDirections";
 import { ResearchCards } from "../components/ResearchCard";
 import { acceptedPapers, papers } from "@/data/papers";
-import { news } from "@/data/news";
+import { sortedNews } from "@/data/news";
 import { collaborators } from "@/data/collaborators";
 
 function pdfHref(pdfFile?: string) {
@@ -60,7 +60,7 @@ export default function HomeEn() {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">What&apos;s New</h2>
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
             <div className="space-y-4">
-              {news.map((item) => {
+              {sortedNews.map((item) => {
                 if (item.type === "other") {
                   return (
                     <div key={`${item.type}-${item.date}-${item.title}`} className="flex items-start gap-4">

@@ -24,3 +24,14 @@ export const news: NewsItem[] = [
   { type: "paper", date: "2025.03", paperId: "haprepair-fse-industry-2025" },
   { type: "paper", date: "2023.11", paperId: "llm-code-syntax-semantics" },
 ];
+
+function newsDateValue(date: string) {
+  const [year, month] = date.split(".").map(Number);
+  return year * 100 + month;
+}
+
+export const sortedNews = [...news].sort((a, b) => {
+  const diff = newsDateValue(b.date) - newsDateValue(a.date);
+  if (diff !== 0) return diff;
+  return 0;
+});
