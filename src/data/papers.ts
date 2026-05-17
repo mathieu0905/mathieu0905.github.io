@@ -107,7 +107,7 @@ export const papers: Paper[] = [
   },
   {
     id: "llm-code-syntax-semantics",
-    title: "LLMs: Understanding Code Syntax and Semantics for Code Analysis",
+    title: "Exploring Code Analysis: Zero-Shot Insights on Syntax and Semantics with LLMs",
     venue: "TOSEM",
     year: 2026,
     acceptedYear: 2026,

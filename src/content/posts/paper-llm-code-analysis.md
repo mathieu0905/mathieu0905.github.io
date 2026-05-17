@@ -1,12 +1,12 @@
 ---
-title: "LLM 真的理解代码吗？一次系统性的拷问"
+title: "Exploring Code Analysis: Zero-Shot Insights on Syntax and Semantics with LLMs"
 date: "2023-11-15"
-description: "我的第一篇投稿：系统评估 LLM 对代码语法和语义的理解能力，发现它们像 AST 解析器一样擅长语法，但在语义理解上漏洞百出。TOSEM 已接收。"
+description: "我的第一篇投稿：系统评估 LLM 对代码语法和语义的理解能力，发现它们像 AST 解析器一样擅长语法，但在语义理解上漏洞百出。TOSEM 已接收，正式版本题目更新为 Exploring Code Analysis: Zero-Shot Insights on Syntax and Semantics with LLMs。"
 tags: ["论文解读", "LLM", "静态分析"]
 coverColor: "from-amber-500 to-yellow-600"
 ---
 
-# LLM 真的理解代码吗？一次系统性的拷问
+# Exploring Code Analysis: Zero-Shot Insights on Syntax and Semantics with LLMs
 
 > 📄 已被 **TOSEM** 接收 | [PDF](/papers/2305.12138v4.pdf)
 >
