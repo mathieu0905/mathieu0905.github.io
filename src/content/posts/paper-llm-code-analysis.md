@@ -8,7 +8,7 @@ coverColor: "from-amber-500 to-yellow-600"
 
 # Exploring Code Analysis: Zero-Shot Insights on Syntax and Semantics with LLMs
 
-> 📄 已被 **TOSEM** 接收 | [PDF](/papers/2305.12138v4.pdf)
+> 📄 已被 **TOSEM** 接收 | [PDF](https://dl.acm.org/doi/epdf/10.1145/3818607)
 >
 > 作者：Wei Ma\*, **Zhihao Lin\***, Shangqing Liu, Qiang Hu, Ye Liu, Wenhan Wang, Cen Zhang, Liming Nie, Li Li, Yang Liu, Lingxiao Jiang
 >

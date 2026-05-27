@@ -9,6 +9,7 @@ import { ResearchCards } from "./components/ResearchCard";
 
 function pdfHref(pdfFile?: string) {
   if (!pdfFile) return undefined;
+  if (/^https?:\/\//i.test(pdfFile)) return pdfFile;
   return `/papers/${encodeURIComponent(pdfFile)}`;
 }
 

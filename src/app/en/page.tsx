@@ -9,6 +9,7 @@ import { collaborators } from "@/data/collaborators";
 
 function pdfHref(pdfFile?: string) {
   if (!pdfFile) return undefined;
+  if (/^https?:\/\//i.test(pdfFile)) return pdfFile;
   return `/papers/${encodeURIComponent(pdfFile)}`;
 }
 

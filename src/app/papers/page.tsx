@@ -2,6 +2,7 @@ import { acceptedPapers, manuscriptPapers } from "@/data/papers";
 
 function pdfHref(pdfFile?: string) {
   if (!pdfFile) return undefined;
+  if (/^https?:\/\//i.test(pdfFile)) return pdfFile;
   return `/papers/${encodeURIComponent(pdfFile)}`;
 }
 

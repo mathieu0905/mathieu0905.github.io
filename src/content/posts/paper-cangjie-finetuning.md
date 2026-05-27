@@ -8,7 +8,7 @@ coverColor: "from-cyan-500 to-blue-600"
 
 # 当 LLM 遇上小众语言：仓颉语言微调实战
 
-> 📄 发表于 **EMSE 2026** | [PDF](/papers/Effective_Fine_tuning_for_Low_resource_Languages__A_Case_Study_of_Cangjie.pdf)
+> 📄 发表于 **EMSE 2026** | [PDF](https://link.springer.com/article/10.1007/s10664-026-10878-4)
 >
 > 作者：Zhihao Lin, Zhaofeng Liu, Mingyi Zhou, Zihan Huang, Chi Chen, Wei Ma, Li Li
 

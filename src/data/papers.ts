@@ -92,7 +92,7 @@ export const papers: Paper[] = [
     authors: ["Zhihao Lin", "Zhaofeng Liu", "Mingyi Zhou", "Zihan Huang", "Chi Chen", "Wei Ma", "Li Li"],
     tags: ["Misc"],
     status: "accepted",
-    pdfFile: "Effective_Fine_tuning_for_Low_resource_Languages__A_Case_Study_of_Cangjie.pdf",
+    pdfFile: "https://link.springer.com/article/10.1007/s10664-026-10878-4",
   },
   {
     id: "open-source-ai-se-tools",
@@ -114,7 +114,7 @@ export const papers: Paper[] = [
     authors: ["Wei Ma*", "Zhihao Lin*", "Shangqing Liu", "Qiang Hu", "Ye Liu", "Wenhan Wang", "Cen Zhang", "Liming Nie", "Li Li", "Yang Liu", "Lingxiao Jiang"],
     tags: ["Static Analysis"],
     status: "accepted",
-    pdfFile: "2305.12138v4.pdf",
+    pdfFile: "https://dl.acm.org/doi/epdf/10.1145/3818607",
   },
   {
     id: "eager-parallel-execution",
