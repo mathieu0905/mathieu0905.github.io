@@ -1,7 +1,7 @@
 ---
 title: "昨天的 arXiv 在问同一个问题：Agent 的判断如何被验证？"
 date: "2026-06-17"
-description: "2026-06-17 的相关论文集中转向仓库级 Agent 的验证闭环、任务构造、工具安全和软件供应链审计。"
+description: "2026-06-17 的相关论文集中讨论仓库级 Agent、漏洞审计、时间安全 benchmark、工具契约与证据锚定。"
 tags: ["论文解读", "arXiv", "Coding Agent", "软件工程", "Agent可靠性"]
 series: "alphaXiv论文解读"
 coverColor: "from-emerald-500 to-cyan-600"
@@ -9,234 +9,195 @@ coverColor: "from-emerald-500 to-cyan-600"
 
 # 昨天的 arXiv 在问同一个问题：Agent 的判断如何被验证？
 
-昨天这一批论文很适合放在同一张图里看：**LLM Agent 正在从“能判断”走向“判断必须留下证据”**。最强的几篇不是单纯提升 pass@1，也不是换一个更会写代码的模型，而是在给 Agent 的软件工程判断加上可执行、可审计、可反驳的证据链。
+2026-06-17 这批论文很像一组互相照镜子的工作：它们不再满足于让 LLM Agent 给出一个判断，而是在追问这个判断能不能被验证、被追踪、被反驳。安全审计、软件工程 benchmark、工具调用防御、架构文档反馈、供应链检测，看起来是不同场景，但共同主题很清楚：Agent 进入真实工程环境以后，最稀缺的不是“会说”，而是“说出来以后有证据”。
 
-安全方向尤其集中：OpenAnt 和 Code-Augur 都在做仓库级漏洞发现，但共同点不是“让 LLM 找 bug”，而是把静态分析、攻击者模拟、fuzzing、动态验证接成闭环。SWE-Future 则从 benchmark 角度问另一个问题：如果我们总是重放历史 GitHub issue，怎么知道 agent 不是在吃训练污染红利？CAPRA、PYPILINE、ContractGuard 这些论文虽然场景不同，但也都在强调同一件事：Agent 的输出必须被 grounding、contract、trace、evidence 或 runtime check 约束。
+这一天尤其值得读，因为强相关论文覆盖了三条正在汇合的线。第一条是仓库级安全 Agent：OpenAnt、Code-Augur、PYPILINE 都把 LLM 放进静态分析、知识库、fuzzing、动态验证组成的工作流里。第二条是评估协议：SWE-Future 和 Compute-Budgeted Evidence Graphs 都在处理时间泄漏和未来信息污染。第三条是 Agent 边界：CAPRA、ContractGuard、Agent communication protocol taxonomy 都在问一个更系统的问题，即 Agent 与证据、工具、协议和外部状态之间应该怎样连接。
 
-今天的 digest 基于 arXiv 官方元数据和已下载 PDF 文本整理。强相关论文的 PDF 均已成功下载并抽取文本；中相关论文主要结合摘要和局部文本信号判断。
+下面的解读基于 arXiv 官方元数据和已下载 PDF 文本。强相关和中相关论文的 PDF 均已下载并抽取文本；本文尽量围绕方法与证据展开，而不是把摘要换一种说法。
 
 ## 今日脉络
 
-这一天的相关论文可以分成四组：
+昨天相关论文可以分成四组。
 
-1. **仓库级安全 Agent 的验证闭环**：OpenAnt、Code-Augur、PYPILINE 都把 LLM 放进更大的软件分析 workflow 里，让它不再只是“看代码给意见”，而是和静态分析、知识库、fuzzing、动态测试、解释性报告结合。
-2. **软件工程 benchmark 的时间一致性**：SWE-Future 直接攻击 SWE agent benchmark 的历史重放问题，用“预测未来仓库演化”来生成任务。
-3. **Agent 输出的 evidence grounding**：CAPRA、ContractGuard、Compute-Budgeted Evidence Graphs 都在给 agent/模型判断附上可追踪证据。
-4. **Agent 系统边界与协议**：LLM agent communication protocol taxonomy、ContractGuard、EARS 等论文关注多 agent 或 tool-using agent 的接口、契约、拒答和协调边界。
+**第一组是“验证闭环”**。OpenAnt 和 Code-Augur 都做 agentic vulnerability detection，但它们真正的贡献不是“LLM 找到了更多漏洞”，而是把 LLM 的判断放进可执行闭环：OpenAnt 强调从代码分解到动态 exploit reproduction 的漏斗，Code-Augur 强调把 agent 的隐含安全假设写成 assertion，再交给 fuzzer 反驳。
 
-如果用你的主线来概括：昨天这批论文的关键词不是 code generation，而是 **validated software change intelligence**。
+**第二组是“时间一致性”**。SWE-Future 说，真实 GitHub issue/PR 任务虽然逼真，但在今天的模型训练生态里很容易污染；Compute-Budgeted Evidence Graphs 则在漏洞 triage 里展示，随机切分和未来证据会让指标膨胀到几乎失真。这两篇都在提醒：真实世界数据不是天然可靠，时间边界才是评估可信度的一部分。
+
+**第三组是“证据锚定”**。CAPRA 在软件架构反馈里做 deterministic evidence anchoring，PYPILINE 在供应链检测里把 static API knowledge base 作为 agent 推理基础，Graph-ESBMC-PLC 则给了一个反面教材：验证器如果生成空 IR，验证成功反而是危险信号。
+
+**第四组是“Agent 接口与契约”**。ContractGuard 把工具安全的信任边界从 agent policy 转移到 contract integrity；Agent communication protocol taxonomy 则把多 Agent 系统的通信协议拆成可比较的技术维度。它们都在把“Agent 系统”从 prompt 层往工程接口层拉。
 
 ## 强相关论文深读
 
-### 1. OpenAnt：仓库级漏洞发现的闭环验证 pipeline
+### 1. OpenAnt：仓库级漏洞发现，不是靠长上下文硬看，而是靠验证漏斗
 
 **论文**：[OpenAnt: LLM-Powered Vulnerability Discovery Through Code Decomposition, Adversarial Verification, and Dynamic Testing](http://arxiv.org/abs/2606.19149v1)  
 **作者**：Nahum Korda, Gadi Evron  
 **分类**：cs.CR, cs.LG  
 **发布日期**：2026-06-17
 
-**TL;DR**：OpenAnt 把 repository-scale vulnerability discovery 拆成“静态分解 → 可达性过滤 → LLM 语义分析 → 对抗验证 → 动态 exploit 测试”的多阶段闭环，目标是让 LLM 的漏洞判断被攻击者模型和执行环境验证。
+**TL;DR**：OpenAnt 把大型代码库漏洞发现拆成一个逐级收窄、逐级加证据的 pipeline：先用静态结构削减分析面，再让 LLM 做语义判断，最后用对抗验证和动态 exploit 环境筛掉不可执行的发现。
 
-它解决的问题非常实际：传统静态分析在真实大型代码库中 false positive 很高，动态 fuzzing 又需要大量基础设施且覆盖面有限。LLM 有语义推理能力，但直接把整个仓库塞给模型会遇到上下文管理、成本和验证问题。OpenAnt 的设计思路是先把仓库切成可分析单元，再逐步加深验证强度。
+OpenAnt 要解决的是一个很硬的工程问题：真实大型代码库的漏洞发现既不能完全依赖静态分析，也不能把所有希望放在 LLM 的长上下文推理上。论文开头指出，传统静态分析在真实项目上的 false positive 可能从个位数到 40% 以上不等，具体取决于工具、数据集和配置。开发者面对大量 warning 时会疲劳，重要发现也会被噪声淹没。另一方面，LLM 有更强语义推理能力，但直接应用到 repository-scale security analysis 会遇到上下文管理、成本、验证不足三重问题。
 
-方法上，OpenAnt 的核心不是一个 prompt，而是一个六阶段 workflow：
+它的解法是把“让 LLM 看代码”改造成一个六阶段漏斗。第一步，用语言相关 AST 抽取函数和代码单元。第二步，从外部输入入口出发做 reachability filtering，只保留攻击者可能触达的路径。第三步，把可达代码包装成自包含分析单元，让 LLM agent 通过工具辅助导航、查 caller、读函数、跟踪数据流。第四步，对候选漏洞做 adversarial verification：模型不能只说“这里可能有漏洞”，还要在受限攻击者能力下尝试多种 exploit strategy，证明这个条件在现实威胁模型里可触达。第五步，进入动态验证：系统为漏洞生成临时 exploit environment，在 sandbox/container 中执行；如果 build failure 或 runtime crash，错误消息会回传给 LLM，最多迭代三次修正测试环境。第六步，最终只留下有动态证据支撑的发现。
 
-- 先用语言相关 AST 抽取函数和代码单元。
-- 再做从外部入口点出发的 reachability filtering，只保留攻击者可能触达的分析面。
-- 把可达单元包装成自包含分析上下文，交给 LLM agent 做工具辅助导航和语义判断。
-- 对候选漏洞做 adversarial verification，让模型在约束攻击者能力下判断 exploitability。
-- 对通过验证的候选生成临时 exploit 环境，放进 sandbox/container 里动态测试。
-- 最后只保留能被执行证据支撑的发现。
+论文中最有说服力的不是某一个 prompt，而是分析面收缩的数字。作者报告在大型仓库中，reachability filtering 可以消除 83%-99% 的函数；摘要中称最多约 97%。在 OpenSSL 示例里，原始抽取函数数达到 15,232，经过后续暴露分类后，外部可利用单元只剩 586，不到原始代码库的 1%。这说明 OpenAnt 并不是寄希望于模型“读完整个 repo”，而是先用程序结构把问题变小，再把 LLM 放到更窄但更相关的空间中。
 
-论文里一个有价值的数字是：在 OpenSSL 示例中，代码库有 15,232 个抽取函数，reachability filtering 后可达单元大幅缩小；摘要中称分析面最多可降低 97%。这说明它不是靠更长上下文硬扛仓库，而是用程序分析先做“证据空间裁剪”。
+实验设计上，OpenAnt 有一个值得注意的选择：它没有把 Juliet、OWASP Benchmark 或公开 CVE benchmark 当作主要评估对象。论文明确说这些 benchmark 对现代 code-oriented LLM 存在污染风险，有些测试文件名甚至直接暴露 vulnerability type，容易让模型走 shortcut learning。因此作者转向真实开源项目，包括 web application、automation platform、cryptographic library、web framework 等多种项目类型。这个选择很对，但也带来新的不确定性：真实项目评估更贴近实践，却更难做系统性 recall 估计，因为未知漏洞本身没有完整 ground truth。
 
-**对你的研究启发**：这篇很像 HapRepair/RepoRescue/Chain-Tracking 可以借鉴的工程形态。Agent 不应该直接输出“这里有问题/这里要改”，而应该输出一个可执行假设，并被外部机制逐层验证。对软件变更任务来说，类似结构可以改写成：
+这篇与当天主题的关系很明确：它把 Agent 判断变成逐层验证的工程产物。LLM 在这里不是最终裁判，而是中间推理器；真正让结论站得住的是 reachability、attacker simulation、dynamic reproduction 这些外部证据。局限也在这里：如果动态验证环境覆盖不了某类漏洞，或者 adversarial verification prompt 对特定语言/框架不敏感，OpenAnt 仍可能漏掉重要问题。论文强调相同 prompt 可跨语言应用，这是好信号，但跨语言泛化的系统性边界仍需要更多案例支撑。
 
-- 静态影响面裁剪：哪些文件/函数可能受变更影响；
-- Agent 生成变更假设：为什么这些位置需要改；
-- 对抗性验证：构造反例或边界用例；
-- 动态验证：运行测试、构建、UI replay 或平台迁移检查；
-- 证据报告：记录每个修改的触发证据和验证结果。
-
-**局限**：安全漏洞发现天然容易被“发现几个新漏洞”这种展示牵引。真正需要细看的是 false positive 如何统计、动态验证覆盖哪些漏洞类型、OpenSSL/WordPress/Flowise 等对象是否能代表一般仓库级任务。它的 pipeline 很强，但能否泛化到非安全软件变更，还需要你自己迁移验证。
-
-**建议与对应讲解**：**精读**。重点读 system pipeline、reachability filtering、adversarial verification 和 dynamic verification 章节。读完后可以直接抽一个“Repository Change Verification Pipeline”的方法骨架，用在 HapRepair 或 RepoRescue：把 agent 的 patch proposal 当成 candidate vulnerability 一样，必须经过静态范围、对抗用例、执行反馈三层过滤。
-
-**可转化动作**：做一个小实验：在 20 个真实 bugfix PR 上，让 agent 先生成“变更影响假设”，再用静态 call graph + 测试失败 trace + targeted test generation 验证每个假设，比较它与普通 agent patch 的漏改率。
-
-### 2. Code-Augur：把 Agent 的隐含安全假设写成可被 falsify 的 specification
+### 2. Code-Augur：把“我觉得这里安全”变成可被 fuzzer 打脸的断言
 
 **论文**：[Code-Augur: Agentic Vulnerability Detection via Specification Inference](http://arxiv.org/abs/2606.18619v1)  
 **作者**：Zhengxiong Luo, Mehtab Zafar, Dylan Wolff, Abhik Roychoudhury  
 **分类**：cs.CR, cs.AI, cs.SE  
 **发布日期**：2026-06-17
 
-**TL;DR**：Code-Augur 让 agent 在判断组件安全时，把“我认为这里必须成立”的局部不变量写成源码断言，再用 guided fuzzer 去 falsify 这些断言。
+**TL;DR**：Code-Augur 不只让 Agent 报告漏洞，还要求它把安全判断背后的隐含假设写成源码断言；随后 guided fuzzer 尝试 falsify 这些断言，从而暴露漏洞或修正错误 specification。
 
-这篇的核心问题比漏洞发现本身更深：**当 agent 说“这里安全”时，它到底基于什么假设？** 现有 agentic vulnerability detection 可以发现漏洞，但它的推理往往不透明。更危险的是 false negative：agent 没发现漏洞时，我们不知道它是穷尽了关键边界，还是只是误解了输入约束。
+如果说 OpenAnt 关注“候选漏洞能否被验证”，Code-Augur 关注的是另一个更微妙的问题：Agent 没报漏洞时，我们凭什么相信它？当前许多 agentic security systems 可以找到 impressive 的漏洞，但它们的 negative judgment 很难解释。一个 agent 说某个组件安全，可能是因为它理解了输入约束，也可能是因为它漏掉了某个特殊路径。论文把这个问题称为 agent tacit assumptions 的不透明性。
 
-Code-Augur 的答案是 specification-first。给定一个 codebase，agent 分析组件并判断是否存在 vulnerable code；当它认为某个组件安全时，就把背后的 local invariant 写成 in-source assertion。与此同时，guided fuzzer 尝试违反这些 assertion。触发 assertion 有两种含义：要么是真漏洞，要么说明 agent 的 specification 写错了，需要 refinement。无论哪种，agent 的“理解”都被程序实际行为反驳或校正。
+Code-Augur 的核心范式是 security-specification-first。它先从代码、文档和构建上下文中 distill threat model，再让 agent 分析各个组件。当 agent 认为某处安全时，不是把判断留在自然语言里，而是把 local invariant 写进源码，形成 assertion。这些 assertion 是 agent 对程序语义的承诺：如果它认为某个输入组合不可能出现，或某个状态关系必须成立，就要把这个假设落到可执行检查上。接着，guided fuzzer 尝试生成输入去违反这些 assertion。触发 assertion 后有两种可能：要么是真漏洞，要么是 assertion 本身太强或错误。无论哪种情况，Agent 的理解都必须被修正。
 
-这和 OpenAnt 的互补点很清楚：OpenAnt 更像“候选漏洞的验证漏斗”，Code-Augur 更像“安全判断的可反驳化”。前者验证 positive finding，后者也关注 negative judgment 的可信度。
+论文的 motivating example 来自 Little CMS。简化案例中，攻击者控制的 profile 可以构造带 13 个 channel 和 PT_ANY wildcard 的 pixel format，而库中 transform 的 entry color space 固定为单 channel；某个 guard 因 PT_ANY 分支直接返回 true，没有比较 channel count。人读这类 bug 时，关键不只是发现一行 if 有问题，而是意识到 agent 对“这个 guard 代表什么安全条件”的理解可能是错的。Code-Augur 的 assertion insertion 正好把这种理解变成可测试对象。
 
-**对你的研究启发**：这篇可以直接迁移到 coding agent 的变更理解。Agent 做 patch 时其实也有隐含 specification：
+实验上，论文使用 DARPA AI Cyber Challenge 和 OSV database 相关 benchmark，并在两个 frontier LLM 下评估。摘要称 Code-Augur 比其他 SOTA agent 检测出更多漏洞，并发现 22 个新的 open-source vulnerabilities，其中 16 个已经被修复。这些数字说明它不只是形式上优雅，也有实际发现能力。不过，和所有漏洞发现论文一样，读者要注意两个问题：第一，发现的新漏洞并不等于整体 recall 高；第二，assertion 的强弱会极大影响 fuzzer 的效率和误报。如果 agent 写出的 spec 太弱，fuzzer 无法触发；太强，则会制造大量 benign violation。
 
-- 为什么这个文件需要改？
-- 为什么这个边界条件不会破？
-- 为什么这个 API 迁移是语义等价的？
-- 为什么这个 UI 行为没有变化？
+Code-Augur 和当天主题的关系在于它把 Agent 的“理解”外化成了程序对象。很多 LLM Agent 工作把 reasoning trace 当解释，但 trace 仍然是语言；Code-Augur 让解释变成 assertion，让 assertion 经受执行。这个方向比“让模型自我反思”更工程化，也更可审计。它的局限同样清楚：specification inference 仍然依赖模型本身，guided fuzzing 能否覆盖足够路径也取决于 harness 和输入建模。即使如此，这篇仍是昨天最值得认真读的论文之一，因为它把“可信 Agent 判断”推进到了可反驳层面。
 
-如果能让 agent 把这些隐含判断写成断言、测试、property、trace expectation 或 UI invariant，再由执行反馈 falsify，就能把“看起来合理的 patch”变成“可被反驳的 patch claim”。这对 Chain-Tracking 和 HomeTrans 都很有用。
-
-**局限**：specification inference 质量是上限。如果 agent 写出的 assertion 太弱，fuzzer 就算全通过也没有意义；如果 assertion 太强，又会产生大量 benign violation。论文报告发现 22 个新漏洞，但你需要看清这些漏洞的确认流程和与已有 agent 的公平比较。
-
-**建议与对应讲解**：**精读**。重点看 specification-first paradigm、assertion insertion、guided fuzzing loop 和 evaluation。不要只看漏洞数，重点看它如何把 tacit assumptions durable committed 到源码里。  
-**可转化动作**：在 HapRepair 里做一个“patch assumption extraction”模块：每个补丁必须伴随 1-3 条可执行假设，例如输入约束、状态转移或 UI 前后条件，再用测试/trace 去打它。
-
-### 3. SWE-Future：别再只重放历史 PR，面向未来合成 SWE Agent 任务
+### 3. SWE-Future：SWE Agent benchmark 的真实性，不能再靠历史 PR 重放
 
 **论文**：[SWE-Future: Forecast-Conditioned Data Synthesis for Future-Oriented Software Engineering Agents](http://arxiv.org/abs/2606.18733v1)  
 **作者**：Qiao Zhao, JianYing Qu, Jun Zhang, Yehua Yang, Hanwen Du, Zhongkai Sun  
 **分类**：cs.SE, cs.AI  
 **发布日期**：2026-06-17
 
-**TL;DR**：SWE-Future 用某个时间点之前的 repo evidence 预测未来 feature/bugfix/refactor 任务族，再基于预测任务族合成 coding-agent benchmark，减少直接重放历史 PR 带来的污染风险。
+**TL;DR**：SWE-Future 用仓库时间点 T0 之前的 evidence 预测未来 task family，再基于预测结果合成 coding-agent 任务，以减少直接重放 GitHub issue/PR 带来的污染风险。
 
-这篇非常对你的 benchmark 主线。当前 SWE-bench 式任务的真实性来自 GitHub issue/PR，但这也带来污染问题：公开 issue、PR、reference patch 可能进入预训练、微调、合成数据或 benchmark-driven model selection。完全合成任务可以避开污染，却容易失去真实仓库压力。
+这篇论文的问题定义非常切中当前 SWE agent 评估的痛点。SWE-bench 一类 benchmark 的价值来自真实 GitHub issue 和 pull request：任务不再是孤立函数，而是带有仓库上下文、测试、依赖和项目习惯的真实软件工程问题。但它的风险也来自同一个来源。公开 issue、PR discussion、reference patch、benchmark traces 可能进入预训练、微调、合成数据生成或模型选择流程。随着 benchmark 越有名，这种污染风险越高。完全合成任务虽然能降低污染，却可能脱离真实仓库需求。
 
-SWE-Future 的折中方案是引入时间边界：
+SWE-Future 试图走中间路线：不用直接重放已经发生的 PR，而是从过去预测未来。方法有四步。第一，在时间点 T0 为每个 repo 构建 evidence bundle，包含 T0 前的 issue、PR、label 和文本。第二，基于这些信息 forecast 未来 feature implementation/enhancement、bugfix、refactor task families。第三，固定 forecast 后，用 T0 之后真实发生的 PR 只做 retrospective validation，检查预测任务族是否确实对应未来仓库工作。第四，在 task-generation snapshot 中，以 validated families 为条件合成任务，而不是复制后来的 PR。
 
-- 在时间点 T0 收集此前 issue、PR、label、文本等 repository evidence；
-- 基于这些 pre-T0 evidence 预测未来可能出现的 feature/enhancement、bugfix、refactor task families；
-- 先用后续真实 PR 回看这些预测是否匹配未来仓库工作；
-- 再把 validated forecast families 作为条件，在 task-generation snapshot 上合成 200 个 coding-agent tasks。
+论文把 temporal boundary 画得很清楚：forecast 使用 pre-T0 evidence，validation 使用 later PR，但 later PR 不进入公开任务构造。这个边界是它区别于历史重放 benchmark 的关键。作者在 80 个 repository 上做 retrospective validation，forecaster 对 76 个 repo 输出 260 个 families，剩下 4 个因为没有 cluster 超过 evidence threshold 而 abstain。强相关或相关的 family 有 151 个，覆盖 61 个 repository。类别上，bugfix families 最容易形成可合成方向，89/139 个达到 strong+related；feature/enhancement 更难，45/93 个达到 strong+related。最终数据集包含 200 个 coding-agent tasks，来自 61 个 repo。
 
-论文报告在 80 个 repository 上，forecaster 在主语义匹配指标下达到 58.1% future-work relevance；最后构造了跨 61 个仓库的 200-task 数据集。
+最重要的结果是 58.1% future-work relevance。这个数字不算惊艳，但很诚实：预测未来仓库演化本来就难。它说明 repository evidence 对未来工作有明显信号，但也远不是确定性 oracle。比起把这个数字包装成高性能，我更喜欢它暴露出的研究问题：什么样的仓库历史能预测未来任务？什么类型的变更更容易被 forecast？feature、bugfix、refactor 的可预测性差异是否反映了软件演化的结构性规律？
 
-**对你的研究启发**：这篇值得和 RepoRescue、AtomicCommitBench 放在一起看。它把“软件演化”从背景材料变成 benchmark 生成机制。你可以借它提出一个更强的观点：可靠 coding agent 的 benchmark 不应只问“能否解决已经发生的 issue”，还要问“能否在仓库演化压力下处理即将出现的维护任务”。
+这篇和当天主题的关系是“验证不只是执行层面的，也包括评估协议层面的”。如果 benchmark 本身带有未来信息泄漏或历史重放污染，再强的 agent 结果也很难解释。SWE-Future 的贡献不在于生成了 200 个任务，而在于提出了一个更时间一致的任务构造范式。局限也明显：forecast relevance 只有中等水平，合成任务是否真正保留项目约束，需要看 executable validation assets 和 hidden artifact boundary 的质量。此外，语义匹配并不等同于可执行修改需求，后续仍需要更多人工审计和 agent performance 分析。
 
-**局限**：58.1% relevance 说明 forecast 仍然不稳，且合成任务是否保留真实工程约束要看任务生成质量。另一个风险是：forecast 过程本身可能过度依赖语义相似，而不是可执行修改约束。
-
-**建议与对应讲解**：**精读**。重点读 temporal split、forecast validation、task synthesis 章节。读实验时不要只看 relevance，要看它如何定义 task family 和 semantic match。  
-**可转化动作**：为 RepoRescue 做一个 “future maintenance task synthesis” 版本：给定旧仓库在时间 T0 的状态，预测未来依赖升级/API 变更/构建失败类型，再合成修复任务。
-
-### 4. CAPRA：软件架构反馈里的 evidence anchoring
+### 4. CAPRA：多 Agent 评审软件架构文档，关键不是多 Agent，而是证据锚定
 
 **论文**：[CAPRA: Scaling Feedback on Software Architecture Deliverables with a Multi-Agent LLM System](http://arxiv.org/abs/2606.18976v1)  
 **作者**：Marco Becattini, Niccolo Caselli, Matteo Minin, Roberto Verdecchia, Enrico Vicario  
 **分类**：cs.SE, cs.AI  
 **发布日期**：2026-06-17
 
-**TL;DR**：CAPRA 用多 agent 系统评审软件架构交付物，但真正值得借鉴的是它把 LLM 发现的问题通过 deterministic evidence anchoring 绑定回原文和图。
+**TL;DR**：CAPRA 用多 Agent 系统评审软件架构交付物，但最值得注意的是 deterministic evidence anchoring：每个反馈 claim 都要尽量绑定回原始文档和图中的证据片段。
 
-CAPRA 的场景是软件工程教育中的 architecture deliverable feedback。它要分析文档、UML 图、需求 traceability、结构完整性，然后生成个性化 LaTeX 反馈。系统包括文档解析、多个 specialized verification agents、evidence anchoring、ConsistencyManager，以及报告生成。
+CAPRA 的场景是软件工程教育。学生提交架构文档、UML 图、需求说明和设计理由，教师需要检查结构完整性、需求 traceability、功能是否覆盖、问题严重程度和反馈可操作性。传统自动评分更擅长代码或选择题，对这类多模态、半结构化、主观但又需要证据的 artifact 不太适用。LLM 看起来很适合生成反馈，但问题也很明显：它可能说得像真的，却无法指出学生文档哪里支撑了这个判断。
 
-最值得注意的是 evidence anchoring：CAPRA 不只是让 agent 说“这里有问题”，还用 normalized Levenshtein distance 等确定性匹配，把问题发现和学生原始文档中的引用片段连接起来。然后 ConsistencyManager 进一步 cross-verify、deduplicate、merge findings。实验使用 10 份学生报告和 8 项二元评价 taxonomy，严格双评审聚合下满足 88.8% criteria，kappa=0.582，单份处理约 4 分钟。
+系统架构分为几个阶段。首先是 document parsing：CAPRA 用 Python microservice、PyMuPDF 和 vision-enabled LLM 解析文本和 UML 图。然后是 parallel multi-agent evaluation：多个 specialized agents 针对不同维度检查文档，例如规格、测试、功能覆盖、架构一致性。接着是 evidence anchoring：agent 发现的问题不能直接进入报告，而要通过 fuzzy matching 和 normalized Levenshtein distance 回连到原始文档片段。最后由 ConsistencyManager agent 做 cross-verification、deduplication 和 merge，再生成 template-compliant LaTeX feedback。
 
-**对你的研究启发**：CAPRA 的任务不是 coding agent，但它的 evidence anchoring 很适合软件变更审计。你的 agent 如果说“这个文件需要同步修改”，就应该能 anchor 到 commit diff、调用关系、测试失败、文档约束或 API usage，而不是只给自然语言解释。
+它的经验结果不大，但信息密度够。评估使用 10 份学生报告，构建 8 项二元评价 taxonomy，覆盖 extraction completeness、feature validation、issue grounding、severity detection、recommendation specificity、traceability、template/tone compliance 等方面。严格双评审聚合下，CAPRA 满足 88.8% criteria；两名评审 raw agreement 93.75%，但论文提醒这个数字要谨慎解读，因为 corpus 主要由高分报告组成，多数类别天然偏 pass。Cohen's kappa 为 0.582，属于中等一致性。效率上，CAPRA 每份报告略多于 4 分钟，约 0.44 美元，论文称相比 30-45 分钟人工评审有 7.2-10.8 倍加速。
 
-**局限**：样本只有 10 份学生报告，且教育反馈里的主观性很强。它证明的是 architecture feedback pipeline 可行，不是证明多 agent 架构本身优于更简单的 pipeline。
+这篇的关键不在“多 Agent 比单 Agent 强”，论文也没有充分证明这一点。真正重要的是 evidence anchoring 的设计哲学：LLM 的反馈必须能回到 artifact 中的具体证据，否则它只是漂亮的评论。它和 OpenAnt、Code-Augur 是同一条线的不同表述：OpenAnt 用动态执行锚定漏洞，Code-Augur 用 assertion/fuzzing 锚定安全假设，CAPRA 用文本/图匹配锚定文档反馈。
 
-**建议与对应讲解**：**略读方法，精读 evidence anchoring**。你不需要深挖教育场景，但可以保留它的 grounding 设计。  
-**可转化动作**：为 AtomicCommitBench 加一个 “change rationale anchoring” 评估维度：每个原子提交拆分理由必须能锚定到 diff hunk、依赖关系或 issue intent。
+局限也很清楚。样本只有 10 份，而且是高分学生报告，不能代表混乱、缺失、低质量、跨语言的真实课程提交。评估 taxonomy 是二元化的，可能掩盖反馈质量的细粒度差异。vision-enabled LLM 对 UML 图的解析错误也可能向后传播。尽管如此，这篇对“Agent 输出如何被证据约束”提供了一个很具体的中间层设计，不需要读者关心教育场景，也能理解它在 Agent reliability 上的价值。
 
-### 5. Vibe Coding 到 Product Lines：AI 生成软件里的 variability 被挤到了生成时刻
+### 5. Vibe Coding 到 Product Lines：AI 生成软件把 variability 挪到了生成时刻
 
 **论文**：[Where Did the Variability Go? From Vibe Coding to Product Lines by Regeneration](http://arxiv.org/abs/2606.19042v1)  
 **作者**：Xhevahire Ternava  
 **分类**：cs.SE, cs.AI  
 **发布日期**：2026-06-17
 
-**TL;DR**：作者观察 10 个 vibe-coded C/C++ 项目后认为，AI 生成软件几乎没有传统 SPL 意义上的 compile/runtime variability；变体决策被提前到 generation time。
+**TL;DR**：这篇论文观察到 vibe-coded 软件几乎不保留传统软件产品线意义上的 compile-time/runtime variability，而是把变体决策提前到 generation time，并提出 Variability by Regeneration。
 
-这篇的研究味道偏 conceptual，但问题很有意思。传统软件产品线会把 variability 设计进代码、配置、编译选项或运行时行为中；vibe coding 则常常由 LLM 从自然语言一次性生成完整程序。论文观察到的现象是：变体不是在代码 artifact 里被维护，而是在每次生成时被解决。
+这篇和前几篇的技术味道不同，更像一个概念性软件工程问题：当整个程序由 LLM 从 prompt 生成时，传统软件工程里精心维护的 variability 去哪里了？软件产品线过去会把 variability 放在代码、配置、编译选项、插件、运行时开关里，让同一套 artifact 支持不同环境和用户需求。vibe coding 则倾向于从自然语言生成一个目的明确的完整程序。作者对 10 个 vibe-coded C/C++ GitHub 项目做探索性分析，结论是这些 artifact 几乎没有 compile/runtime variability；变体选择发生在 LLM 生成源码的那一刻。
 
-作者提出 Variability by Regeneration：把 variability 放回 specification，由 LLM 作为 derivation engine，按声明式规格生成不同变体和对应 binary，再用 dispatcher 路由请求。它更像是“用 LLM 重构软件产品线的绑定时间”。
+作者没有把这件事简单定义成缺陷，而是提出 Variability by Regeneration。基本思路是把 feature model 和 variant configuration 留在 specification 中，让 LLM 作为 derivation engine，为每个 variant 生成 purpose-built binary。系统中有一个 dispatcher，根据用户请求路由到对应 variant binary。形式化上，论文把 specification 写成 S = <F, tau, V, C>：F 是 feature 集合，tau 给 feature 类型，V 是 variant configuration，C 是 requires/excludes 等约束关系。也就是说，variability 不再主要存在于源码 artifact，而存在于 spec 和生成过程。
 
-**对你的研究启发**：这篇对 HomeTrans 和软件演化主线有启发：如果 AI-generated software 的变更点不再内嵌在 artifact 中，而是外置到 specification/generation pipeline，那么维护问题会从“修改代码”转向“维护生成规范和生成历史”。这也会影响 AtomicCommitBench：未来的原子变更可能不只是 diff hunks，而是 spec delta。
+这个观点很有意思，因为它改变了“软件演化”的单位。传统 SPL 里，维护者维护的是一个带 variability 的代码库；在 VbR 设想中，维护者更像是在维护一个生成规范、一个 dispatcher 和一组可再生成 artifact。这样可以得到更干净、更少 dead code 的 binary，但代价是生成一致性、变体间行为一致性、LLM 输出可控性、dispatcher overhead、验证成本都会变成核心问题。
 
-**局限**：实证部分只有 10 个项目，且 VbR 只在 wc product family 上演示，工程规模还小。它更适合作为 conceptual provocation，而不是成熟方法。
+实验和证据相对薄。论文的探索性分析只有 10 个项目，VbR pipeline 也只在一个 wc product family 上演示。作者自己也承认，扩展到几十个 variants、测量 generation cost、LLM consistency、dispatcher overhead，以及自动验证 VbR properties 都是开放问题。因此，这篇不应被当作成熟系统论文读，而应当读作一个概念提醒：AI-generated software 可能改变 variability 的 binding time。
 
-**建议与对应讲解**：**略读但保留观点**。读 introduction、exploratory analysis 和 VbR formalization 即可。  
-**可转化动作**：写 related work 时可以把它作为 “AI-generated software evolution changes the binding time of variability” 的背景证据。
+它和当天主题的关系在于，Agent 生成的软件 artifact 也需要被放回工程生命周期中看。OpenAnt/Code-Augur 问生成或判断能否被验证；SWE-Future 问任务构造是否时间安全；这篇则问 AI 生成 artifact 在长期演化中如何表达变化。它的贡献不是给出强实证结论，而是给 “software evolution in the agent era” 提供了一个新的切入点。
 
-### 6. PYPILINE：软件供应链恶意包检测里的 static analysis + agent workflow
+### 6. PYPILINE：供应链检测中的 Agent，不是替代静态分析，而是消费静态分析产物
 
 **论文**：[PYPILINE: Malicious PyPI Package Detection via Suspicious API Knowledge and Agent Workflow](http://arxiv.org/abs/2606.19063v1)  
 **作者**：Siyuan Pang, Zhengwei Jiang, Yepeng Yao, Zijing Fan, Haozhe Li, Baoxu Liu  
 **分类**：cs.CR  
 **发布日期**：2026-06-17
 
-**TL;DR**：PYPILINE 用静态分析构建 suspicious API knowledge base，再让 agent 对未知 PyPI 包做语义分析和结构化恶意性报告。
+**TL;DR**：PYPILINE 先用静态分析从已知恶意包中构建 suspicious API knowledge base，再让 LLM Agent 基于这份知识库分析未知 PyPI 包并输出可解释恶意性报告。
 
-它的流程很清楚：先对已知恶意包做 AST 和 API call graph 分析，抽取 suspicious API knowledge base；检测阶段把知识库作为推理增强，让 LLM agent 做深度语义分析，并输出可解释报告。论文报告在 9,408 个恶意包和 14,005 个良性包的数据上，precision 96.7%、recall 99.6%、F1 98.1%。
+PyPI 恶意包检测是一个很适合 Agent workflow 的场景。攻击者可以在 setup.py、install hooks、动态导入、网络请求、编码 payload 等地方藏行为；纯规则方法可解释但脆弱，传统 ML 方法可能适应不了新攻击，动态分析又昂贵且覆盖不稳定。PYPILINE 的思路不是让 LLM 直接读包然后判断，而是先通过程序分析构造一个结构化知识层。
 
-**对你的研究启发**：PYPILINE 和 OpenAnt 是同一类设计哲学：LLM 不单独承担判断，而是在程序分析产生的结构化证据上工作。对 RepoRescue/Chain-Tracking 来说，这对应“先抽取结构化工程证据，再让 agent 做高层判断”。
+离线阶段，系统收集已知恶意包，对其 AST 和 API call graph 做静态分析，提取 suspicious APIs，并构建一个按相关性排序的知识库。论文提到最终形成 300 个 malicious API 相关知识项。在线检测阶段，未知包先被静态分析，得到代码结构、API usage 等信息；然后 Agent 在 suspicious API knowledge base 的引导下做语义分析。输出不是单个 label，而是结构化、可解析的 maliciousness assessment report。Agent 还可以调用预定义工具，例如数据库或邮件服务相关检查，以增强自动化程度。
 
-**局限**：恶意包检测容易受数据集构造和时间切分影响。需要重点看 train/test 是否存在家族泄漏、是否按时间评估、混淆和动态行为覆盖如何。
+实验规模不小。论文使用 9,408 个恶意包和 14,005 个良性包；报告 precision 96.7%、recall 99.6%、F1 98.1%，precision 比 baseline 高 5.7 到 24.2 个百分点。论文还把恶意行为分成多种类型，并做了恶意行为的 empirical study。这个结果很漂亮，但需要谨慎看待：恶意包检测最容易受数据切分、家族泄漏、时间泄漏和重复样本影响。如果训练/测试里存在同源变体，F1 会显著乐观；如果评估不是按时间切分，也难以说明系统面对未来攻击的适应性。
 
-**建议与对应讲解**：**跟踪代码/略读实验**。如果开源，最值得看 suspicious API knowledge base 的构造和 agent report schema，而不是追逐 F1。  
-**可转化动作**：把 “suspicious API KB” 换成 “migration risk API KB” 或 “OpenHarmony incompatibility KB”，用于 HomeTrans/AppForgeHM 的迁移风险检测。
+PYPILINE 和当天主题的关系在于，它把 Agent 放在“结构化证据消费者”的位置。Agent 的价值是综合静态 API knowledge、代码语义和报告生成，而不是取代 AST/call graph 分析。这个设计比“让 LLM 当恶意包分类器”可靠得多，也更容易审计。它也和 OpenAnt 形成呼应：二者都说明，在真实软件安全任务里，LLM 最适合待在一个 evidence-rich workflow 里，而不是孤立地给出最终判断。
 
 ## 中相关论文速读
 
-### Compute-Budgeted Exploitability Evidence Graphs：漏洞 triage 的证据图和泄漏安全评估
+### Compute-Budgeted Exploitability Evidence Graphs：评估协议比模型更容易泄漏未来
 
-[论文链接](http://arxiv.org/abs/2606.19076v1)。这篇不是 coding agent，但非常适合借鉴 evaluation protocol。它把 advisories、exploit archives、fix commits、hacker discourse 组织成 temporal evidence graph，并要求每个 CVE 判断只使用固定决策时间前可见证据。最重要的发现是：naive random split 和未过滤 evidence 会把 prospective recall 虚高 8.5 倍。
+[Compute-Budgeted Exploitability Evidence Graphs for Prospective Vulnerability Triage](http://arxiv.org/abs/2606.19076v1) 不是 coding agent 论文，但它对昨天主题很重要。它研究漏洞 triage：防御者无法一次修所有 CVE，因此需要预测哪些漏洞更可能被利用。问题是，很多 exploit prediction 研究把未来才出现的公开 chatter、PoC、advisory、fix commits 喂给模型，导致指标被未来信息污染。
 
-**建议与对应讲解**：**精读 evaluation protocol，略读漏洞领域细节**。对 SWE-Future 和 RepoRescue 都有价值：任何使用历史仓库数据的 benchmark，都必须防止未来信息泄漏。可转化成一个 “time-safe software evolution benchmark checklist”。
+论文把 advisories、exploit archives、fix commits、hacker-community discourse 组织成 temporal evidence graph，并要求每个 CVE 只能使用固定 decision time 前可见的证据。每个风险分数还配一个 auditable certificate，列出支持信号、时间戳、source layer 和 leakage flags。结果很有警示性：budgeted evidence selection 把 leakage-safe prospective recall@50 从 severity-only baseline 的 0.010 提到 0.026，虽然绝对值仍然低；但 naive random split + unfiltered evidence 会把 prospective recall 虚高 8.5 倍，把 EPSS-high recall 虚高 5.0 倍。这个结论比具体模型更重要：评估边界错了，模型比较就失真。
 
-### A Technical Taxonomy of LLM Agent Communication Protocols：Agent 协议分类表
+### ContractGuard：结构化工具 gating 的信任边界在 contract integrity
 
-[论文链接](http://arxiv.org/abs/2606.19135v1)。它分析 9 个 actively maintained open-source protocols，提出 counterparty、payload、interaction state、discovery mechanism、schema flexibility 五个维度。对你来说，它的价值不是 taxonomy 本身，而是提醒 coding agent workflow 正在变成协议问题：agent-to-agent、agent-to-context、tool/data communication 迟早会影响可复现性和审计。
+[The Gate Is Only as Honest as Its Contracts](http://arxiv.org/abs/2606.18550v1) 讨论 tool-augmented LLM agents 的安全问题。Risk-Aware Causal Gating 的思想是把危险工具从 agent 可见 action space 中移除，这样即使 agent 完全听从 prompt injection，也调用不到看不见的工具。但这篇指出，安全保证并没有消失信任假设，只是把它转移到了 tool contracts：preconditions、effects、risk、authorization 这些字段如果被污染，gate 仍会错。
 
-**建议与对应讲解**：**略读 taxonomy 表**。看维度定义和 sampled protocols 即可。可用于 MazeBreaker 或 agent 安全相关工作的背景段。
+论文把攻击拆得很细，尤其强调 effect forgery 比 risk relabeling 更危险，因为 causal gate 先判断工具是否在路径上；伪造 effects 能把危险工具路由到 causal path。ContractGuard 用 signed provenance、typed contract attestation、runtime effect verification 三层防御。控制 benchmark 中，完整 L3 stack 在 exhaustive adaptive attacker 下把 attack-induced injection success rate 降到 0；没有防御或部分防御在多数目标上仍可达到 1.00。它的局限也明确：symbolic benchmark 中 runtime effect verification 只需调解共享状态，但真实工具可能已有不可逆副作用，例如邮件发送、文件删除或资金转移。
 
-### ContractGuard：工具安全的脆弱点在 contract layer
+### A Technical Taxonomy of LLM Agent Communication Protocols：多 Agent 系统正在变成协议工程
 
-[论文链接](http://arxiv.org/abs/2606.18550v1)。它讨论 Risk-Aware Causal Gating 的 contract layer：如果攻击者不能说服 agent，但能污染工具 contract 的 declared effects/risk/authorization，gate 仍会误判。论文提出 signed provenance、typed contract attestation、runtime effect verification 的防御梯子，并在控制 benchmark 中做 ablation。
+[A Technical Taxonomy of LLM Agent Communication Protocols](http://arxiv.org/abs/2606.19135v1) 是一篇 taxonomy。它分析 9 个 actively maintained open-source protocols，提出五个维度：counterparty、payload、interaction state、discovery mechanism、schema flexibility。表 1 和表 2 分别给出跨协议模式和逐协议理由。
 
-**建议与对应讲解**：**精读威胁模型，略读形式化细节**。对 tool-using coding agent 很关键，因为 build/test/git/filesystem 工具的 effect contract 一旦错，agent 的安全边界就会失真。可转化成 “coding agent tool contract integrity” 的安全假设段。
+这篇和 coding agent 的距离比安全审计论文远，但它提醒了一个趋势：当 Agent 从单体脚本变成分布式系统，可靠性问题会下沉到通信层。论文观察到，7/9 协议支持 agent-to-agent communication，所有 sampled agent-to-agent protocols 都结合 hybrid payload 和 session-state persistence；多数协议支持多个 predefined schemas，少数可以 runtime schema negotiation；decentralized discovery 仍然少见。作者认为未来更可能出现 federated layered protocol stack，而不是单一协议统一天下。对昨天主题来说，它补上了“Agent 判断如何流动”的基础设施视角。
 
-### Graph-ESBMC-PLC：一个“空 IR 导致 vacuous verification”的警示案例
+### Graph-ESBMC-PLC：验证成功也可能是空 IR 的假象
 
-[论文链接](http://arxiv.org/abs/2606.18941v1)。这篇偏 PL/formal verification，讲 ESBMC-PLC 对 graphical PLCopen XML ladder diagram 解析失败时会生成空 GOTO IR，导致验证 vacuously safe。新工作用 DFS resolver 把 graphical LD 转成完整 IR，3 个图形 benchmark 和 11 个文本 benchmark 无回归。
+[Graph-ESBMC-PLC](http://arxiv.org/abs/2606.18941v1) 是偏 PL/formal verification 的论文，但它有一个非常有教育意义的失败模式：原 ESBMC-PLC 支持 textual PLCopen XML ladder diagram，却会把 graphical exports 解析成空 GOTO IR，导致 verification vacuously succeeds。也就是说，工具显示 safe，不是因为程序被证明安全，而是因为根本没有生成要验证的程序。
 
-**建议与对应讲解**：**略读，但记住失败模式**。这对 Phantom Rendering/HapRepair 很有启发：验证工具本身可能“成功地什么都没验证”。可转化成一个很好的 motivation：agent 不能只看 verifier pass，还要检查 verifier 是否覆盖了目标 artifact。
+新工作用 DFS-based graphical LD resolver 修复这一点：从 leftPowerRail 遍历到 coils，提取 rung paths，处理 SET/RESET coil 顺序，再转换到 ESBMC 后端可用的 IR。实验上，3 个 graphical LD programs 都从空 IR 变成 full GOTO IR，并在 k=2 下 70ms 内验证 SAFE；11 个 textual benchmarks 也保持 11/11 零回归。局限是 benchmark 很小，两个 Beremiz 示例暴露了 current resolver 对 function blocks 动态保持不足的问题。它和当天主题的关系是反向的：验证本身也需要被验证。只看 pass/fail，不检查 verifier 是否覆盖目标 artifact，是很危险的。
 
-### REVES：revision/verification augmented training for test-time scaling
+### REVES：把“修正过程”变成训练信号
 
-[论文链接](http://arxiv.org/abs/2606.18910v1)。这篇更偏通用 LLM training，但因为用了 LiveCodeBench 和 public test feedback，和执行反馈有边缘关系。它把成功恢复轨迹中的 near-miss answer 转成 revision/verification prompts，用于训练模型更好地识别和修正中间错误。
+[REVES](http://arxiv.org/abs/2606.18910v1) 更偏通用 LLM training，但因为使用 LiveCodeBench 和 public test feedback，和执行反馈有边缘关系。它认为当前 post-training 多优化 single-shot objective，而 test-time scaling 依赖 sequential revision，两者不匹配。REVES 把成功恢复轨迹中的 near-miss intermediate answers 转成 decoupled revision prompts 和 verification prompts，让模型专门学习“如何改错”和“如何识别错”。
 
-**建议与对应讲解**：**略读代码任务实验**。如果你研究 StreamExec 或 To Run or Not to Run，可以看它如何把失败-修正轨迹变成训练信号；否则不必深挖训练细节。
+摘要报告在 LiveCodeBench 上，使用公开测试反馈，相比 RL baseline 提升 +6.5 points。它和昨天主题的联系在于：错误不只是失败样本，也可以是可学习的中间对象。不过这篇主要是训练方法，不是仓库级软件工程系统；如果只关心真实 repo agent，保留“revision/verification prompts 从恢复轨迹中抽取”这个概念即可。
 
 ## 可留意/可跳过
 
-- [Leadership as Coordination Control](http://arxiv.org/abs/2606.19111v1)：多 agent 团队领导控制，和 coding agent 组织有间接关系。保留关键词：coordination control 不是越多越好，只有在特定 failure regime 下有收益。
-- [EARS](http://arxiv.org/abs/2606.18668v1)：sub-agent abstention 作为 inter-agent communication protocol。保留关键词：拒答不是沉默，而是给 coordinator 的结构化 failure state。
-- [RouteJudge](http://arxiv.org/abs/2606.18774v1)：LLM routing 的偏好评估平台。和你的主线较远，但 cost-aware routing 可能影响未来 coding agent 的模型调度。
-- [Quantifying and Auditing LLM Evaluation via Positive-Unlabeled Learning](http://arxiv.org/abs/2606.19057v1)：LLM-as-judge 偏差审计。保留关键词：选择性人工监督下的 judge calibration，可用于 agent patch review 的评价器校准。
+- [Leadership as Coordination Control](http://arxiv.org/abs/2606.19111v1)：多 Agent 团队里的 process-level coordination control。可保留的判断是：协调控制不是越多越好，论文显示收益只在特定 recovery regime 下出现。
+- [EARS](http://arxiv.org/abs/2606.18668v1)：把 sub-agent abstention 设计成 inter-agent communication protocol。关键词是“拒答不是沉默，而是可操作 failure state”。
+- [RouteJudge](http://arxiv.org/abs/2606.18774v1)：LLM routing 的偏好评估平台。与软件工程主线较远，但 cost-aware routing 可能影响未来多模型 coding agent。
+- [Quantifying and Auditing LLM Evaluation via Positive-Unlabeled Learning](http://arxiv.org/abs/2606.19057v1)：LLM-as-judge 偏差审计。保留关键词：选择性人工监督下的 judge calibration。
+
+## 横向比较
+
+| 论文 | 问题定义 | 证据形式 | 工程可迁移性 | 主要可信度风险 |
+|---|---|---|---|---|
+| OpenAnt | 仓库级漏洞发现如何降低噪声并验证 exploitability | reachability、对抗验证、动态 exploit reproduction | 很高，pipeline 思路清晰 | 真实项目缺少完整 ground truth，动态验证覆盖有限 |
+| Code-Augur | Agent 的安全假设如何显性化并被反驳 | in-source assertions、guided fuzzing | 很高，specification-first 很通用 | assertion 质量决定上限，fuzzer 覆盖不确定 |
+| SWE-Future | SWE benchmark 如何避免历史重放污染 | temporal boundary、forecast validation、hidden artifacts | 高，任务构造范式重要 | forecast relevance 中等，合成任务真实性需验证 |
+| CAPRA | LLM 架构反馈如何 grounding 到原始 artifact | fuzzy evidence anchoring、ConsistencyManager | 中高，适合反馈/审计类系统 | 样本只有 10 份且高分报告偏多 |
+| VbR | AI 生成软件的 variability 去哪里 | spec、variant config、regeneration pipeline | 中，概念价值大于系统成熟度 | 小样本、小 demo，缺少规模验证 |
+| PYPILINE | 恶意包检测如何结合静态知识和 Agent 分析 | AST、API call graph、suspicious API KB、结构化报告 | 高，安全和供应链场景直接 | 数据切分和家族/时间泄漏风险 |
 
 ## 我的判断
 
 | 维度 | 判断 |
 |---|---|
-| 创新性 | 8/10。OpenAnt、Code-Augur、SWE-Future 都不是单点 trick，而是在重新定义 agent 可靠性的证据结构。 |
-| 实用价值 | 8.5/10。安全审计、benchmark 构造、tool contract、evidence anchoring 都能直接迁移到真实仓库任务。 |
-| 严谨性 | 7/10。多篇论文仍有样本规模、数据泄漏、动态验证覆盖范围等问题，但它们至少开始正视评估协议。 |
-| 与用户方向相关度 | 9/10。昨天这一批几乎正好落在 Reliable Coding Agents for Real-World Software Change and Evolution 的核心区域。 |
+| 创新性 | 8/10。OpenAnt、Code-Augur、SWE-Future 分别在验证闭环、可反驳 specification、时间安全任务构造上提出了清晰问题。 |
+| 实用价值 | 8.5/10。昨天这批论文很多都能落到真实工程 workflow，而不是停在 prompt 或 benchmark 分数。 |
+| 严谨性 | 7/10。强相关论文普遍意识到污染、grounding、验证覆盖问题，但不少评估仍受样本规模或 ground truth 不完整限制。 |
+| 与当天主题一致性 | 9/10。多数论文都围绕“Agent 判断如何被外部证据约束”展开，主题集中度很高。 |
 
-最大的确定性：**Agent 可靠性研究正在从“模型能不能做对”转向“模型做出的每个判断能否被外部证据审计”。**  
-最大的不确定性：这些 pipeline 是否能从 security/education/benchmark 场景稳定迁移到一般软件变更任务，还需要新的 empirical study。
-
-## 今日可转化动作
-
-1. **写一个 position/motivation 句子**：真实仓库级 coding agent 的核心瓶颈不是生成代码，而是把变更判断转化为可执行、可反驳、可审计的证据链。
-2. **设计一个实验**：对 agent patch 要求输出 patch assumptions，再用测试、trace、static dependency、UI replay 去 falsify；比较是否降低 silent failure 和漏改。
-3. **扩展 Chain-Tracking**：把“需要同步修改”的判断 anchor 到 call graph、data flow、issue text、test failure 或历史 co-change evidence。
-4. **扩展 AtomicCommitBench**：加入 rationale grounding 维度，要求每个拆分出的原子提交都有可追踪证据，而不是只看 diff 聚类是否合理。
-5. **扩展 RepoRescue**：用 SWE-Future 的 temporal discipline 重新构造任务，避免用未来修复信息污染 agent 的维护决策。
-
-## 一句话结论
-
-2026-06-17 这批 arXiv 论文给出的共同信号是：**下一代 coding agent 的竞争点，不是更会说“我觉得该改这里”，而是能把这个判断交给程序分析、执行反馈、时间切分和证据审计去验证。**
+最值得记住的一句话是：**可靠 Agent 的关键能力，不是把判断说得更像专家，而是把判断变成能被程序、时间边界、证据链和执行环境检验的对象。**
