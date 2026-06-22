@@ -1,473 +1,265 @@
 ---
-title: "6 月 19 日这批 arXiv 在逼近一个现实问题：Coding Agent 到底怎样才算可靠？"
+title: "周末前这批 arXiv 终于开始正面处理：Coding Agent 的仓库知识、验证闭环与错误边界"
 date: "2026-06-19"
-description: "2026-06-19 的相关论文集中讨论仓库级指导、长回合编码、agent harness 安全、多 agent 协调、复杂构建验证与系统软件安全评测。"
-tags: ["论文解读", "arXiv", "Coding Agent", "软件工程", "Agent可靠性", "软件演化"]
+description: "2026-06-19 这批相关论文集中讨论 repository guidance、GitHub issue resolution、多轮可靠性、构建受限环境测试生成、协同日志与正确性判定。"
+tags: ["论文解读", "arXiv", "Coding Agent", "软件工程", "Agent可靠性", "仓库级智能体"]
 series: "alphaXiv论文解读"
-coverColor: "from-emerald-500 to-cyan-600"
+coverColor: "from-sky-600 to-emerald-600"
 ---
 
-# 6 月 19 日这批 arXiv 在逼近一个现实问题：Coding Agent 到底怎样才算可靠？
+# 周末前这批 arXiv 终于开始正面处理：Coding Agent 的仓库知识、验证闭环与错误边界
 
-先把日期说清楚。今天是 2026-06-22，但 arXiv `cs/new` 当下最新一批新刊实际显示为 `Friday, 19 June 2026`。也就是说，这次 digest 按 arXiv 官方新刊节奏，解读的是 2026-06-19 这一批，而不是自然日意义上的 2026-06-21。这个区分很重要，因为周末没有新的 cs daily listing，若按自然日硬写，反而容易编出不存在的“前一天新论文”。
+先说明日期边界。今天是 2026-06-22，但 arXiv CS 常规 `new` 列表在周末没有新批次；我联网核对后，当前对应的上一批标准新投稿仍是 **Friday, 19 June 2026**。所以这篇 digest 覆盖的是 **2026-06-19** 这一批里，与 `Reliable Coding Agents for Real-World Software Change and Evolution` 实质相关的论文，而不是硬凑一个并不存在的 2026-06-21 新列表。
 
-这批论文值得读，不是因为出了某一个压倒性的 SOTA，而是因为很多工作在同时碰同一个硬问题：**LLM coding agent 进入真实仓库、真实测试、真实权限边界以后，评价标准不能再只是“最后 patch 过没过”，而必须往前追问它是否找对了文件、是否理解了仓库惯例、是否在长回合中维持一致、是否知道自己什么时候该停、是否能在复杂构建环境里得到可信反馈。**
+这一天最值得读的地方，不是又多了几篇“模型会写代码”的论文，而是有一批工作开始同时碰三件更难的事：**Agent 到底需要什么仓库外知识，怎样在复杂工程环境里持续完成多轮变更，以及我们如何知道它没有在“看起来正确”的地方偷偷出错。** 具体看，repository guidance 不再被当成玄学提示词，而被当成可调对象；GitHub issue resolution 不再只比 resolve rate，而开始把 baseline regression、PR safety 和部署失效模式一起算进去；正确性评估也不再满足于“跑过一个固定输入就算对”。
 
-如果把昨天这些论文放在一条线上看，会发现主线很集中。第一类工作在研究**仓库级上下文和 repository guidance** 到底能不能真正帮助 agent。第二类在研究**长回合、多步骤、多 agent 协作** 时，失败是怎么累积出来的。第三类在处理**安全边界和 harness 设计**，也就是 agent 不该做什么、什么时候不能升级权限、什么时候不能直接把“会动”当成“安全”。第四类则在逼问**评估协议本身是否可信**，尤其是时间泄漏、基准过拟合、测试 oracle 错觉这些问题。
+如果把这些论文放在一起看，主线其实非常清楚。今天真正往前推进的，不是纯粹的代码生成能力，而是三类“外部结构”：一类是**仓库知识结构**，告诉 Agent 哪些文件、测试和历史工作流才是真上下文；一类是**验证结构**，让 build/test/runtime evidence 去约束修改；还有一类是**协作与审计结构**，把 PR 之前的冲突、错误、回滚、权限和 correctness illusion 暴露出来。对 repository-level coding agents、software change intelligence、agent reliability 这些方向来说，这一批论文是可以拼成一张图的。
 
-下面的解读基于 arXiv 官方页面元数据与本地下载 PDF 文本。强相关论文都已下载并抽取正文，不只依赖摘要。
+下面的强相关论文均已下载并阅读 arXiv PDF 正文，方法、实验和局限尽量基于论文内容而不是只复述摘要。
 
 ## 今日脉络
 
-昨天真正和“Reliable Coding Agents for Real-World Software Change and Evolution”这条线实质相关的论文，大致可以分成四组。
+今天的相关论文大致可以分成四组。
 
-第一组是**仓库级 operational knowledge**。最典型的是 *Probe-and-Refine Tuning of Repository Guidance for Coding Agents*。它不讨论模型再训练，而是讨论仓库里的 `AGENTS.md`、运行测试的方法、子系统边界、常见误修路径这些“人类老开发者脑子里知道、代码里却没有”的隐性知识，能否被系统化地调优成真正帮助 agent 的 guidance。这个问题对 repository-level agent 非常关键，因为真实失败经常不是不会写代码，而是从第一步就走错目录、跑错测试、理解错局部约定。
+第一组是**“仓库外知识到底怎么喂给 Agent”**。`Probe-and-Refine Tuning of Repository Guidance for Coding Agents` 把 repository guidance 从静态文档变成可迭代调参对象；`Phoenix` 则说明真实 issue resolution 并不是单个 patch 生成问题，而是 planning、reproduction、testing、failure analysis 和 PR handoff 的串联。
 
-第二组是**长程过程可靠性**。*StaminaBench* 和 *Before the Pull Request* 都属于这一类，但关注点不同。前者研究 agent 连续工作 100 轮会怎样崩，后者研究多个 agent 在真正打开 PR 之前如何相互踩踏、重复劳动、发生 race condition。这两篇合起来实际上在说同一句话：coding agent 的问题不是只看单题 pass/fail，而是要看它能否在 evolving workspace 中维持过程质量。
+第二组是**“多轮软件变更的可靠性”**。`StaminaBench` 不再问单题 pass rate，而是问 agent 在 100 次连续改动中能活几轮；`Before the Pull Request` 把注意力从 PR 结果前移到并发 agent 的 claim、冲突、重复劳动和日志可挖掘性。
 
-第三组是**agent harness 与安全边界**。*AgentArmor*、*Phoenix*、*When Lower Privileges Suffice* 这几篇都在讨论同一个现实：很多灾难不是模型不会写 patch，而是 harness 设计把它推到了错误的权限边界、错误的 fallback 策略或错误的执行路径上。这里的关键词不是“alignment”这种大词，而是很工程化的东西：baseline-aware test evaluation、least privilege、三振停止、deterministic guardrail、planner/reproducer/tester 的职责切分。
+第三组是**“复杂工程环境里的验证闭环”**。`Library-Aware Doubles and Iterative Repair...` 把受限 firmware 环境下的单测生成做成 scaffold + build log + coverage 的闭环；`AutoPass` 则把编译器内部状态与运行时证据接入 agent，而不是把编译器当黑盒。
 
-第四组是**复杂环境反馈与评估可信度**。*Library-Aware Doubles and Iterative Repair* 把视角放在固件代码的复杂构建/测试环境里，说明生成测试本身就要面对依赖、链接、stub、fake 和 line coverage 这些硬约束。*Calibration Without Comprehension* 则从系统软件漏洞检测切入，提醒我们即便模型在 benchmark 上“有分”，也可能根本没有学到安全推理，只是在调输出分布。
-
-把这四组连起来，昨天这批论文传递出的判断其实很清楚：**coding agent 可靠性不再是模型层的单点问题，而是仓库知识、过程控制、执行边界、测试反馈和评估协议共同构成的系统问题。**
+第四组是**“正确性与安全边界不能只看表面通过”**。`The Correctness Illusion in LLM-Generated GPU Kernels` 直接指出现有 benchmark 的 fixed-shape oracle 会把明显错误的 kernel 判成正确；`AgentArmor` 和 `ToolPrivBench` 一类工作则在提醒，真实 coding agent 的风险一半来自模型，一半来自 harness、工具权限和状态管理。
 
 ## 强相关论文深读
 
 ### 1. Probe-and-Refine Tuning of Repository Guidance for Coding Agents
 
-**论文信息**：*Probe-and-Refine Tuning of Repository Guidance for Coding Agents*  
-**作者**：Harry Degroot, Alex Vasilopoulos, Yuntian Deng  
-**arXiv**：[2606.20512](https://arxiv.org/abs/2606.20512)  
-**分类**：cs.SE, cs.LG  
-**发布日期**：2026-06-19
+**论文信息**  
+标题：[Probe-and-Refine Tuning of Repository Guidance for Coding Agents](https://arxiv.org/abs/2606.20512v1)  
+作者：Asa Shepard, Jeannie Albrecht  
+分类：cs.SE, cs.LG  
+发布日期：2026-06-19
 
-**一句话 TL;DR**：这篇论文证明了 repository guidance 不是“有没有”在起作用，而是“怎么生成、怎么诊断、怎么迭代修正”在起作用；调好的仓库指导能明显提升 agent 的 solve coverage，但并不直接提高单个 patch 的精度。
+**一句话 TL;DR**  
+这篇论文最重要的发现不是“guidance 有用”，而是 **repository guidance 只有在被系统性调成“仓库专属操作知识”之后，才会稳定地提升 coding agent 的解题覆盖率。**
 
-#### 为什么这个问题重要
+**为什么这个问题重要**  
+仓库级 coding agent 的一个常见误判是：只要把代码树、README 和 issue 丢给模型，它自然会自己找到正确文件、正确测试和正确工作流。真实 repo 里往往不是这样。真正决定 agent 能不能进入有效修改路径的，常常是代码外的知识：哪个子系统惯常放在哪里、测试要先跑哪一组、哪些历史工作流会把 patch 带偏、某个框架里哪类错误应该先 reproduce 再修。这个问题和“prompt engineering”不一样，它更像 software change engineering 里的 repo operational knowledge 表征问题。
 
-做真实仓库级 coding agent 时，最常见的一类失败不是模型不会写一段局部代码，而是它对仓库的 operational knowledge 一无所知。哪个目录才是责任边界，哪个测试最小且最相关，某个 bug 历史上常常误改到什么模块，repo 里哪些辅助脚本才是正确入口，这些信息往往不在类型系统里，也不在函数签名里。人类维护者靠长期经验记住这些“仓库习惯”，agent 则只能靠 trial-and-error 在昂贵的 step budget 里慢慢摸。
+**方法怎么工作**  
+这篇的方法是一个非常干净的 pipeline。第一步，它从静态 guidance artifact 出发，针对每个仓库自动生成 synthetic bug-fix probes。第二步，用单次 LLM 调用诊断这些 probes 暴露出的 guidance 缺口，例如测试入口不清楚、子系统定位规则太泛、修复顺序建议不可靠。第三步，再把这些缺口回写到 guidance 里，形成新的 repo-specific 指导文本。论文图 1 给的是完整 tuning loop，图 2 还展示了 `django/django` 的 guidance 演化：原本泛化的“先看错误信息、再修改代码”之类规则，最终被替换成了 reproduce-first、子系统 tracing、特定 middleware 依赖、具体 test path 这种可执行知识。重要的是，这个 refinement 过程本身 **不是** agent loop，也不依赖工具执行，而是用 probes 去打磨 repo guidance。
 
-因此，问题并不是“给 agent 一份 `AGENTS.md` 会不会更好”这么简单，而是：**仓库指导文件能否像 prompt 一样被系统调优，且这种调优是否真正改变了 agent 在真实 bug-fix 任务中的轨迹？**
+**关键实验与证据**  
+实验在 SWE-bench Verified 上做了 4 次独立 trial、每次 500 个实例、agent step budget 200。结果很明确。  
+`probe-and-refine` 的平均 resolve rate 是 **33.0%**，高于 `static_kb` 的 **28.3%** 和无上下文 baseline 的 **25.5%**。混合效应逻辑回归里，`probe_refined vs. no_context` 的 odds ratio 是 **2.11**，`probe_refined vs. static_kb` 是 **1.58**，两者 `p < 0.001`。更关键的是，收益几乎全部来自 **coverage**：refined guidance 能让可评测 patch 的比例达到 **56.2%**，而 no-context 只有 **41.7%**，整整多出 **14.5 个百分点**。但 precision 基本不变，三组大约都在 **56%-61%**， evaluated subset 上没有统计显著差异。论文自己据此下了一个很重要的判断：这类 guidance 的主要作用不是让 patch 本身更“聪明”，而是让 agent 更容易走到正确文件和正确工作流上。
 
-#### 方法怎么工作
+**局限和可信度**  
+这篇的局限恰恰来自它做得很“工程”。首先，实验主要依赖 SWE-bench Verified；虽然比小样本 case study 强，但仍然继承 benchmark 本身的分布限制。其次，论文也承认收益高度依赖底座模型生成 probe 的诊断质量；交叉模型实验里，Qwen 可用，但 Nemotron 的 tuning loop 退化明显。第三，improvement 主要体现在 coverage 而不是 patch precision，这意味着如果仓库里的关键知识不是“去哪修、怎么跑”，而是更深的语义约束，guidance 未必能继续带来同等幅度增益。
 
-这篇论文的方法不是训练一个新 agent，而是训练仓库指导的生成流程。核心 pipeline 可以分成四步。
+**与当天主题的关系**  
+这篇几乎可以视为“repository-level coding agent 需要仓库外知识”的代表作。它把一个原本很容易被说成 prompt 小技巧的事情，转成了可实验、可比较、可迭代优化的 repo artifact。
 
-第一步，先为每个 repository 生成一个初始的 `static_kb`，相当于一份静态仓库知识文件。它来自 pinned commit 的代码快照，而不是根据具体 SWE-bench 实例临时写。
+### 2. Phoenix: Safe GitHub Issue Resolution via Multi-Agent LLMs
 
-第二步，系统为该仓库自动生成一批 synthetic bug-fix probes。这里的 probe 不是正式 benchmark 任务，而是用于“试探 guidance 是否会把 agent 引向正确工作流”的诊断题。论文图 1 展示了完整闭环：生成 probe、让固定 coding agent 尝试修复、根据 expected behavior 判断成败、再把失败模式汇总成 guidance edits。
+**论文信息**  
+标题：[Phoenix: Safe GitHub Issue Resolution via Multi-Agent LLMs](https://arxiv.org/abs/2606.20243v1)  
+作者：Kipngeno Koech, Muhammad Adam, Baimam Boukar Jean Jacques, Joao Barros  
+分类：cs.SE, cs.MA  
+发布日期：2026-06-19
 
-第三步，把多个 probe 失败轨迹聚合成 repository-specific edits。论文图 2 给出的例子很有代表性：原来模糊的规则“先做 targeted reads”会被改成更具体的 repo navigation 指令；“先跑最小相关测试”会被改成明确到 test class / method 的执行建议。这说明 refinement 不是简单扩写字数，而是在把泛化建议压实为 repo-specific operational heuristics。
+**一句话 TL;DR**  
+Phoenix 真正有价值的地方，不是多 agent 分工本身，而是它把 **GitHub issue resolution 的正确性保护、状态机、测试基线和部署失效模式** 都显式写进了系统。
 
-第四步，用 refined guidance 替换原始 static KB，再把同一份 guidance 用到该仓库下所有 SWE-bench Verified 实例。值得注意的是，refinement 阶段完全不接触正式 evaluation instances，避免了直接用测试集调 prompt 的污染。
+**为什么这个问题重要**  
+“自动修 GitHub issue” 现在已经是一个熟悉的 demo，但 demo 和部署之间差了很多层。真实系统不是产出一个 patch 就结束，而是要处理 issue 文本脏数据、规划文件修改、复现实验、测试回归、失败重试、PR 生成、token 过期、并发仓库冲突、WAF 拦截等一串细节。对 real-world software change 来说，很多系统不是败在“模型不会改”，而是败在“系统没把 correctness preservation 和 workflow hazards 管住”。
 
-#### 关键实验与证据
+**方法怎么工作**  
+Phoenix 的架构很工整。它把流程拆成六个 agent：Planner、Reproducer、Coder、Tester、Failure Analyst、PR Agent，并用 GitHub labels 当成持久化状态机。论文图 2 展示的是核心流水线，图 4 展示五态 label state machine。关键步骤至少有三层。第一层是 **plan/reproduce**：先规划修改文件和实现路径，必要时尝试在 base branch 上补一个 failing test。第二层是 **baseline-aware test evaluation**：测试前先 stash Phoenix 的改动，回到未修改的 base branch 跑一次 test suite，拿到 baseline failures 集合 `B`；再恢复改动重跑，得到 `P`，只有 `P \\ B = ∅` 时，才算 correctness preserved。第三层是 **failure feedback loop**：如果引入了新失败，Failure Analyst 解析测试输出，给 Coder 返回结构化原因和建议，最多两轮。除此之外，论文还列出了七层 safety control，包括 path traversal prevention、workflow file guardrail、内容清洗、retry 上限、并发串行化、安装 token 刷新等。
 
-实验主设置是在 SWE-bench Verified 500 个实例上、4 个独立 trial、200 agent steps。对比三组条件：无 guidance、静态 guidance、probe-refined guidance。
+**关键实验与证据**  
+论文给了两种证据。其一是在 SWE-bench Lite 的 24 个实例上，Phoenix 取得了 **18/24 = 75%** 的 oracle resolution，且成功样本里没有 pass-to-pass regression。其二是在 **14 个仓库、42 个真实 issue** 上，Phoenix 的 correctness preservation 是 **42/42 = 100%**；其中 easy、medium、hard 三档都保持 100% CP，hard tier 的平均处理时间是 **122 秒**。但更值得记住的是作者自己做的人工复核：生成出来的 PR 大约 **一半是 well-targeted fix**，另一半虽然没破坏 baseline correctness，却把代码放到了错误路径。这直接暴露了当前系统的主要瓶颈不是“修完会不会炸测试”，而是 **planner localization**。
 
-最关键的数字有三个。
+**局限和可信度**  
+Phoenix 最大的诚实之处，是它没有把 100% CP 说成“问题解决了”。作者明确强调，CP 只能说明 **没引入新回归**，不能说明 patch 在语义上真解决了 issue。对于真实 issue 的试验，论文承认 roughly half 的 PR 放到了 invented path 或 generic scaffolding 上。再加上它依赖现有测试套件，若仓库测试覆盖不足，CP 也只能是一种下界保障。但从 reliability 角度看，这种“只承诺我没有把本来通过的东西弄坏”的系统设计，比空喊高 solve rate 要成熟得多。
 
-第一，**resolve rate 从 25.5%（no context）提升到 28.3%（static KB），再提升到 33.0%（probe-refined）**。而且 `probe-refined > static > no-context` 的顺序在 4/4 次 trial 中都成立，关键对比的 mixed-effects logistic regression 都是 `p < 0.001`。
+**与当天主题的关系**  
+Phoenix 把 software change agent 的问题重新定义成一个可部署 workflow 问题，而不是单条补丁生成问题。它和今天的主线高度一致：Agent 可靠性来自 state machine、baseline gate 和 failure handling，而不只来自模型参数。
 
-第二，提升主要来自 **coverage 而不是 precision**。论文明确写到 refined guidance 会让 agent 产出可评估 patch 的实例比例多出 **14.5 个百分点**，但 **per-patch precision 基本维持在约 59%**，差异不显著（`p = 0.119`）。这很重要，因为它说明 guidance 的作用更像“把 agent 送到更可能正确的文件/测试/工作流”，而不是直接让它写出更精细的改动。
+### 3. StaminaBench: Stress-Testing Coding Agents over 100 Interaction Turns
 
-第三，refinement 后的 guidance 平均比 static KB 长 **63%**，从平均 **1,687 字符**增长到 **2,754 字符**。这既是一个结果，也是一个潜在混杂项：性能变好到底因为内容更对，还是因为 prompt 更长？论文在 limitations 里坦率承认这点没有被完全剥离。
+**论文信息**  
+标题：[StaminaBench: Stress-Testing Coding Agents over 100 Interaction Turns](https://arxiv.org/abs/2606.19613v1)  
+作者：Vlad Sobal, Shuo Yang, Yuting Zhang, Wei Xia, Stefano Soatto  
+分类：cs.SE, cs.AI  
+发布日期：2026-06-19
 
-#### 局限和可信度
+**一句话 TL;DR**  
+这篇论文把一个大家隐约知道但很少正式测的事实钉死了：**单轮能做题，不代表多轮能活下去；今天的 coding agents 在长会话改代码里普遍死得非常早。**
 
-这篇论文最值得肯定的是它对局限写得比较老实。
+**为什么这个问题重要**  
+真实软件维护不是一锤子买卖。仓库级变更经常是连续数十轮的需求澄清、回归修复、接口重命名、数据验证补丁和副作用修复。可很多 benchmark 仍然用“一题一解”的 solved fraction 衡量 agent，导致系统在多轮环境里累积的上下文腐败、回归扩散、错误恢复能力根本看不见。对于 reliable coding agents，这其实是最基础的外部效度问题。
 
-第一，实验虽然有 4 个独立 trial，但低 step budget 的扩展实验只是单次运行，方差刻画不足。第二，refined guidance 比 static guidance 长很多，存在 length confound。第三，它的单文件 guidance 设计本身就共享了一个假设：仓库 operational knowledge 可以被压缩到一个几千字符的 artifact 中，这对中大型 repo 未必总成立。第四，评测对象仍然是 SWE-bench Verified 的 Python 仓库，对其他语言、尤其是复杂工业平台和怪异构建系统的迁移还没有证据。
+**方法怎么工作**  
+StaminaBench 的设计很清楚。它从一个 REST API server 起步，然后连续采样 follow-up change requests，逐轮修改同一个代码库，论文里固定到 **100 turns**。第一层关键设计是 **程序化生成任务和测试**，不让 LLM 参与 benchmark 造题，从而保证可重现。第二层是 **黑盒 HTTP 接口**：agent 和 server 都跑在隔离环境里，benchmark 只通过 HTTP 交互，因此语言无关，也更接近真实服务变更。第三层是 **failure accounting**：它不只看“第几轮挂了”，还统计 missing feature、hallucinated feature、data validation error、cascade deletion、rename failure、regression、wrong endpoint，甚至 agent self-kill、invalid tool call、stuck loop 这种 harness 级故障。
 
-不过它最强的一点也正在这里：它没有声称“guide makes model smarter”，而是把机制说得很窄很清楚。**guidance 主要改善定位与流程选择，不直接改善 patch precision。** 这比很多只报最终 pass rate 的论文更有研究价值。
+**关键实验与证据**  
+这篇最扎眼的是数字。论文主文里给出的总体结论是，所有测试模型都在 **5-6 轮内**开始失败；而在附录的更高 retry 预算下，最强组合可以走得更远，但仍远没到“稳定完成 100 轮”。例如在 `R=10` retries 下，`GLM-5 + OpenCode` 的平均通过轮数达到 **82.5**，但只有 **65%** 场景能完整跑到 100 轮；`Qwen3.5-122B + OpenCode` 是 **61.0** 轮、**35%** full pass；`Kimi K2.5 + Kimi CLI` 是 **57.1** 轮、**30%** full pass。更重要的是反馈粒度影响极大：在 OpenCode、`R=2` 默认设置下，`GLM-5` 从 minimal feedback 的 **10.7** 轮提升到 detailed feedback 的 **57.0** 轮，`Qwen3.5-122B` 从 **2.8** 轮升到 **39.4** 轮，差距非常夸张。作者甚至估算了一次完整配置的 API 成本，像 `GLM-5 + OpenCode` 的单次 20-scenario sweep 就用了 **4.5B input / 7.5M output tokens**。
 
-#### 与当天主题的关系
+**局限和可信度**  
+论文自己也说得很明白：这个 benchmark 只测试了一类任务，也就是逐轮演化 REST 服务。它当然无法覆盖复杂构建系统、跨语言仓库、移动端 UI、编译器或 OpenHarmony 这类环境。但它的价值不在 domain 覆盖，而在它把“多轮生存能力”从模糊抱怨变成了可操作指标。另一个需要注意的点是，结果强烈受 harness 影响，说明 benchmark 测到的不只是模型，还包括 agent shell、上下文压缩、错误恢复策略。
 
-这篇论文直接支撑了“仓库级任务不是单靠大模型上下文窗口就能解决”的主线。真正重要的是，仓库知识要被结构化、诊断化、可迭代改写。对真实软件变更工程来说，这比再多一个“会写代码”的模型更接近问题本身。
+**与当天主题的关系**  
+StaminaBench 为“software evolution in the agent era”提供了非常必要的动态视角。它提醒我们，coding agent 的可靠性不是 solve 一个 issue，而是在连续变更里 **不把之前修好的东西重新搞坏**。
 
----
+### 4. Library-Aware Doubles and Iterative Repair for LLM-Generated Unit Tests in OpenSIL Firmware
 
-### 2. StaminaBench: Stress-Testing Coding Agents over 100 Interaction Turns
+**论文信息**  
+标题：[Library-Aware Doubles and Iterative Repair for Large Language Model-Generated Unit Tests in OpenSIL Firmware](https://arxiv.org/abs/2606.19725v1)  
+作者：Ma Toan Bach, Yuchi Zheng, Haingo Razafindranto, Tanvir Alam, Aric Leather, Ranveer Sandhu, Jitesh Arora  
+分类：cs.SE, cs.AI, cs.MA  
+发布日期：2026-06-19
 
-**论文信息**：*StaminaBench: Stress-Testing Coding Agents over 100 Interaction Turns*  
-**作者**：Miloš Lajh, Matej Letovský, Antonín Komenda, David M. Píchal, Jan Kocián  
-**arXiv**：[2606.19613](https://arxiv.org/abs/2606.19613)  
-**分类**：cs.SE, cs.AI  
-**发布日期**：2026-06-19
+**一句话 TL;DR**  
+这篇论文证明，在严格构建约束下，单测生成真正困难的部分不是“写出断言”，而是 **把 stub/mock/fake、头文件、链接依赖和 coverage 迭代接起来，让测试能在真实固件环境里活下来。**
 
-**一句话 TL;DR**：StaminaBench 不是再测一个“单题能不能过”的 coding benchmark，而是问 agent 在连续 100 次需求变更后还能不能维持工程一致性；结果显示，不带充分测试反馈的 agent 基本在 5-6 回合内就会崩。
+**为什么这个问题重要**  
+很多 coding agent 论文默认测试环境是轻量 Python/JS 项目，build feedback 很短、依赖也不深。真实工业软件不是这样。像 firmware、embedded、OpenHarmony 这类环境，agent 生成代码常常第一步就死在编译链接、符号冲突、头文件缺失、静态依赖和运行前置条件上。对 real-world software change 来说，这一类“环境反馈能不能被 agent 消化”比单纯生成代码更关键。
 
-#### 为什么这个问题重要
+**方法怎么工作**  
+论文做的是 AMD openSIL firmware 的自动单测生成工作流。第一步，agent 生成 UT scaffold，包括 `.c`、`.h`、`.inf` 和 iteration `.json`。第二步，它通过 library-aware retrieval 找到已有的 doubles、禁止重定义的符号列表和必须包含的 `#include`。第三步，进入 compile-dispatch repair loop：根据编译和链接错误做小范围修复；如果 build 成功，再运行 UT，采集 LCOV line coverage。第四步，coverage-guided iteration 根据 hit/miss 行映射去补 test case、调输入、补 doubles。论文图 5 给了完整的 11-stage workflow，图 6 展示 LCOV 导出的逐行 hit/miss 如何驱动下一轮修复。整体上，它不是让 LLM 一步写对，而是把 test authoring 变成 “draft -> build -> dispatch -> coverage -> targeted repair” 的闭环。
 
-现实中的 coding agent 使用方式很少是“一次性给你一道题”。更常见的是用户先让它搭一个基础功能，再连续加条件、改接口、修边角、补异常处理、做局部重构。也就是说，agent 面对的不是孤立 task，而是**持续演化中的 workspace**。如果 benchmark 只测单轮任务，它衡量的更像一次性代码生成，而不是 software change engineering。
+**关键实验与证据**  
+实验在 **76 个 functions under test** 上做。结果相当硬。  
+整体上，工作流为 **73/76 = 96.1%** 的 FUT 生成了能在 EDK II 下编译并链接的 UT。没有 LCA/VDB 的配置下，compile-success 样本的平均 line coverage 是 **73.9%**。在 48 个同时评估两种高级配置的子集上，`LCA-only` 的平均 coverage 达到 **98.8%**，`LCA+VDB` 是 **94.7%**。从类别细分看，`LCA-only` 在 Small/Medium 上几乎都能做到 **100%** coverage，Large 是 **94.3%**，XFER/Ip2Ip 类甚至是 **99.4%**。这些数字说明，coverage feedback 比“直接多给 retrieval”更稳定；VDB 会改变 runtime-token tradeoff，在复杂函数上可能节约时间，但未必严格减少迭代次数。
 
-StaminaBench 把“多轮连续改动”这个长期被忽略的维度，单独提升成 benchmark 的一等公民。这和真实仓库演化、真实协作式开发更接近。
+**局限和可信度**  
+这篇的局限很具体。首先，它依赖 Windows-hosted EDK II + POSIX LCOV 的混合环境，迁移到别的 embedded toolchain 还需要工程工作。其次，LCA+VDB 并没有在所有类别上优于 LCA-only，说明 retrieval 并不是免费午餐。第三，论文没有真正做开发者 productivity 的对照试验，所以“减少多少人工 effort”目前更多是合理推断而不是严格因果证明。
 
-#### 方法怎么工作
-
-论文先抽象出一个通用的多轮 benchmark 框架：有一个 reference system 按已知规则演化，agent system 需要在每一轮根据自然语言变化追上 reference state，测试函数在每轮结束时判断两者是否一致。
-
-在 coding 场景下，它把这个框架落到一个可程序化生成的 REST API server。核心流程至少包括三步。
-
-第一，随机采样一个 OpenAPI-like 初始 schema，agent 先根据 spec 生成 `server.py`。第二，每一轮系统生成一个 follow-up change request，对 reference implementation 做合法演化，同时给 agent 一个自然语言变更描述。第三，用黑盒 HTTP 测试套件去比对 agent 当前系统和 reference state 是否一致；如果失败，可以把测试反馈回传给 agent 重试若干次。
-
-这里有两个设计很关键。其一，测试完全程序化生成，**不依赖 LLM judge**，因此 reproducibility 强很多。其二，agent 与 server 都运行在隔离环境，通过 HTTP 和 benchmark 通讯，这使它天然具备语言无关性和黑盒验证属性。
-
-#### 关键实验与证据
-
-实验覆盖 6 个 agent harness、7 个开源或开放权重模型、20 个 100-turn 场景。
-
-最扎眼的结果是：**在没有反馈循环时，所有测试 agent 都在大约 5-6 轮之内失败。** 这不是个小问题，而是说明当前很多“vibe coding”式 agent 还没有稳定维护 evolving codebase 的能力。
-
-更具体地看，Table 2 显示在 `R = 0` 无重试条件下，多数组合平均通过回合数连 10 都到不了。加上反馈与重试后，情况会显著改善。论文摘要概括为：**把测试反馈回传并允许 retry，平均通过回合数最多可提升 12 倍。**
-
-但反馈不是万能药。Table 3 也显示，即便在 `R = 2` 下，harness 差异仍然非常大，强模型在最好和最差 harness 间能拉出 **最高约 6 倍差距**。这说明“模型能力”与“agent scaffold”不是可互相替代的，harness 设计本身就是性能变量。
-
-另一个值得保留的数字是成本。论文在 limitations 中指出，一次完整 full-grid sweep 的 token 成本极高，例如某些组合单个 20-scenario sweep 就要消耗 **45 亿输入 token** 量级。换句话说，这种 benchmark 非常接近真实长程工作负载，但也因此极其昂贵。
-
-#### 局限和可信度
-
-StaminaBench 的优点是问题定义很扎实，缺点也几乎都来自这个定义。
-
-第一，它测的是一个特定任务族，即 REST API server 演化，不能直接外推到 GUI app、compiler、firmware 或移动平台。第二，程序化 change sampler 虽然保证了可重复性，但自然性和真实开发者提出的杂乱需求之间仍有差距。第三，多轮 benchmark 极贵，导致很多实验格点无法像单轮 benchmark 那样做海量重复。
-
-不过这些局限并不削弱它的核心结论：**coding agent 的“耐力”是一个独立于单题能力的维度，而且当前系统在这条维度上明显偏弱。**
-
-#### 与当天主题的关系
-
-这篇论文把“软件演化时代的 agent 可靠性”从一句口号变成了可测的 benchmark 目标。它直接挑战了当前大量只用单步任务评估 coding agent 的做法，也解释了为什么很多看起来强的 agent 一旦进入长 session 就会静默积累错误。
-
----
-
-### 3. AgentArmor: A Framework, Evaluation, & Mitigation of Coding Agent Failures
-
-**论文信息**：*AgentArmor: A Framework, Evaluation, & Mitigation of Coding Agent Failures*  
-**作者**：Ari Holtzman, Jared Kaplan, Milan Aggarwal, Zico Kolter, Dan Hendrycks 等  
-**arXiv**：[2606.19380](https://arxiv.org/abs/2606.19380)  
-**分类**：cs.SE, cs.LG  
-**发布日期**：2026-06-19
-
-**一句话 TL;DR**：AgentArmor 的核心贡献不是再做一个更强 coding agent，而是把 destructive coding-agent failure 分成 underspecification、capability error 和 harness error 三类，并用 agent harness 级改造去降低这些失败。
-
-#### 为什么这个问题重要
-
-真实开发环境里，coding agent 出错的方式往往不是 benchmark 上那种“没把题做出来”，而是“做了一个会伤人的动作”。例如在部署环境中执行了不该执行的命令、在上下文错乱后继续推进危险更改、在明明有 safer action 的情况下走了默认危险路径。随着 coding agent 从 code completion 进入 editing、deployment、monitoring 闭环，这类 failure 的成本会越来越高。
-
-关键点在于：这些失败并不都来自模型本身。有些是任务说明不充分，有些是模型能力不足，还有些纯粹是 harness 没把安全动作变成默认路径。因此只盯模型层面会看错问题。
-
-#### 方法怎么工作
-
-论文先定义三类 failure mechanism。
-
-第一类是 **underspecification**：safe action 存在，但默认系统提示或指令没有把它变成优先策略。第二类是 **capability error**：safe action 明明可用，模型却因为偏置或能力限制没选它。第三类是 **agent harness error**：模型知道该怎么做，但 harness 没能让它顺利执行。
-
-然后作者基于真实部署故障灵感构造 8 类评估情境，覆盖 **20 个 coding environments** 和 **59 个 synthetic transcript templates**。这套评估本身就有价值，因为它把平时口头流传的“agent 翻车案例”变成了可重复压力测试。
-
-在 mitigation 端，AgentArmor 不是一个新模型，而是一组 harness 改造，至少包括五块：扩展系统提示、独立 command classifier、`3 strikes` policy、deterministic guardrails，以及让 agent 能编辑自身上下文的工具。可以把它理解成“把安全默认值前移到 harness”。
-
-#### 关键实验与证据
-
-实验使用 Claude Opus 4.6、GPT 5.4、Gemini 3.1 Pro 三个模型，在各自支持的 tool-calling agent harness 上运行。
-
-摘要层面的主结论是：**加入 AgentArmor 后，在统计显著意义上更安全。** 论文没有把自己包装成“完全消除风险”，而是强调 harness 级增强确实能降低多个 failure mode 的发生率。
-
-更重要的不是某个单一分数，而是分析框架本身。作者指出很多灾难性失误并不是同一种病：有些应该靠更具体的系统 prompt 修，有些要靠 rule-based classifier 拦，有些必须靠停止策略与 deterministic policy 限制。这个拆解避免了一个常见误区：凡是 agent 出错就归因为“模型不够 aligned”。
-
-#### 局限和可信度
-
-这篇论文的问题定义非常强，但结果展示相对更偏系统安全论文风格，而不是大规模 SWE benchmark 风格。它的限制包括：场景由作者手工设计，代表性取决于 failure taxonomy 是否覆盖现实世界；评估高度依赖 synthetic transcript templates；论文证明的是“更安全”，不是“依然保持同等任务效能下更安全”。
-
-即便如此，我认为它的可信度仍然不错，因为它没有试图夸大 generality。它更像一篇给工业 agent harness 设计者看的经验-机制论文，而不是一篇 leaderboard 论文。
-
-#### 与当天主题的关系
-
-这篇论文支撑了一个很重要的主线：**agent reliability 很多时候是 harness property，而不是纯模型 property。** 对真实软件变更工程尤其如此，因为 destructive action、权限调用和长上下文误导都发生在 harness 与环境边界上。
-
----
-
-### 4. Phoenix: Safe GitHub Issue Resolution via Multi-Agent LLMs
-
-**论文信息**：*Phoenix: Safe GitHub Issue Resolution via Multi-Agent LLMs*  
-**作者**：Kipngeno Koech, Nathan Aw, Andrei Dan, Alex Vasilopoulos 等  
-**arXiv**：[2606.20243](https://arxiv.org/abs/2606.20243)  
-**分类**：cs.SE, cs.MA  
-**发布日期**：2026-06-19
-
-**一句话 TL;DR**：Phoenix 试图把“自动处理 GitHub issue”做成一个 production-style pipeline，重点不是 solve rate 本身，而是 baseline-aware test evaluation、分工明确的多 agent state machine，以及一套围绕真实 webhook 部署失败总结出的安全控制。
-
-#### 为什么这个问题重要
-
-很多 issue-resolution agent 的论文都停在离线 benchmark。真正要把 agent 接到 GitHub webhook、让它收 issue、起分支、跑测试、开 PR，问题会立刻变成工程问题：认证会过期、WAF 会挡请求、权限边界不对、CI 会抖动、现有测试就不稳定。只看离线 fix accuracy，根本看不到这些 failure。
-
-Phoenix 的价值正在于它把“从 triage 到 PR”这条线拉到了一个更接近 production automation 的层级。
-
-#### 方法怎么工作
-
-系统由六个专门角色组成：planner、reproducer、coder、tester、failure analyst、PR agent。它们通过 label-based GitHub webhook state machine 串起来，而不是在一个大 prompt 里混成一团。
-
-核心流程至少有三步。
-
-第一，planner 和 reproducer 负责理解 issue、定位问题、建立最初复现路径。第二，coder 与 tester 在 baseline-aware testing 框架下工作：不是简单跑测试，而是把变更后的测试结果和 baseline test run 做对比，防止把本来就 flaky 或本来就 failing 的 repo 误判成自己修坏了。第三，failure analyst 和 PR agent 负责判断这次尝试是否该收敛、是否应开 PR、如何写出足够可审计的结果。
-
-这种切分的好处是：安全控制可以绑定到具体角色与状态，而不是作为全局大词存在。
-
-#### 关键实验与证据
-
-论文给了两组最重要的数字。
-
-第一，在 production webhook path 上跑 **24 个 SWE-bench Lite 实例** 时，Phoenix 的 **oracle-resolve rate 为 75%**，并且成功样本里没有 pass-to-pass regressions。作者也明确提醒，这个 slice 不是 full split leaderboard，不能简单横比。
-
-第二，在 **14 个 repository 的 42 个真实 issue** 试验中，它实现了 **100% correctness preservation**，hard tier 平均耗时 **122 秒**。这个指标很有意思，因为它更像工程系统该报的数字：不是“我解决了多少”，而是“我至少没有把正确性变坏”。
-
-但论文并没有只报好消息。作者手工检查发现，最终 PR 里**大约只有一半是 well-targeted fix**，另一半会把代码落到错误路径上，主要是 planner localization 还不够稳。这种不遮掩失败的态度反而提升了可信度。
-
-#### 局限和可信度
-
-Phoenix 的局限同样很明确。24 个 SWE-bench Lite 样本太小，42 个真实 issue 也更像 pilot 而不是成熟大样本。其次，`correctness preservation` 很重要，但不等于真正解决率。再者，约一半 PR path placement 仍不理想，说明 retrieval/localization 还是瓶颈。
-
-不过它有一个别的论文很少给出的强点：作者把 **WAF filtering、token expiry、permission boundaries、flaky CI** 这些部署故障直接纳入 paper narrative。对真正想做 GitHub automation 的研究者来说，这比再报一个脱离环境的 benchmark 分数更有价值。
-
-#### 与当天主题的关系
-
-Phoenix 强调了一个现实：**仓库级 agent 的关键不是“会不会修”，而是“修的过程能不能在真实平台边界内被安全组织起来”。** 这恰好对应用户画像里关于“理解、修改、验证和组织软件变更”的后三个动词。
-
----
+**与当天主题的关系**  
+这篇对用户方向的意义很直接：它说明在复杂工业平台里，agent 可靠性的关键是能否把 **build log、dispatch log 和 coverage** 变成结构化修复信号。对于 OpenHarmony/HarmonyOS 这类平台研究，这个范式非常可迁移。
 
 ### 5. Before the Pull Request: Mining Multi-Agent Coordination
 
-**论文信息**：*Before the Pull Request: Mining Multi-Agent Coordination*  
-**作者**：Donald Pinckney, Ajeet Khatri, Maxime Heckel 等  
-**arXiv**：[2606.19616](https://arxiv.org/abs/2606.19616)  
-**分类**：cs.SE, cs.AI, cs.MA  
-**发布日期**：2026-06-19
+**论文信息**  
+标题：[Before the Pull Request: Mining Multi-Agent Coordination](https://arxiv.org/abs/2606.19616v1)  
+作者：Dipankar Sarkar  
+分类：cs.SE, cs.AI, cs.MA  
+发布日期：2026-06-19
 
-**一句话 TL;DR**：这篇论文的核心观点是，多 agent coding system 的很多失败并不出现在 PR 结果上，而出现在 PR 之前的 claim、碰撞、等待和重复发现过程里；如果不记录这些 pre-PR coordination 信号，你就看不见真正的过程质量。
+**一句话 TL;DR**  
+这篇最重要的观点是：**PR 结果只看到了协作的尾声，真正决定多 agent 软件变更质量的，很多信号都发生在 PR 之前。**
 
-#### 为什么这个问题重要
+**为什么这个问题重要**  
+今天讨论 coding agents 时，很多实证都盯着 PR 通过率、merge rate、修改速度。但如果多个 agent 在同一 repo 并发工作，最贵的失败往往不体现在 PR 上，而体现在“两个 agent 重复做同一件事”“最后写入覆盖前一个人的改动”“某个 claim 一直拿不到锁”“同一任务被 rediscover 多次”。对 software change intelligence 来说，这些都是第一手协作过程数据，不应被 PR 结果压平。
 
-目前很多关于 agent 协作的观测都停留在 PR 层：提交速度、被接受概率、回滚比例之类。但真实多 agent 环境下，更致命的问题常发生在更早阶段：两个 agent 同时认领同一块工作、一个 agent 长时间持锁、多个 agent 重复探索同一文件、race condition 让状态记录丢失。这些问题在最终 PR 历史中往往不可见。
+**方法怎么工作**  
+作者提出 `grite`，一个把 coordination substrate 放进 git 自身的方案。核心思路有三步。第一步，使用 append-only、signed event log 记录 task claim、lease acquisition、completion 等过程，而不是只在 worktree 里写一个易冲突文件。第二步，协调策略分三档：无协调、只有 advisory locks、locks + shared task state。第三步，对这个 coordination log 做预注册的 detector 挖掘，自动恢复 conflicting edits、redundant rediscovery、lock starvation、race-to-close 这类 failure mode。论文强调这些 detector 跑在 tidy one-row-per-event log 上，未来也可以直接迁移到真实 agent 日志。
 
-如果研究目标是“Agent 时代的软件组织方式”，那 pre-PR coordination 本身就是研究对象，而不是结果的噪声。
+**关键实验与证据**  
+在 `N=32` 并发 agent 的实验点上，结果非常直白：无协调时，重复劳动率是 **0.78**，conflicting edits 是 **410**，goodput 只有 **2.33**；只有 locks 时，重复劳动率仍有 **0.64**，conflicting edits 降到 **138**，goodput 升到 **3.84**；到了 `locks + shared state`，重复劳动率直接变成 **0.00**，conflicting edits 只剩 **48**，goodput 达到 **8.00**。另一张 failure-mode 表里还能看到一个很有意思的现象：`locks-only` 反而出现了 **180** 次 redundant rediscovery，高于 no-coord 的 **36**，因为 lease 只能阻止“同时做”，阻止不了“后来又把别人做完的活重新做一遍”。
 
-#### 方法怎么工作
+**局限和可信度**  
+这篇的主要限制是作者写得很坦率：目前量化结果来自 synthetic tier-T1 agent，而不是大规模真实 LLM agent 日志。也就是说，数量级未必能直接外推到生产系统。但它的结构性结论其实已经很稳：**mutual exclusion 不够，shared completion state 也必须有。** 这一点对任何多 agent repository workflow 都成立。
 
-作者提出一个叫 `grite` 的 coordination substrate，核心设计是：**不依赖中心服务器，而把协调事件直接写进 git 内部的 append-only、signed event log**。
+**与当天主题的关系**  
+这篇补上了一个常被忽略的层面：repository-level agent 不只是 patch generator，还是协作系统。很多“为什么 AI PR 被拒更多”的答案，可能根本不在 PR 里，而在 PR 之前。
 
-这件事至少解决三类问题。
+### 6. The Correctness Illusion in LLM-Generated GPU Kernels
 
-第一，它让每个 agent 的 claim、release、conflict、merge 等动作有统一的可挖掘记录。第二，因为底层是可复制的日志，而不是脆弱的文件 tracker，可以在并发写入下保持收敛。第三，日志本身就是 mining artifact，可以反推出冲突模式。
+**论文信息**  
+标题：[The Correctness Illusion in LLM-Generated GPU Kernels](https://arxiv.org/abs/2606.20128v1)  
+作者：Dipankar Sarkar  
+分类：cs.SE, cs.DC, cs.LG  
+发布日期：2026-06-19
 
-换句话说，这篇论文不是在做另一个协作 prompt，而是在做**协作过程的 observability substrate**。
+**一句话 TL;DR**  
+这篇论文的核心结论非常锋利：**很多被 benchmark 判为“正确”的 LLM 生成 kernel，只是因为 benchmark 的 correctness oracle 太弱。**
 
-#### 关键实验与证据
+**为什么这个问题重要**  
+这不只是 GPU kernel 的问题，而是所有 coding agent 评估都会碰到的问题。只要 oracle 过窄，agent 就会在“看起来通过”的地方藏下错误。对 patch correctness、repository repair、compiler optimization，甚至移动平台 UI 自动化来说，弱 oracle 都会把错误系统性洗白。换句话说，这篇论文讨论的是一个比 GPU 更普遍的研究方法问题。
 
-最关键的数字非常直观：引入共享协调 substrate 后，**“纯粹重做别人任务”的工作占比从 78% 降到 0%**，同时 **useful throughput 超过三倍**。这是个相当强的结果，因为它说明多 agent 的浪费并不是小修小补，而是可以吞掉大部分劳动。
+**方法怎么工作**  
+作者把现有 kernel benchmark 的典型 oracle 概括成 fixed-shape、small-sample、`allclose` 风格检查。然后自己构造了一个受控 corpus：**26 个 kernel 条目**，其中 **16 个正确 control**、**10 个 LLM-style buggy variant**。这些 bug 不是随便造的，而是针对 LLM 常见转写错误模式，例如 `other=0.0 instead of -inf`、漏掉 `0.5`、`acc=` 写成 `acc+=`、漏乘 attention score scale 等。新的 seeded oracle 用两层替换原始做法：一层是 **op-schema-aware seeded fuzzing**，主动打边界 shape；另一层是 **fp64 CPU reference + per-op/dtype tolerance**。重点不是更复杂，而是更接近“找出 illusion”。
 
-论文还报告每个 agent 的日志副本都会**收敛到同一状态**，而基于普通文件的 tracker 会出现并发写入丢失。更进一步，作者可以从日志中自动恢复出 **conflicting edits、lock starvation、redundant rediscovery、race-to-close** 这类 failure mode，而且这些失败很多在 PR 历史里根本看不见。
+**关键实验与证据**  
+论文给出的 headline 非常干净。在单 GPU 的 24-op corpus 上，新 oracle **抓到了 9/9 buggy variants，放过了 15/15 correct controls，零 false positive**。扩展到 26-op、5 种 GPU（RTX 3060、A10、A100 SXM4、L40S、H100 NVL）后，结论完全一致：**16/16 controls clean，10/10 illusions all caught**。更细的例子也很有说服力：`softmax triton buggy` 在随机采样时 **13/30** cases 失败，但如果只看 regular shapes 则 **0/10** 失败；换成 boundary-only strategy 会变成 **6/10**。这说明问题根本不在模型“偶尔出错”，而在 oracle 根本没有打到正确边界条件。
 
-#### 局限和可信度
+**局限和可信度**  
+作者明确承认这些 buggy variants 是 author-seeded，不是直接从真实 deployed LLM 输出中挖出来的。因此论文证明的是“这种 oracle 会把这类典型 LLM bug 误判为正确”，而不是“某个商业模型的真实 bug rate 是多少”。但这个限制不削弱主结论，因为它本来就在讨论 **benchmark fidelity** 而不是模型排名。
 
-这篇论文最可能被质疑的地方，是它把相当一部分改进归因于新的协调 substrate，因此实验的公平 baseline 设计很关键。另一个问题是，日志写入和协议维护本身也有成本，论文虽说 overhead bounded，但对超大规模 agent swarm 的扩展性还需要更多数据。
-
-不过我认为它的贡献不在于宣称“我们解决了协作”，而在于提醒大家：**如果你的 agent system 连 pre-PR coordination trace 都没有，那你根本无法研究过程失败。**
-
-#### 与当天主题的关系
-
-它和用户方向里的 `software change intelligence` 非常贴近。真正的 change intelligence 不只是分析 patch 本身，还要分析 patch 之前变更是如何被认领、定位、冲突、放弃和重试的。
-
----
-
-### 6. Beyond the GUI Paradigm: Do Mobile Agents Need the Phone Screen?
-
-**论文信息**：*Beyond the GUI Paradigm: Do Mobile Agents Need the Phone Screen?*  
-**作者**：Jinseok Chung, Minkyoung Song, Hyunji Jung, Namhoon Lee  
-**arXiv**：[2606.19388](https://arxiv.org/abs/2606.19388)  
-**分类**：cs.SE, cs.CL, cs.HC  
-**发布日期**：2026-06-19
-
-**一句话 TL;DR**：这篇论文真正提出的不是“CLI 比 GUI 强”这么简单，而是：对于复杂移动任务，屏幕交互只是 interface 的一种；如果平台暴露了 CLI，agent 应该被允许使用更接近系统状态的操作面。
-
-#### 为什么这个问题重要
-
-把 OpenHarmony/HarmonyOS 视为高价值测试场景时，一个核心原因就在这里：复杂工业平台往往不只是一个屏幕，而是同时包含文件系统、命令行、包管理、后台服务、权限状态、跨 app 数据。若 agent 只能通过 GUI screenshot 和 click 工作，它看到的是最表层的交互层，很多高价值操作根本不在这一层。
-
-所以这篇论文虽然表面上是 mobile agent，但实质上讨论的是**agent 应否接近系统真实控制面**。这和 repository-level coding agent 可以直接读文件、跑命令、查进程而不是只看网页，是同一种设计选择。
-
-#### 方法怎么工作
-
-作者把 mobile agent 分成 GUI paradigm 和 CLI paradigm 两类来比较。CLI agent 可以直接访问 device services/data，GUI agent 则只看屏幕并发出交互。
-
-实验分两部分。第一部分是在 AndroidWorld 和 MobileWorld 上，对比三种 coding-agent style 系统和三个可复现 GUI baseline。第二部分是自己构建 `CLI-Advantage Task Suite`，覆盖 bulk operations、multi-condition filtering、aggregation、cross-app workflows、hidden device state 五类日常任务。
-
-这里最重要的方法论选择是：作者不只测“标准 benchmark 能不能过”，还专门构建一批**GUI 自然吃亏、CLI 自然占优** 的任务模板。这避免了评测只服务于旧范式。
-
-#### 关键实验与证据
-
-数字非常直接。Claude Code (Opus 4.7) 在 AndroidWorld / MobileWorld 上达到 **71.8% / 51.9%**，都超过可复现 GUI baseline。oracle CLI 解的上限更高，达到 **88.8% / 86.3%**，说明空间还很大。
-
-更有说服力的是 CLI-Advantage Suite：**所有 CLI agent 在五类任务上都优于所有 GUI baseline，而且平均步骤数只有 10.7，而 GUI baseline 要 18.6。** 这说明 CLI 不是只在极个别任务上取巧，而是在一类“需要系统状态与批处理能力”的任务上系统性更合适。
-
-#### 局限和可信度
-
-它的限制同样明显。首先，这不是一个“纯苹果对苹果”的设定，CLI 能力本来就比 GUI richer；因此论文更像是在证明 interface choice matters，而不是单纯比较推理能力。其次，AndroidWorld/MobileWorld 对真实用户任务覆盖有限，离工业级移动平台仍有距离。第三，CLI agent 天然带来更高权限与更高破坏能力，这一点论文强调得不够多。
-
-但它给出的工程含义非常清楚：**当任务本质上依赖系统状态、批量操作、隐藏元数据和跨应用数据流时，只让 agent 看屏幕是主动把它绑在低带宽接口上。**
-
-#### 与当天主题的关系
-
-这篇论文对用户关注的 OpenHarmony/HarmonyOS 场景尤其值得保留。它提醒我们，不应把复杂平台上的智能软件工程任务窄化成 GUI automation，而要从更接近系统控制面的接口设计 agent workflow。
-
----
-
-### 7. Library-Aware Doubles and Iterative Repair for Large Language Model-Generated Unit Tests in OpenSIL Firmware
-
-**论文信息**：*Library-Aware Doubles and Iterative Repair for Large Language Model-Generated Unit Tests in OpenSIL Firmware*  
-**作者**：多位 AMD/openSIL 相关作者  
-**arXiv**：[2606.19725](https://arxiv.org/abs/2606.19725)  
-**分类**：cs.SE, cs.AI, cs.MA  
-**发布日期**：2026-06-19
-
-**一句话 TL;DR**：这篇论文说明，在复杂构建环境里，测试生成的主要难点不是“写出断言”，而是能否让测试在真实工具链中编过、链过、跑起来；LLM workflow 必须正面处理 doubles、依赖和编译修复。
-
-#### 为什么这个问题重要
-
-很多 coding agent 论文把“测试反馈”讲得很轻，好像有个 `pytest` 就够了。但真实工业环境里，尤其是固件、系统软件、嵌入式代码，测试本身就很难搭起来。函数可能依赖特殊头文件、链接脚本、硬件抽象层、复杂 mock/stub/fake、专门构建系统。这里的瓶颈不是让模型猜一个 assert，而是让生成物进入真实 build/test loop。
-
-这和用户研究方向中的“复杂构建/测试/运行环境反馈”高度一致。
-
-#### 方法怎么工作
-
-论文针对 AMD 的 openSIL 固件代码库，设计了一个多 agent UT authoring workflow。关键步骤至少有三层。
-
-第一，自动生成 test scaffold，包括必要的测试框架文件、JSON 输入、INF 配置等。第二，做 **library-aware doubles** 生成与复用，也就是识别哪些依赖需要 deep doubles、哪些只要 shallow stub/mock/fake。第三，进入 **iterative compile-dispatch repair loop**：让测试在真实构建系统里编译、链接、调度执行，再把 build log 与 line coverage 回传给 LLM 继续修。
-
-这里最有意思的是它把 line coverage guidance 放进闭环，而不是只把编译错误当反馈。也就是说，系统不仅追求“能跑”，还追求“跑到更多有效代码”。
-
-#### 关键实验与证据
-
-结果很扎实。总共 **76 个 functions under test** 中，有 **73 个最终生成了可编译的单测**。在不使用 coverage guidance 或 retrieval augmentation 时，平均 line coverage 是 **73.9%**。在一个 **48-function 子集** 上，仅用 line-coverage guidance 就能把平均 coverage 拉到 **98.8%**；加入 vector-database retrieval 后是 **94.7%**。
-
-这组数字有两个解读。其一，复杂环境下 buildability 的确可以通过 structured repair loop 大幅提高。其二，retrieval 并不必然比更直接的 coverage feedback 更有效，至少在这套设定里，`LCA-only` 反而优于 `LCA+VDB`。这说明“多加知识库”不一定是免费午餐。
-
-#### 局限和可信度
-
-论文也写得很明白：compile success、dispatch success、line coverage 都只是 proxy，不代表语义正确或测试 oracle 强。换句话说，**高 coverage 不等于好测试**。此外，实验只针对 AMD openSIL 和 EDK II，外部可迁移性有限。
-
-但即便如此，这篇论文的重要性依然很高，因为它正面展示了一个常被忽略的事实：**在复杂软件环境里，验证闭环本身就是要被工程化的对象。**
-
-#### 与当天主题的关系
-
-它直接支撑“执行反馈”“构建环境反馈”“复杂工业平台测试场景”的主线。相比那些只在干净 Python repo 上跑单测的论文，这篇更接近真实复杂平台的 friction。
-
----
-
-### 8. Calibration Without Comprehension: Diagnosing the Limits of Fine-Tuning LLMs for Vulnerability Detection in Systems Software
-
-**论文信息**：*Calibration Without Comprehension: Diagnosing the Limits of Fine-Tuning LLMs for Vulnerability Detection in Systems Software*  
-**作者**：若干系统安全/SE 研究者  
-**arXiv**：[2606.20502](https://arxiv.org/abs/2606.20502)  
-**分类**：cs.CR, cs.AI, cs.SE  
-**发布日期**：2026-06-19
-
-**一句话 TL;DR**：这篇论文最重要的结论不是“某个模型不行”，而是 fine-tuning 在系统软件漏洞检测上很可能只是在校准输出阈值，而没有形成真正的安全理解。
-
-#### 为什么这个问题重要
-
-如果研究 coding agent 的安全验证，漏洞检测和安全 triage 是无法绕开的子问题。但这个方向一个长期疑问是：模型在 benchmark 上拿到的分，到底来自真实安全推理，还是来自污染数据、模板记忆和分类倾向？
-
-这篇论文的价值在于，它没有再做一个“我们调了个模型，分数更高”的工作，而是反过来检查这种提升是否只是表面校准。
-
-#### 方法怎么工作
-
-作者构建了一个名为 **CWE-Trace** 的框架，基于 Linux kernel 样本，强调三个设计点。
-
-第一，数据是 **834 个手工整理样本，覆盖 74 个 CWE**，而且做了严格 temporal split：历史集与 post-cutoff leakage-free 集分开。第二，保留 vulnerable-patched pairs 的上下文对应关系，而不是只给孤立代码片段。第三，除了常规准确率外，还引入 **Directional Failure Index (DFI)** 和 **Hierarchical Distance and Direction (HDD)** 两个指标，用来诊断模型是以什么方向系统性地失败。
-
-这套设计其实是在逼问一个更深的问题：模型到底是在理解漏洞机制，还是只是学会“某种模式更像漏洞”。
-
-#### 关键实验与证据
-
-最关键的实验结论非常硬。
-
-第一，所谓污染优势并不明显。作者发现，**84% 的 nominally contaminated 样本其实没有可用的 memorization signal**，而且约 **31%** 带有 CWE misclassification。换句话说，“这条样本可能见过”并不自动意味着模型真能靠记忆得利。
-
-第二，最强 detection 分数也很一般。论文报告 **最佳 binary detection 只有 52.1%**，仅仅 **比随机高 2.1 个百分点**；而精确 CWE Top-1 排名 **低于 1.3%**。这已经足够说明当前模型离“可靠安全推理”还很远。
-
-第三，更重要的是 failure 机制。作者认为 backbone directional priors 主导了 fine-tuning 后的行为，fine-tuning 更多是在调输出 threshold，而不是改变决策政策本身。这就是标题里的 `calibration without comprehension`。
-
-#### 局限和可信度
-
-这篇论文的可信度相当高，原因不是结果多漂亮，而是它刻意把漂亮结果拆掉了。它不仅控制时间泄漏，还从函数级分析污染是否真的存在，并区分 detection 与 understanding 两种能力。局限主要在于数据仍然是 Linux kernel/C 场景，不能直接外推到所有语言与漏洞族。
-
-不过对 coding agent 研究来说，这恰好是最有价值的负结果之一。它提醒我们：**如果你把安全能力建在表面分数上，很可能是在给一个不会安全推理的模型做 calibration cosmetics。**
-
-#### 与当天主题的关系
-
-它和昨天主题的关系在于“评估可信度”这一条主线。Agent reliability 不是只看会不会输出一个漏洞标签，而是看这个标签是否建立在真实理解上。对 repository-level 安全 agent，这个提醒尤其关键。
+**与当天主题的关系**  
+如果说前几篇在讲 agent 怎么利用外部证据，那这篇是在提醒我们：**连“证据”本身都可能是假的。** 对 agent reliability 研究来说，这是必须时时记住的一根刺。
 
 ## 中相关论文速读
 
-### When Lower Privileges Suffice: Investigating Over-Privileged Tool Selection in LLM Agents
+### AgentArmor: coding agent 的危险边界一半在模型，一半在 harness
 
-[2606.20023](https://arxiv.org/abs/2606.20023) 讨论的不是 coding patch 本身，而是 agent 在多个可选工具间的权限选择。它定义了 `over-privileged tool selection`：明明低权限工具已经足够，却过早选了高权限工具，或在短暂失败后过度升级。这个问题对 coding agent 非常现实，因为真实开发环境里“能完成任务”和“应当用什么权限完成任务”不是一回事。
+[AgentArmor](https://arxiv.org/abs/2606.19380v1) 把 coding agent failure 分成三类：underspecification、capability error、agent harness error。它的 mitigation 也有很强的系统味：两级命令风险分类器、三次误操作后直接终止回合、只允许用户解除的 immutability daemon、允许 agent 自己裁剪长工具输出，以及删除前必须先 `ls -la`、执行脚本前必须先读脚本等 deterministic guardrail。结果上，两级分类器在测试集上的 `AUC-ROC` 达到 **0.990**，production prompt 点的 precision 大约 **97.3%**、recall **64.7%**。更有价值的是它展示了 coding agent 的 failure source 并不只在模型，而在“模型以什么操作协议接触系统”。这与 repository-level reliability 很接近，但论文更多是 harness safety，而不是软件变更任务本身，所以我把它放在中相关。
 
-方法上，作者构建了 ToolPrivBench，在八个 domain、五类 recurring risk pattern 上测直接高权限选择与失败后的 escalation。结论是 mainstream LLM agent 普遍存在过度升级，而且 transient failure 会放大这种倾向。prompt-level control 能缓解一些，但效果不稳；他们提出的 privilege-aware post-training 更有效，把 OPUR 降到 **39.71% / 27.02% / 18.93%**（在三种 Qwen3 设定下）。为什么这篇我放中相关而不是强相关？因为它离 repository software change 还差一层，但它对 agent 安全边界设计有直接启发：least privilege 不能默认从一般安全 alignment 自动获得。
+### JAMER: project-level benchmark 已经开始区分“能编译”和“行为对”
 
-### OpenRath: Session-Centered Runtime State for Agent Systems
+[JAMER](https://arxiv.org/abs/2606.19830v1) 为专业游戏引擎上的 project-level code engineering 提供了 `JamSet/JamBench`。最有意思的是它的验证管线不是停在编译，而是从文件完整性、headless 运行到行为采集一路做下去。数据规模上，从 **24 万多个仓库**里筛出 **8,133** 个 verified projects，其中 **300** 个人工核验项目做 JamBench。结果也很说明问题：Task 2a 中，runtime pass rate 会从 small project 的 **80.4%** 掉到 large project 的 **5.7%**；Code Agent 虽然能提升 compilation rate，但 **几乎不提升 runtime behavioral quality**。这和今天的主线高度一致：语法/编译通过并不代表系统级行为正确。之所以放中相关，是因为它更偏 game-engine project benchmark，不是仓库演化或 patch workflow 本身。
 
-[2606.19409](https://arxiv.org/abs/2606.19409) 不是一篇重结果的 benchmark 论文，而是一篇 runtime model 论文。它的中心思想是把 `Session` 做成一等运行时对象，统一承载 conversation、tool effect、memory event、sandbox placement、lineage metadata、token usage、pending work 和 replay evidence。这样 fork、merge、replay 这些原来只能靠日志重建的行为，会变成显式 runtime 操作。
+### AutoPass: 把编译器内部证据和运行时证据一起纳入 Agent 决策
 
-这和用户方向里的 `verify and organize software change` 很贴近，因为很多真实 agent 系统的问题，恰恰来自状态被碎片化记录。为什么我没有把它列为强相关？因为它的 claims 主要限于 controlled runtime properties，论文自己也承认缺少广泛定量比较与 memory quality 评测。不过它值得保留一个判断：**如果 agent runtime 状态不是 first-class value，后续审计和复现会很痛苦。**
+[AutoPass](https://arxiv.org/abs/2606.20373v1) 做的是编译器性能调优，不是传统代码修复，但方法论很值得关注。它不是把 LLVM 当黑盒，而是让 agent 读取 compiler IR、compiler-internal optimization state 和 measured runtime feedback，然后迭代修改 pass pipeline。结果上，在带 rollback policy 的设置下，AutoPass 在 x86-64 和 ARM64 上的几何平均速度提升分别达到 **1.043x** 和 **1.117x**（相对 `-O3`）；无 rollback 的 cBench 测试里，x86-64 上几何均值 **1.040x**、只有 **6** 个 regression，ARM64 上是 **1.109x**。更有意思的是 one-shot `R1` 到三轮 refinement `R3` 的差距：x86 上 regression 从 **13** 降到 **6**。它和“执行反馈驱动 Agent 修正”这个主题很贴，但任务更偏编译器 autotuning，所以放中相关。
 
-### N-Version Programming with Coding Agents
+### ToolPrivBench: least privilege 不是自然从通用 safety 对齐里长出来的
 
-[2606.20158](https://arxiv.org/abs/2606.20158) 把经典 N-version programming 搬到 coding agent 时代来做。作者用 Knight-Leveson 的 Launch Interceptor Program Specification，让 agent 生成 **48 个实现**，再用 **100 万随机测试输入** 来测共同失效。结果显示 common-mode failure 仍然很多，这个负结果很重要，因为它打掉了一个过于乐观的想法：多模型/多语言自然就会带来足够的错误独立性。
+[When Lower Privileges Suffice](https://arxiv.org/abs/2606.20023v1) 研究的是 tool-using LLM agents 过度选择高权限工具的问题。论文的价值不在某个具体数字，而在结论：一般 safety alignment 并不会自然迁移成 least-privilege tool choice，而且 transient failure 还会放大这种过度升级倾向。对真实 coding agents 来说，这和 shell、git、文件系统、云部署工具的权限边界直接相关。之所以放中相关，是因为它研究的是工具选择安全性，而非仓库级代码变更任务本身。
 
-但它也发现 diversity 不是完全没用。多数投票的三版本单元把平均 failure count 从 **387.44** 降到 **130.99**，还有 **11,844 个 N-version units** 没观察到失败。这说明多版本 agent assembly 仍可能是工程上可用的 reliability strategy，只是不能假设错误自动独立。对 coding agent 来说，这是个边缘但很有价值的判断。
+### Qiskit Code Migration with LLMs: API 演化是软件演化里一个很真实但常被低估的场景
 
-### JAMER: Project-Level Code Framework Dataset and Benchmark on Professional Game Engines
+[Qiskit Code Migration with LLMs](https://arxiv.org/abs/2606.20173v1) 关注的是 QDK 高速演化带来的技术债。方法上它不是直接让 LLM“猜迁移”，而是先自动生成 migration taxonomy，再做 taxonomy-guided RAG，且比较 unrestricted 与 restrictive retrieval。论文主张 restrictive taxonomy-based retrieval 能显著减少 hallucination，尤其在复杂 refactoring scenario detection 上表现更稳。它对 “software evolution in the agent era” 很贴，但因为场景局限在量子软件生态，而且正文给出的定量证据不如今天前几篇扎实，所以我放在中相关。
 
-[2606.19830](https://arxiv.org/abs/2606.19830) 值得关注，不是因为游戏，而是因为它把 project-level benchmark 从小 repo 拉到了 professional engine framework。作者从超过 **24 万个仓库** 中筛出 **8,133 个验证通过的 Godot 项目**，其中 **300 个**构成 JamBench。评价指标不只看 compile，而是结合 SCS 与 BAS，还收 runtime behavior。
+### Repository-Level Solidity Code Generation: specialized repo benchmark 的价值在于暴露结构性缺陷
 
-最值得保留的结论是：随着项目规模增大，runtime pass rate 会从 **80.4%** 掉到 **5.7%**；而 Code Agents 虽然提高了 compilation rate，却没有带来 runtime behavioral quality 提升。这和很多 repository benchmark 的经验高度一致：**语法层修通不等于系统层行为对了。** 之所以放中相关，是因为它和 coding agent 大方向很近，但不直接聚焦软件变更与可靠性闭环。
+[Repository-Level Solidity Code Generation with Large Language Models](https://arxiv.org/abs/2606.19988v1) 引入了 **5,470** 个 repository-level Solidity contracts 的 `SolidityBench` 和面向领域语义的 `SolidityScore`。结论很有代表性：通用模型在 specialized repository generation 上存在系统性的结构缺陷；非参数方法里 RAG 最好，而 in-context learning 超过两个示例后会因 context saturation 退化；SFT 提升最大。这篇并不直接讨论 software change，但它说明“repository-level”这个维度已经在特殊领域开始形成真正的数据和评测，而不是单函数 codegen。
 
-### FAPO: Fully Autonomous Prompt Optimization of Multi-Step LLM Pipelines
+### CWE-Trace: 系统软件漏洞检测里，fine-tuning 可能只是校准，不是理解
 
-[2606.19605](https://arxiv.org/abs/2606.19605) 更像 pipeline optimization 论文，不是 repository agent 论文。但它有一个值得保留的判断：多步 LLM pipeline 的瓶颈常常不是单个 prompt，而是链条结构。FAPO 先做 prompt edits，不够时再做结构级改动；在 **18 个模型-基准组合中赢了 15 个**，平均比 GEPA 高 **14.1 个百分点**，在需要升级到结构变化的 6 个 HoVer / IFBench 比较中全部取胜，平均增益 **33.8 个百分点**。
-
-为什么与今天主题有边缘关系？因为 coding agent 本身也是 multi-step pipeline。它提醒我们，在研究 agent 可靠性时，不能把全部问题都压缩成“prompt 写得好不好”，workflow shape 本身也是变量。但这篇缺少 repository-level software change 证据，因此不必深挖。
+[Calibration Without Comprehension](https://arxiv.org/abs/2606.20502v1) 用 **834** 个人工整理的 Linux kernel 样本、**74 个 CWE**、严格 temporal split 去检验一个尖锐问题：漏洞检测 benchmark 上的 gain 到底是 reasoning，还是 contamination 和阈值校准。结论并不乐观。作者发现名义上“受污染”的样本里，**84%** 实际没有可用 memorization signal，且约 **31%** 的样本带有 CWE misclassification。更关键的是，多数 backbone 的 directional prior 很稳定，`DFI` 从 **-85.5** 到 **+94.8** 个百分点不等，fine-tuning 主要是在改输出阈值，不是在改决策策略。最好检测分数也只有 **52.1%**，只比 chance 高 **2.1** 个百分点，Top-1 CWE ranking 还不到 **1.3%**。这篇更偏 vulnerability detection，而不是 coding agent，但它对“评估可信度”和“系统软件环境下 LLM 理解力边界”都有参考价值。
 
 ## 可留意 / 可跳过
 
-- `Qiskit Code Migration with LLMs`：[2606.20173](https://arxiv.org/abs/2606.20173)。可保留关键词是“API 演化驱动的迁移辅助”，但论文目前更像特定框架迁移案例，不够仓库级。
-- `Prompt Quality and Pull Request Outcomes`：[2606.19644](https://arxiv.org/abs/2606.19644)。保留一个判断：PR 结果与 prompt structure 的关联值得看，但它更偏经验研究，不直接提供 agent reliability 机制。
-- `The Correctness Illusion in LLM-Generated GPU Kernels`：[2606.20128](https://arxiv.org/abs/2606.20128)。很值得保留“测试 oracle 会制造 correctness illusion”这个警示，但任务域偏 GPU kernel，不是仓库级软件变更。
-- `Multi-LCB: Extending LiveCodeBench to Multiple Programming Languages`：[2606.20517](https://arxiv.org/abs/2606.20517)。保留“多语言新题评估”的 benchmark 价值，但它主要测 coding breadth，不是 software change depth。
-- `DynAMO`：[2606.19382](https://arxiv.org/abs/2606.19382)。可以保留“dependency-aware parallel workflow”这个词，但场景偏工业资产流程，不必今天深挖。
+- [OpenRath: Session-Centered Runtime State for Agent Systems](https://arxiv.org/abs/2606.19409v1)  
+保留的关键词是 `Session` 作为可分支、可回放、可审计的运行时值。它对 agent provenance 很有启发，但目前更像编程模型报告，量化证据还少。
+
+- [Interpretable and Verifiable Hardware Generation with LLM-Driven Stepwise Refinement](https://arxiv.org/abs/2606.19387v1)  
+可保留“stepwise refinement + formal transformation rules”这个思路。它和“先把高风险生成约束成可验证中间步骤”有关，但应用场景偏 RTL 生成，不是今天 repo-level software change 的中心。
+
+- [Beyond Global Replanning: Hierarchical Recovery for Cross-Device Agent Systems](https://arxiv.org/abs/2606.20487v1)  
+关键词是 scope-aware recovery、device-local strategy 与 global replanning 分离。对 computer-use / mobile agents 有价值，但与仓库级代码变更的直接交集还有限。
+
+- [Bistable by Construction: Wall-Clock-Calibrated State Monitors Have No Moment-Detection Regime at Agent Cadence](https://arxiv.org/abs/2606.19386v1)  
+这篇有意思的点在于：wall-clock 校准的 state monitor 在真实 agent 节奏上要么几乎常亮，要么几乎失声。保留这个判断即可，不必今天深挖。
+
+- [Prompt Quality and Pull Request Outcomes](https://arxiv.org/abs/2606.19644v1)  
+结论是 prompt 的 `Context / Specificity / Verification` 对 downstream PR outcome 的作用不同，尤其 verification 与 code adoption 更相关。实证有用，但更像协作行为研究，不是今天最核心的 agent workflow 论文。
 
 ## 横向比较
 
-| 论文 | 问题定义 | 关键证据 | 工程可迁移性 | 可信度判断 |
+| 论文 | 核心问题 | 关键证据 | 工程可迁移性 | 我最在意的风险 |
 |---|---|---|---|---|
-| Repository Guidance | 仓库指导是否真能帮助 repo agent | 33.0% vs 28.3% vs 25.5%，提升主要来自 coverage | 很高 | 机制解释清楚，但有长度混杂 |
-| StaminaBench | 长回合 coding agent 会怎样失稳 | 无反馈 5-6 轮即崩，反馈可提升至多 12x | 很高 | benchmark 扎实，但任务族单一且昂贵 |
-| AgentArmor | destructive failure 来自哪里 | 20 环境、59 模板、harness 改造显著更安全 | 高 | taxonomy 强，量化更偏系统安全风格 |
-| Phoenix | GitHub issue automation 如何落地 | 75% oracle-resolve；42 real issues 上 100% CP | 很高 | 样本小，但部署细节真实 |
-| Before the PR | 多 agent 协调失败在哪里 | 重复劳动占比 78% -> 0%，throughput 超 3x | 很高 | 过程可观测性贡献大 |
-| Mobile CLI Agents | 复杂移动任务是否该只靠 GUI | 71.8/51.9；步骤 10.7 vs 18.6 | 中高 | interface advantage 明确，但权限问题仍待展开 |
-| Firmware UT Repair | 复杂构建环境下如何生成可运行测试 | 73/76 buildable；coverage 73.9% -> 98.8% | 很高 | coverage 不等于语义正确，但工程价值强 |
-| CWE-Trace | 安全 benchmark 高分是否代表理解 | best detection 52.1%，Top-1 < 1.3% | 很高 | 负结果非常有信息量 |
+| Probe-and-Refine | repo guidance 是否能系统提升仓库级 agent | 33.0% vs 28.3% vs 25.5%，收益主要来自 14.5pp coverage 提升 | 很高 | 依赖底座模型是否能生成有诊断性的 probe |
+| Phoenix | issue resolution 如何在真实 GitHub workflow 中保住 correctness | 24 例 SWE-bench Lite 中 75% oracle resolve；42 个真实 issue 上 100% CP | 很高 | CP 不等于真正修好，planner localization 仍弱 |
+| StaminaBench | coding agent 多轮会话能活多久 | 默认场景早期失败；强配置也只是把平均通过轮数推高，不等于稳过 100 轮 | 很高 | 任务域仍局限于 REST API 演化 |
+| OpenSIL UT | 严格构建环境里的测试生成如何闭环 | 73/76 compile success；LCA-only 98.8% mean coverage | 很高 | 平台和 toolchain 依赖较重 |
+| grite / Mining Coordination | 多 agent 协作失败为何在 PR 前就发生 | dup-work 从 78% 到 0%，goodput 从 2.33 到 8.00 | 高 | 目前主实验仍是 synthetic agents |
+| GPU Correctness Illusion | benchmark 的 correctness oracle 是否在误判 | 9/9 buggy caught, 15/15 clean；5 类 GPU 一致 | 很高 | author-seeded bugs 不是实际线上输出样本 |
 
 ## 我的判断
 
-如果只用一句话概括 2026-06-19 这批论文，我的判断是：**coding agent 研究正在从“模型会不会做题”转向“系统怎样才能持续、受约束、可审计地做变更”。**
+**创新性：A-**  
+今天最有创新性的不是再造一个更大 benchmark，而是几篇论文都在改“外部结构”：repo guidance、baseline-aware testing、coordination log、seeded oracle、coverage-guided repair。这些东西不 glamorous，但很扎实。
 
-从创新性看，我给这一天打 `A-`。最强的不是某篇单点算法，而是多个子方向同时开始认真处理同一个系统问题。`Probe-and-Refine`、`StaminaBench`、`AgentArmor`、`Phoenix` 这几篇放在一起，已经能拼出一个相对完整的研究版图。
+**实用价值：A**  
+如果你的方向是 repository-level coding agents、真实构建/测试环境反馈、agent reliability，这批论文的信号密度很高。尤其 `Probe-and-Refine`、`Phoenix`、`StaminaBench`、`OpenSIL UT` 这四篇，几乎都能直接转成后续研究原型。
 
-从实用价值看，我给 `A`。昨天最有价值的论文都不是纯 leaderboard 工作，而是直接触到 repo knowledge、长 session、权限边界、复杂测试环境和真实 webhook 这些工程痛点。对真实软件仓库智能体而言，这些问题比再涨几点 pass@1 更接近瓶颈。
+**严谨性：B+**  
+今天不少论文比常见 agent paper 更诚实，愿意把 failure mode、deployment hazard 和 oracle 弱点写出来。但也要看到局限：有些结果仍受 benchmark 分布、任务域、synthetic setup 或 author-seeded corpus 限制。
 
-从严谨性看，我给 `B+`。优点是很多论文开始主动报告局限、主动避开污染、主动解释失败机制；缺点是样本规模仍然偏小，很多实验还停在特定任务族或 pilot deployment。尤其是 Phoenix、OpenRath 这类系统论文，想变成更稳的证据还需要更大规模开放评测。
+**与用户方向相关度：A**  
+这一天的主线非常贴近 `LLM-based Software Change Engineering`：仓库外知识如何表达，验证闭环如何搭，PR 前协作如何记录，弱 oracle 如何误导结论，复杂工业环境中的 build/test feedback 如何变成 agent 的下一步依据。
 
-从与用户研究方向的相关度看，我给 `A`。昨天最强的一批论文几乎都打在“repository-level coding agents、software change intelligence、agent reliability and quality assurance、software evolution in the agent era”这条主线附近，而且不是泛泛而谈。
-
-不确定性主要有两点。第一，很多结果还集中在 Python repo、REST API、GitHub workflow、Linux kernel、Android 这些相对成熟生态，离 OpenHarmony/HarmonyOS 这类复杂工业平台还有迁移距离。第二，大家越来越会报“安全”“可信”“可验证”，但真正能做到跨平台、跨仓库、跨工具链稳住结论的系统仍然很少。这也正是接下来最值得盯的研究空白。
+**不确定性**  
+最大的未知数有两个。第一，今天这些工作大多只各自打通了闭环的一段，还没有形成统一的 repo-level agent stack。第二，除了 OpenSIL 这种少数例子，我们仍缺少 OpenHarmony / HarmonyOS 级别复杂工业平台上的公开、可重复 agent 评测。也正因为如此，今天这批论文最值得重视的，不是它们已经把问题解决了，而是它们开始把真正该解决的问题说对了。
