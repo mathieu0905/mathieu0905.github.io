@@ -56,7 +56,7 @@ export const papers: Paper[] = [
     venue: "FSE",
     year: 2026,
     acceptedYear: 2025,
-    authors: ["Zhihao Lin", "Mingyi Zhou", "Han Hu", "Bo Sun", "Gang Fan", "Li Li"],
+    authors: ["Zhihao Lin", "Mingyi Zhou", "Bo Sun", "Han Hu", "Gang Fan", "Li Li"],
     tags: ["Performance"],
     status: "accepted",
     pdfFile: "hapray_fse.pdf",
