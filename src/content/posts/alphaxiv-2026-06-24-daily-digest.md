@@ -1,335 +1,291 @@
 ---
-title: "从定位到审计：6 月 24 日这批 arXiv 让 Coding Agent 研究开始补工程证据"
+title: "别再把 coding agent 当成会写补丁的聊天机器人：2026-06-24 arXiv 的真正主线是定位、验证与迁移"
 date: "2026-06-24"
-description: "这一天与软件变更工程最相关的新论文，集中在仓库级定位、可迁移修复、agent 控制与生态审计四条真正能落到工程闭环的线上。"
+description: "这一天与软件变更工程最相关的新论文，不是在继续堆“更强 agent”，而是在补 repository-level 诊断、验证编排、legacy workflow 迁移和多 agent 连续性的关键缺口。"
 tags: ["论文解读", "arXiv", "Coding Agent", "软件工程", "Agent可靠性", "仓库级智能体", "软件演化"]
 series: "alphaXiv论文解读"
-coverColor: "from-slate-700 to-cyan-700"
+coverColor: "from-stone-700 to-emerald-700"
 ---
 
-# 从定位到审计：6 月 24 日这批 arXiv 让 Coding Agent 研究开始补工程证据
+# 别再把 coding agent 当成会写补丁的聊天机器人：2026-06-24 arXiv 的真正主线是定位、验证与迁移
 
-如果只看标题，2026 年 6 月 24 日这批 arXiv 很容易被误读成又一天“agent 论文很多、真正和软件工程关系一般”的常规日。细看之后并不是这样。真正值得读的几篇工作，正在把 coding agent 研究从“模型能不能生成 patch”推进到“怎样更稳定地定位、控制、验证、复用和审计软件变更”。这条线和普通的 code generation 不同，它关心的是仓库级任务里哪些证据是可信的，哪些 tool 调度是值得的，哪些改动逻辑可以跨项目迁移，哪些生态统计不能再靠单一 proxy 拍脑袋。
+如果只看标题，2026 年 6 月 24 日这批 arXiv 新论文并没有出现那种一眼就会在社交媒体上刷屏的“全新通用 coding agent”。但对做 `Reliable Coding Agents for Real-World Software Change and Evolution` 的人来说，这一天反而很值得认真读，因为它把几个真正限制落地的问题同时推到了台前：仓库级 repair agent 到底怎么定位，验证预算怎么分配，已有专家脚本工作流怎么渐进迁移成可演化 harness，多 agent 之间的上下文连续性怎样不靠人脑补，依赖升级这种高频真实维护任务能不能从“单项目修补”升级成“跨项目可迁移修复”。
 
-更具体一点说，今天最强的信号不是某个 benchmark 上涨了几分，而是研究问题本身开始变得更像真实工程：定位不再只是 file retrieval，patch 不再只是单项目一次性修补，控制器不再默认“有测试就全跑”，生态分析也不再把 bot 账号当成 adoption 全貌。对研究“Reliable Coding Agents for Real-World Software Change and Evolution”的人来说，这一批论文值得系统读，因为它们都在补同一块长期缺失的东西：**软件变更闭环里的工程证据**。
+更具体地说，这一天的强相关论文几乎都在修正一个常见误区：今天很多 coding agent 论文默认“问题已经被看见”，于是主要精力花在生成和反思上；可一旦任务真的落在大仓库、多文件修改、昂贵验证和复杂历史工作流里，决定成败的第一瓶颈往往不是生成，而是**你是否拿到了正确证据，以及你是否用合适的代价去消耗这些证据**。这也是为什么今天最值得深读的论文，不是那种再包一层多 agent 壳子的系统，而是把定位、控制、迁移、可审计连续性这些“脏活”认真拆开的工作。
+
+如果把它们合在一起看，今日主线很清楚：**coding agent 研究正在从“模型能不能写”转向“软件变更链路能不能被可靠组织起来”**。这条主线和真实仓库、复杂构建/测试环境、legacy maintenance、跨工具 handoff、以及 OpenHarmony 这类复杂工业平台上的 agent 化软件工程问题，是高度同构的。
 
 ## 今日脉络
 
-今天与主线实质相关的论文一共 10 篇。我把它们分成三层：
+今天真正相关的论文可以分成三组。
 
-- 强相关 4 篇：`SHERLOC`、`BigBag`、`Bayesian control for coding agents`、`Detecting AI Coding Agents in Open Source`。这四篇分别对应仓库级定位、变更逻辑复用、工具调用控制、生态级审计，构成了一条完整主线。
-- 中相关 4 篇：`AutoSpec`、`GUI vs. CLI`、`SAFARI`、`ESAA-Conversational`。它们不直接做 repository repair，但分别触到 agent 安全边界、执行层瓶颈、长轨迹 fault attribution、跨 agent 记忆连续性，和“可靠编码智能体”有明确交集。
-- 可留意/可跳过 2 篇：`Reinforcement Learning for Computer-Use Agents with Autonomous Evaluation`、`Toward Self-Evolution-Ready Workflow Harnesses`。前者更偏 GUI agent 训练，后者更像 workflow migration 案例，和软件变更主线有关但不必今天深挖。
+第一组是 **仓库级修复与定位闭环**。`SHERLOC`、`Bayesian control for coding agents`、`BigBag` 都在处理“知道哪里错”和“知道何时该验证”这两个常被低估的问题。前者关心 repository-level repair agent 的 fault localization 怎样从 file retrieval 变成 actionable diagnosis；后者关心验证与修复动作如何在成本受限下调度；再后者则把 breaking dependency update 这种真实维护任务提升到跨项目可迁移的 AST transformation 级别。
 
-如果要把这一天的论文压成一句判断，那就是：**coding agent 研究开始把“生成能力”往后放，把“变更闭环里的可验证结构”往前放。**
+第二组是 **agent workflow 的可迁移性与可持续组织**。`Toward Self-Evolution-Ready Workflow Harnesses` 和 `ESAA-Conversational` 都不是在卷模型本体，而是在补 software change engineering 里更持久的结构问题：已有专家工作流能否低风险迁移，多个 coding agents 之间的状态与决策能否变成可重建、可审计的事件流，而不是散落在不同供应商会话中的上下文残片。
+
+第三组是 **边界、供给链与运行时现实**。`LemonHarness`、`AutoSpec`、`Detecting AI Coding Agents in Open Source`、`FirmCure`、`SemChunk-C` 都不是今天最核心的主线，但分别触到 workspace 边界、agent safety rules、开源仓库里的 agent 痕迹、复杂 firmware runtime 修复、和代码分块对下游 agent 的结构性影响。它们更像是今天主线的外围证据：真实软件工程语境里，agent 的难点越来越少是“会不会写代码”，越来越多是“如何在受约束系统里稳定工作并留下可追溯证据”。
 
 ## 强相关论文深读
 
-### 1. SHERLOC：仓库级 repair agent 缺的不是更多文件，而是更像诊断报告的定位结果
+### 1. SHERLOC：仓库级 repair agent 最缺的不是文件召回，而是带解释的诊断定位
 
-**论文信息**
+**论文信息**  
+标题：*SHERLOC: Structured Diagnostic Localization for Code Repair Agents*  
+作者：Hovhannes Tamoyan, Sean Narenthiran, Erik Arakelyan, Mira Mezini, Boris Ginsburg  
+arXiv 链接：[arXiv:2606.24820](https://arxiv.org/abs/2606.24820)  
+分类：cs.CL  
+发布日期：2026-06-23
 
-- 标题：*SHERLOC: Structured Diagnostic Localization for Code Repair Agents*
-- 作者：Hovhannes Tamoyan, Sean Narenthiran, Erik Arakelyan, Mira Mezini, Boris Ginsburg
-- 链接：[arXiv:2606.24820](https://arxiv.org/abs/2606.24820)
-- 分类：cs.CL
-- 发布：2026-06-24 的 arXiv 新稿列表，摘要页显示提交日期为 2026-06-23
+**一句话 TL;DR**  
+这篇论文真正推进的不是“定位更准一点”，而是把 repository-level bug localization 从“给你几个文件路径”改成“给 repair agent 一份结构化诊断意见”，从而把定位阶段直接嵌进后续修复链路。
 
-**一句话 TL;DR**
+**为什么这个问题重要**  
+今天很多仓库级 repair agent 的失败，并不是因为模型不会改，而是因为前半段把大量预算浪费在无效搜索上。论文开宗明义地指出，LLM agents 在 repository-level coding tasks 里，常常把接近一半预算花在 fault locating 上。更关键的是，即便现有 localizer 找到了正确文件，它通常只输出 location ranking，而没有告诉下游 agent：为什么这个位置可疑、根因可能是什么、还依赖哪些相邻文件、补哪些测试最关键。对真实软件变更来说，这种“只返回位置不返回诊断”的接口很弱，因为下游 patcher 仍然要重新做一遍理解工作。
 
-这篇论文最重要的贡献不是把定位 top-1 再抬高一点，而是把“定位”从文件检索改造成带诊断上下文的结构化产物，让后续 repair agent 真能拿来写 patch。
+**方法怎么工作**  
+论文的 Figure 1 把 SHERLOC 设计讲得很清楚。它不是一个依赖微调或多 agent 编排的大系统，而是一个 training-free 的定位框架，由四块组成。
 
-**为什么这个问题重要**
+第一步，是一个推理型 LLM 负责提出假设和搜索计划。  
+第二步，是一个 deterministic executor 替它访问仓库，但工具集刻意压得很小，只保留四类对 LLM 友好的 repository tools：文件查看、字符串搜索、仓库树检查和 import graph navigation。  
+第三步，是 lightweight self-recovery 机制，专门处理上下文截断、循环探索、tool call malformed、以及最终答案合成失败等常见 agent runtime 问题。  
+第四步，也是这篇最重要的区别点：最终输出不是单纯的 ranked files，而是一份 structured finding，包含 location explanation、root cause、solution idea、dependencies、testing impact 五个字段。Figure 5 给了一个 Django 案例，能直观看到这种 finding 已经接近一个可消费的诊断工单，而不是纯 retrieval 结果。
 
-真实仓库级修复任务里，agent 常常把大量预算花在“先找到该改哪”。问题是，许多定位工作最后输出的只是一个或几个文件名，最多再给出一段 line span。这种输出对评测者够用，因为可以拿来算 recall；但对后面的修复 agent 并不够。修复不是只知道“这个文件可能有问题”就行，还要知道怀疑的依赖链、错误模式、受影响区域、可能的副作用。如果定位阶段只能交付 retrieval，而交不出 diagnosis，那么整个 agent pipeline 会在编辑前就失血。
+这套设计背后的判断很对：repair agent 真正需要的不是更多“候选文件”，而是足够压缩且带因果解释的上下文入口。
 
-这也是为什么这篇论文和一般的 bug localization 工作不一样。它盯住的是 repository-level coding agents 的一个实际瓶颈：**定位结果是否已经足够“可执行”**。
+**关键实验与证据**  
+它的实验证据相对扎实，而且同时覆盖 localization 与 downstream repair transfer。
 
-**方法怎么工作**
+- 在 `SWE-Bench Lite` 上，SHERLOC 达到 **84.33% accuracy@1**。
+- 在 `SWE-Bench Verified` 上，达到 **81.27% recall@1**。
+- 当把 SHERLOC 的 findings 注入下游 repair agent 时，跨 5 个 repair models 和 2 个 agent frameworks，平均 **resolve rate 提升 5.95 个百分点**。
+- 在较弱模型上收益更明显，例如文中给出 `Qwen3-Coder-Next` 下，`SWE-Agent` 从 **44.7%** 提升到 **54.0%**，`OpenHands` 从 **49.4%** 提升到 **53.0%**。
+- 在效率上，平均 **localization tokens 降低 36.7%**，**total tokens 降低 23.1%**，说明它不是单纯把更多上下文塞给 agent，而是真的减少了无效搜索。
 
-SHERLOC 的设计重点是“一个推理模型 + 一组紧凑仓库工具 + 自恢复机制”，而不是多 agent orchestration 或任务特定训练。论文里至少有四个关键步骤值得记住。
+论文还做了一个很有价值的 finding-quality 分析。Figure 7 显示，高质量 findings 的 resolve rate 可以到 **75.9%**，而低质量 findings 只有 **20.0%**。这说明“定位结果能否转移为修复收益”高度依赖 finding 本身的诊断质量，而不仅仅是文件命中。
 
-第一步，它把工具层做成对 LLM 友好的最小集合，而不是把完整 shell 直接丢给模型。论文强调了 `View File`、字符串搜索、仓库树、以及一个很关键的 `Connected Tree` 工具。`Connected Tree` 不是简单的 import graph 可视化，而是把 direct 和 reverse import 关系一起总结出来，帮助模型从一个怀疑文件追到依赖扩散的模块。对于多文件修改、长依赖链 issue，这比孤立地读文件更接近真实人工调试过程。
+**局限和可信度**  
+它最强的一点也是一个明显局限：论文后半段的质量过滤依赖一个 external judge，而且这个 judge 看到了 ground-truth patch，因此 quality-filtered 结果不能被直接当成 deployment-ready 方案。作者自己也承认，这部分更像 retrospective analysis，而非当前可上线策略。另一个限制是，框架虽然 training-free，但主体仍依赖强推理模型；对更便宜模型是否同样稳，需要更多工程数据。
 
-第二步，它采用 bounded interaction loop。模型最多进行 20 轮推理/工具调用；每一轮要么调用工具，要么输出最终定位和诊断。这个设计其实是在控制两个风险：一是长链探索里的 budget 爆炸，二是模型在仓库里无目的游走。和很多“让 agent 一直搜到满意为止”的设计相比，SHERLOC 明显更强调受控探索。
+不过整体可信度仍然高于一批只报 file retrieval 的定位论文。因为它至少证明了三件事：位置找得更准、tokens 更省、下游 resolve 更高，而且这些证据是串在一起的。
 
-第三步，它把最终输出从“位置”扩展成“位置 + findings”。也就是说，输出里不仅有 suspected files，还要有结构化诊断结论，例如受影响 API、怀疑的依赖关系、测试影响等。论文反复强调，operative unit 不该只是 location，而应该是 actionable diagnosis。
+**与当天主题的关系**  
+SHERLOC 是今天最贴近“仓库级 agent 可靠变更链路”的论文之一。它在提醒我们：**repository-level code repair 的中间表示不该只是位置，而应该是诊断证据**。这和你关注的 execution feedback、证据锚定、agent QA 主线高度一致。
 
-第四步，它引入轻量 self-recovery。文中消融显示，除了工具套件本身，强制最后一轮综合和自恢复控制也很关键。作者在 failure taxonomy 里指出，大多数失败并不是完全没搜到相关区域，而是“已经到了正确目录之后选错文件”。这意味着定位困难往往不是纯 recall 问题，而是 evidence synthesis 问题。
+### 2. BigBag：依赖升级修复不该永远停留在“给每个项目写一次补丁”
 
-**关键实验与证据**
+**论文信息**  
+标题：*Agentic Generation of AST Transformation Rules for Fixing Breaking Updates*  
+作者：Frank Reyes, Benoit Baudry, Martin Monperrus  
+arXiv 链接：[arXiv:2606.24446](https://arxiv.org/abs/2606.24446)  
+分类：cs.SE  
+发布日期：2026-06-23
 
-论文在 SWE-Bench Lite 和 SWE-Bench Verified 上都做了定位评测。最显眼的结果是：
+**一句话 TL;DR**  
+这篇的关键贡献是把 breaking dependency updates 的修复对象从“单项目 patch”升级成“可执行、可迁移的 AST transformation program”，让同一类 API breakage 有机会跨项目复用。
 
-- 在 SWE-Bench Lite 上，SHERLOC 达到 `84.33% accuracy@1`。
-- 在 SWE-Bench Verified 上，达到 `81.27% recall@1`。
-- 在约 `30B` 量级模型上，作者声称已能匹配或超过同类 agentic localization 方法。
+**为什么这个问题重要**  
+依赖升级导致的编译失败，是现实仓库维护中最常见、最烦人的长期任务之一。传统 LLM repair 系统大多是在某个 client 项目里把编译弄过，但这对软件演化的帮助很有限，因为同一库版本升级造成的破坏，往往会同时打在多个项目上。若每个项目都单独生成 patch，就失去了 API-level 变化本可复用的结构信息。对 software change intelligence 来说，更有价值的是提炼出“这次依赖变化的修复规则”，而不是只为一个 repo 打一个临时补丁。
 
-更重要的是下游迁移结果。作者把 SHERLOC 的位置和诊断注入到 `OpenHands` 与 `SWE-Agent` 两个 repair framework、共 5 个 repair backbones 中，平均带来 `+5.95` 个百分点的 resolve rate 提升；同时把 localization tokens 降低了 `36.7%`，总 tokens 降低了 `23.1%`。这组数字说明它不是“定位分更高但对修复没帮助”的孤立模块，而是真的改善了后续闭环。
+**方法怎么工作**  
+Figure 1 对 BigBag 的 pipeline 描得很清晰，一共四步。
 
-还有一组很有信息量的结果来自 failure taxonomy。论文表 4 指出，定位失败里最大的类别是“看到了正确文件但做错选择”的 reasoning error，占 `40%`；其次是“到了正确目录但选错文件”的 close miss，占 `27%`；真正因为探索不够而失败的 only `2%`。这个结论很关键，因为它挑战了很多人对 repo-level localization 的直觉：问题未必是工具不够或检索不广，而是**检索结果没有被组织成足够强的诊断证据**。
+第一步是 `Input Context Assembly`。系统会把 client 项目里的编译错误、相关源代码、依赖 API 文档等修复所需上下文拼起来。  
+第二步是 `Transformation Generation and Application`。agent 不直接改目标仓库源码，而是生成 AST transformation program，底层可落在两种引擎上：`Spoon` 或 `JavaParser`。  
+第三步是 `Transformation Verification`。论文非常强调这一点：要把生成的 transformation 重新单独应用回原始项目，在 agent loop 之外再次跑 build，确认真正起作用的是 transformation 本身，而不是 agent 在循环中顺手做的别的隐藏修改。  
+第四步是 `Cross-Project Transfer`。把通过验证的 transformation 应用于遭受同一 breaking change 的其他 client projects，测试它能否迁移。
 
-**局限和可信度**
+这个设计的工程味很足，因为它抓住了一个常被忽略的点：agent 在全自治修复时很容易偷偷做出额外 edits，所以如果不做 isolated verification，你根本不知道“可迁移规则”是否真实成立。
 
-这篇工作很强，但也有几个需要明确写出来的边界。
+**关键实验与证据**  
+这篇的实验对象很贴近真实维护：作者在 `BUMP` benchmark 上评测 **157 个** breaking dependency updates，覆盖 **69 个 client projects** 和 **70 个 libraries**。
 
-第一，headline 结果用到的主力模型是大模型思维版，服务成本并不低。论文自己也承认，最亮眼那行结果不能和一些 32B fine-tuned baseline 直接按 serving cost 对比。研究上这没问题，但工程部署时要额外算账。
+- 最强配置 `GeminiCLI/Gemini-3.1-Pro + JavaParser` 的 **Fix Rate 为 78.6%**。
+- 八个配置上的 `Compilable Rule Rate` 差异很大，最佳能到 **94.3%**，说明 model 选择和 transformation engine 选择都显著影响结果。
+- 如果做 multi-model ensemble，论文估计 `JavaParser` 上可达 **99.4% CRR**，`Spoon` 上 **98.7% CRR**，也就是“能生成可编译 transformation”这一层已经很接近全覆盖。
+- 真正更重要的是跨项目迁移：作者报告总体 **Cross-Project Fix Rate 为 33.3%**，即 **43/129** 个可复现实例能被迁移修复。
+- 论文还指出 `Test Failure` 在部分配置里占比很高，例如 `OpenCode/GPT-5.4-mini/JavaParser` 有 **17.7%**，`OpenCode/DeepSeek-v3.2/JavaParser` 有 **14.2%** 的案例是“编译修好了但行为改坏了”。
 
-第二，评测语料仍主要围绕 SWE-Bench 系列，语言和生态偏 Python。论文说 `Connected Tree` 只需要一个薄的语言特定 import parser，因此迁移到其他语言“很容易”；这个说法在 JavaScript/Java 可能成立，在更加复杂或弱静态结构的生态里就未必同样轻松。
+这最后一个结果尤其重要，因为它提醒我们：对真实软件变更，build success 只是第一层，测试失败才是规则泛化时最容易暴露的真实语义风险。
 
-第三，虽然作者把结构化诊断注入 repair agent 后看到了平均增益，但这仍然是“先定位、再注入”的串联式评估。更进一步的问题是：repair agent 是否可以在定位阶段主动请求更细证据，形成双向交互，而不是一次性消费 SHERLOC 输出。论文还没有走到这一步。
+**局限和可信度**  
+BigBag 的强点是问题定义和 verification protocol 都站得住，但它也有几个限制。首先，它聚焦的是 Java 生态和 breaking API updates，外推到动态语言、多运行时构建场景、或者非 API-level 维护任务，还需要新证据。其次，33.3% 的跨项目 fix rate 说明“规则可迁移”确实存在，但距离通用自动化还远。最后，它的验证目标主要围绕 compile 和 test，对更深层运行行为或性能回归覆盖有限。
 
-**与当天主题的关系**
+尽管如此，这篇依然很值得重视，因为它把“repository repair”从 instance-level patch 往 “change pattern synthesis” 推了一步。这正是 software evolution 里更有复利价值的方向。
 
-如果说今天有一条主线叫“验证闭环”，SHERLOC 代表的是闭环的第一环：**让前置证据足够可用**。它告诉我们，仓库级 coding agent 的定位组件不能只追求 retrieval 指标，而要追求对后续 patch generation 有效的证据结构。
+**与当天主题的关系**  
+BigBag 支持今天的第二条主线：**可靠软件变更 agent 不该只学会给当前仓库打一补丁，而应该尽量提炼出可验证、可迁移的变更规则。**
 
-### 2. BigBag：把一次性 patch 升级成可跨项目转移的 API 级修复逻辑
+### 3. Bayesian Control for Coding Agents：昂贵 verifier 不是多跑几次就更稳，关键是何时值得跑
 
-**论文信息**
+**论文信息**  
+标题：*Bayesian Control for Coding Agents*  
+作者：论文 PDF 未在首页显式突出完整作者行，此处以 arXiv 页面为准  
+arXiv 链接：[arXiv:2606.24453](https://arxiv.org/abs/2606.24453)  
+分类：cs.AI, cs.CL  
+发布日期：2026-06-23
 
-- 标题：*Agentic Generation of AST Transformation Rules for Fixing Breaking Updates*
-- 作者：Frank Reyes, Benoit Baudry, Martin Monperrus
-- 链接：[arXiv:2606.24446](https://arxiv.org/abs/2606.24446)
-- 分类：cs.SE
-- 发布：2026-06-24 的 arXiv 新稿列表，摘要页显示提交日期为 2026-06-23
+**一句话 TL;DR**  
+它把 coding agent 编排正式建模成一个 cost-sensitive sequential hypothesis testing 问题，核心不是“多加 verifier”，而是根据当前正确性后验、critic 信号和 verifier 成本，决定现在该 refine、该 verify、还是该停。
 
-**一句话 TL;DR**
+**为什么这个问题重要**  
+做真实仓库级 agent 的人都知道，verification 往往既必要又昂贵。轻量 critic 可能只是语法检查、单测片段或 LLM judge；重型 verifier 可能是完整 build、Dockerized eval、integration test，甚至 UI/runtime replay。很多 orchestrator 现在仍然用固定规则，比如“先生成一次，再跑测试，不行再反思”，这其实默认了 verifier 成本和信息价值是静态的。可一旦环境复杂、测试昂贵、token 预算有限，这种固定策略很快会变得粗糙。
 
-BigBag 的核心不是“帮一个项目修好 dependency breakage”，而是让 agent 从一个 seed project 学出可执行 AST transformation，从而把同一 breaking update 的修复逻辑复用到别的项目上。
+**方法怎么工作**  
+论文的 Figure 1 给了一个相当标准但又很有用的建模框架。
 
-**为什么这个问题重要**
+第一步，控制器维护一个候选补丁正确性的后验 belief state。  
+第二步，它把不同动作统一到一个决策空间里：生成新候选、调用便宜 critic、调用昂贵 verifier、或直接停止。  
+第三步，用 critic 的 noisy signals 和 refine transition 的统计规律做 Bayes 更新。  
+第四步，基于 Bellman 方程导出两类控制器：one-step Bayesian greedy 和 finite-horizon Bayesian dynamic programming controller。
 
-今天很多 LLM repair 工作都隐含一个默认假设：每个坏掉的项目都单独修。但真实生态里，大量 breakage 并不是项目私有 bug，而是依赖库升级后在一批下游项目里同时爆发的 API change。若每个项目都让 agent 从头读编译错误、试错 patch、再单独提交，工程成本和研究设定都太浪费。真正应该追问的是：**同一个 breaking update 的修复知识，能不能被提升到 API 级而不是项目级？**
+作者特别强调，动作选择不应只看“当前通过率”或单一 tool success，而应看价值-成本权衡，也就是“这次多花一次 critic / verifier 调用，预期能换回多少 correctness 信息或修复收益”。
 
-这正好击中软件演化和仓库群维护场景里的核心痛点。对 repository repair、compatibility migration、legacy maintenance 来说，这种“修复逻辑可迁移”比单个 patch 更接近高价值产出。
+**关键实验与证据**  
+这篇实验范围不小：覆盖 **6 个 generators**、**9 个 coding benchmarks**，而且不是只在单一 benchmark 上讲故事。它最强的地方不是某个单点绝对分数，而是把不同 regime 划出来。
 
-**方法怎么工作**
+- 论文明确报告，Bayesian control 在 **verification 成本高、先验成功率低、critic 有一定信息量但非近似 oracle** 的区域最有价值。
+- 相反，当 public test critic 已接近 oracle，简单的 `gate(Crtest)` 往往就够了，复杂 Bayesian aggregation 不会带来多少额外收益。
+- 论文还测了 belief state 作为 uncertainty quantification 的效果，Table 1 指出它在 `LCB-Medium` 和 `LCB-Hard` 上优于 token probability 和原始 tool success 之类的 baseline。
+- 从 Figure 4 的 verifier-cost sweep 可以看出，随着 `Cver` 升高，最佳策略会从“直接 verify”切换到“先 gating”，再切换到“Bayesian controllers 主导”，这对设计真实 SWE-bench-like harness 很有启发。
 
-论文给出一个四步式流程，图 1 很清楚。
+这篇论文没有把结论吹成“Bayesian 永远最好”，反而把“何时值得用复杂控制器”说清楚了，这一点非常加分。
 
-第一步是输入上下文装配。BigBag 会把三个核心输入交给 agent：一个已经被依赖升级打坏的 client project、目标 AST transformation engine 的 API 文档、以及一个 transformation template。这里的 template 不是预写规则，而只是一个空的 Maven 工程骨架，里面有依赖配置和一个空的 `Main.java`。这个设计很关键，因为它限制了 agent 的自由度，让它必须产出“基于 AST 库的结构化变换程序”，而不是偷懒用字符串替换糊过去。
+**局限和可信度**  
+它的局限也很明显。首先，这篇更像 orchestration methodology，而不是 end-to-end repo agent 系统论文，所以你无法直接从中得到一个落地 repair pipeline。其次，belief update 依赖 held-out calibration data，真实线上环境如果任务分布漂移，参数可能需要重估。再者，论文强调的是成本敏感控制，默认 correctness 可以被二元化建模；现实中的 partial correctness、silent semantic bug、multi-objective quality 并不总能被这一框架自然吸收。
 
-第二步是 generate-apply-verify loop。agent 生成 transformation 程序，把它应用到 client sources，再触发 Maven build。如果构建失败，agent 继续改 transformation，直到成功或耗尽预算。和普通生成 patch 的区别在于，这里生成的对象不是最终源码 diff，而是能遍历 AST、定位受影响构造并重写它们的可执行程序。
+但就 agent reliability 来说，这篇很重要，因为它在逻辑上把“验证闭环”从经验规则推进成了显式决策问题。相比“To Run or Not to Run”式的经验观察，这里给了更系统的控制视角。
 
-第三步是 transformation verification。系统会先判断到底有没有生成 transformation；如果生成了，再单独验证“仅靠这个 transformation 本身是否真的修掉了编译失败”。只有通过这一层验证的 transformation 才能进入下一步。这个 gate 把“构建恰好成功”与“修复逻辑本身正确”稍微拉开了一点距离。
+**与当天主题的关系**  
+它直接服务于今天的主线之一：**验证不只是要不要做，而是如何在预算受限的真实 agent loop 里被理性调度。** 对复杂仓库、昂贵测试、移动/工业平台运行反馈尤其 relevant。
 
-第四步是 cross-project transfer。把通过验证的 transformation 应用到所有受到同一 breaking update 影响的其他 client projects 上，评估它是否能迁移。论文在表 III 里按 breaking update 粒度分析了 transferability，这一点比简单地报总体均值更有解释力。
+### 4. Toward Self-Evolution-Ready Workflow Harnesses：真正难的不是从零造 agent，而是把已经在跑的专家脚本系统迁过去
 
-**关键实验与证据**
+**论文信息**  
+标题：*Toward Self-Evolution-Ready Workflow Harnesses: A Reversible Migration Path and Convertibility Taxonomy for Expert LLM Pipelines*  
+作者：论文 PDF 以案例论文形式呈现，作者信息请以 arXiv 页面为准  
+arXiv 链接：[arXiv:2606.24598](https://arxiv.org/abs/2606.24598)  
+分类：cs.SE, cs.AI, cs.LG  
+发布日期：2026-06-23
 
-BigBag 在 BUMP benchmark 上评测了 `157` 个 compilation-failure breaking dependency updates，比较了 4 个大模型和 2 个 AST engine（Spoon / JavaParser）的 8 种配置。
+**一句话 TL;DR**  
+这篇最有价值的地方，是把“把现有 LLM+script workflow 渐进迁移成可演化 harness”当成独立研究问题来处理，并给出 Strangler-Fig 式迁移路径与 convertibility taxonomy，而不是假装所有有价值系统都能从零重写成 agent。
 
-最关键的结果有三层：
+**为什么这个问题重要**  
+现实组织里大量有效的 AI 工作流并不是原生 agent，而是“专家脚本 + 一些模型调用 + 人工规则”的混合系统。它们往往已经产生业务价值，但缺乏可演化性、可审计性和反馈驱动调整能力。学术界却更偏爱 greenfield agents 和 benchmark settings，仿佛迁移成本不存在。对 software evolution 研究来说，这种忽视很不现实，因为大多数工业 adoption 问题根本不是“要不要上 agent”，而是“如何不打断已有价值系统地逐步迁移”。
 
-- 最优配置的 compilable transformation rate 达到 `94.3%`。
-- fix rate 达到 `78.6%`。
-- cross-project fix rate 总体为 `33.3%`，也就是 `43/129` 个验证目标修复成功。
+**方法怎么工作**  
+这篇的 Figure 1 和 Figure 2 是关键。
 
-如果只看最后一个数字，33.3% 不算惊艳；但论文接着给出一个更有洞见的发现：对于“所有 client 都以一致方式调用受影响 API 元素”的 breaking updates，跨项目 transfer 成功率可以达到 `80%` 或更高。也就是说，真正决定可迁移性的不是“LLM 会不会写 transformation”，而是**不同项目对同一 API 的使用模式是否足够统一**。
+首先，作者提出一条 **reversible Strangler-Fig migration path**。不是一次性重写，而是先包裹旧系统，再逐步把逻辑抽成可独立执行、可签合同的 stage。  
+其次，harness 的核心组成包括：typed stage、decision engine、safety gate、human checkpoint、trace。也就是说，它把 agent 化理解成“在阶段边界上引入受控自治”，而不是把整条 workflow 一次性交给模型。  
+第三，也是最关键的概念创新，是 `convertibility routing stage`。作者不假设每个 legacy workflow 都可直接 agentify，而是把“这个 workflow 能否分解成 typed independent stages”本身当成一个判断步骤。Figure 2 的决策程序就是围绕这个问题展开的。  
+第四，论文给出 A/B/C 类型 convertibility taxonomy，并结合 migration cost checklist 来判断某条 legacy pipeline 该如何迁移，或者是否应该先 code-first refactor 再谈 agent 化。
 
-论文还指出，16 个 breaking updates 中有 9 个展示出一定程度的 generalization。失败的主因不是 transformation 根本无法编译，而是 seed project 暴露的使用模式不够全面，导致 agent 学到的是“这个项目里怎么修”，而不是“这个 API change 本质上怎么修”。这一点其实非常诚实，也非常重要。
+这个框架的价值在于，它终于开始正视 agent adoption 里的“组织与结构债务”。
 
-**局限和可信度**
+**关键实验与证据**  
+证据层面，这篇不像 benchmark 论文那样有大规模对比，而是一个生产案例研究。作者在一个真实的微信公众号工作流上报告：
 
-最大的可信度问题在于评测指标主要是 `mvn test success` 和编译/构建可通过。论文自己也承认，这不保证没有行为回归。对于 API migration，这个风险并不小，因为很多重构类 breaking change 即使编译通过，也可能在运行时语义上出错。
+- **9 个 expert functions 被迁成 9 个 independently runnable tools**。
+- **0 business-logic change**。
+- **one-flag rollback**。
+- **no production disruption**。
 
-第二个局限是 transfer 筛选较保守。作者只把那些引用同一 broken API element 的项目纳入迁移评测，这能降低噪音，但也意味着结果代表的是“保守估计下的可迁移性”，不是所有可能的迁移覆盖面。
+这些数字看起来朴素，但它们比很多花哨 benchmark 更贴近 industrial migration 的核心诉求。论文还在表格里详细列出 migration cost、stage contracts、安全不变量和 subprocess engine vs agent engine 的差异。
 
-第三个局限是语言和构建链基本锁在 Java / Maven 生态。方法论上，这种“生成 AST transformation 程序而不是 patch”当然可迁移；但迁到 Python、JavaScript，甚至更复杂的移动应用迁移场景时，基础设施并不现成。
+**局限和可信度**  
+它最大的限制是只有单案例，且领域是内容工作流而不是软件仓库操作流，所以外部效度有限。作者也比较诚实，明确把这篇定位成“single-case study honestly bounded”。但这并不妨碍它在概念上很有价值，因为“convertibility”这个词把很多组织里模糊的 agent 迁移争论说清楚了。不是所有工作流都该直接 agentify；更现实的问题是它有没有可分解、可审计、可逆的 stage 边界。
 
-**与当天主题的关系**
+**与当天主题的关系**  
+对真实软件工程 agent 来说，这篇的迁移视角非常重要。无论是 complex repo repair pipeline，还是 OpenHarmony 这类复杂平台上的 build-test-run workflow，真正难的常常不是新造一个 demo agent，而是**把已有可靠流程逐步迁成可反馈、可验证、可追责的 harness**。
 
-BigBag 和今天主题的关系非常直接：它把软件变更的基本单位，从单项目 patch，抬高到了**可审计、可复用、可跨项目迁移的变更逻辑**。这对 agent 时代的软件演化尤其重要，因为未来高价值的不一定是“又修好一个仓库”，而是“把一次 breakage 的修复知识变成可执行资产”。
+### 5. ESAA-Conversational：多 coding agents 时代，真正缺的是可重建 handoff，而不是更长上下文窗口
 
-### 3. Bayesian control for coding agents：不是所有测试和 verifier 调用都值得立即发生
+**论文信息**  
+标题：*ESAA-Conversational: An Event-Sourced Memory Layer for Continuity, Handoff, and Curation Across Heterogeneous LLM Coding Agents*  
+作者：论文 PDF 以 ESAA 系列工作延伸形式呈现，作者信息请以 arXiv 页面为准  
+arXiv 链接：[arXiv:2606.23752](https://arxiv.org/abs/2606.23752)  
+分类：cs.SE  
+发布日期：2026-06-23
 
-**论文信息**
+**一句话 TL;DR**  
+它的关键不是再做一个 memory module，而是把跨 agent 连续性重写成 event sourcing 问题，让 handoff、state、decisions、tasks 都来自 append-only conversation log 的 deterministic projection。
 
-- 标题：*Bayesian control for coding agents*
-- 作者：Theodore Papamarkou, Vladislav Smirnov, Viktor Mazanov, Artem Vazhentsev, Preslav Nakov
-- 链接：[arXiv:2606.24453](https://arxiv.org/abs/2606.24453)
-- 分类：cs.AI, cs.CL
-- 发布：2026-06-24 的 arXiv 新稿列表，摘要页显示提交日期为 2026-06-23
+**为什么这个问题重要**  
+多 agent、跨工具 coding workflow 已经是现实：开发者会在 Codex、Claude Code、Grok 之类工具之间切换，也会因为上下文窗口、权限边界、子任务专业化而反复 handoff。问题是，这些 agent 的对话状态通常各自封存在私有日志里，导致目标、决策、开放任务和验证结果在切换时不断漂移。今天很多所谓“memory”工作只是在做检索或摘要，但没有把 continuity 设计成可重建、可审计的系统对象。
 
-**一句话 TL;DR**
+**方法怎么工作**  
+ESAA-Conversational 的方法并不复杂，但软件工程味很强。
 
-这篇论文把 coding agent 的 orchestration 写成一个代价敏感的序贯假设检验问题：控制器维护“当前候选解正确的后验概率”，再决定下一步是再收集证据、继续 refine、调用 verifier，还是直接停止。
+第一步，把 visible conversation 机械记录到 append-only 的 `.conversation-esaa/activity.jsonl`。  
+第二步，不手写 state，而是从事件流 deterministically 投影出一组 read models，比如 `handoff.md`、`state.md`、`decisions.md`、`tasks.json`。  
+第三步，新 agent 接手时，不是让人类重新总结上下文，而是从这些 read models 和 selective window 中冷启动。  
+第四步，把 continuity、handoff、decision provenance、task projection 统一到同一个 event-sourcing 语义里。
 
-**为什么这个问题重要**
+这个设计背后的软件工程思想其实很传统：日志是真源，状态是投影；不要靠人工维护脆弱摘要。这比很多 agent memory 论文更靠谱，因为它首先解决了 provenance 和 reproducibility。
 
-真实 coding agent 不是只有一个 generator。它身边有便宜但不完全可靠的 critic，也有昂贵但更接近 oracle 的 verifier。现在很多 orchestrator 还是固定规则：有 public tests 就先跑，失败就继续修；或者无条件 verify；或者某个 critic 通过了就停。这类规则的问题，不是它们一定错，而是它们完全忽略了**当前不确定性、critic 质量、verification 成本、任务先验难度**这些变量。
+**关键实验与证据**  
+这篇更偏系统设计与长期使用经验，不是 benchmark 型论文。PDF 明确强调两类目标：  
 
-对可靠 agent 来说，“什么时候该验证、什么时候该停、什么时候该继续搜证据”本身就是核心研究问题。因为过早 verify 会浪费预算，过晚 verify 会让错误候选在系统里滚太久；而错误的停止决策则会直接变成静默错误。
+- 一是展示 event-sourced conversational layer 在 sustained real-world use 中是否可行。  
+- 二是展示 selective、deterministic handoff 对多 agent coding continuity 的实际价值。  
 
-**方法怎么工作**
+它提供的证据主要是 artifact 设计与使用流程，而不是大规模 A/B 数字。Table 1 列出了一整套核心工件，论文中也举例说明 `handoff.md` 和 `decisions.md` 如何在实现前提供稳定的上下文接力。
 
-论文的技术核心很清楚：把 orchestration 视为一个部分可观测决策问题，目标是最大化 expected utility，而不是单纯最大化通过率。
+**局限和可信度**  
+这篇不是严格意义上的评测论文，缺少大样本对照和量化成效，因此很难据此断言它对 resolved rate 或 token efficiency 的提升有多大。它更像一篇系统构件论文。即便如此，它依然值得关注，因为多 agent coding 现实里最常见的失败之一就是 context drift，而这篇至少给出了一条可审计的工程路线。
 
-第一步，定义 belief state。控制器并不把当前候选解看成“对/错已知”，而是维护一个关于正确性的后验分布。这个后验会综合 generator 的先验可信度、不同 critics 的 PASS/FAIL 信号，以及验证结果。
-
-第二步，把动作空间写清楚。控制器可以选择调用合成 critic、public-test critic、LLM critic、真正的 verifier、重新生成或 refinement、以及停止。每个动作都带成本，不同 benchmark 上 verifier 的成本占比也不同。
-
-第三步，用 cost-sensitive sequential hypothesis testing 来做决策。直觉上，如果当前证据已经很强、而 verifier 很贵，那么也许值得直接停；如果 public tests 很接近 oracle，那么复杂的 Bayesian aggregation 可能没有额外收益；如果 critics 信息量高但都不完美，那么继续综合多个 noisy signals 反而最划算。论文结论部分把这三种 regime 总结得很清楚。
-
-第四步，把 belief state 当成 uncertainty score。也就是说，这套 Bayesian machinery 不只用于控制动作，还能事后给出“当前 patch 有多可信”的解释性分数。作者把它和 token probability、raw tool success rate 等 baseline 对比，发现 belief state 在 uncertainty quantification 上更强。
-
-**关键实验与证据**
-
-论文宣称覆盖 `6` 个 generators 和 `9` 个 coding benchmarks。虽然摘要没有把所有细节都展开，但几类关键结果已经足够形成判断。
-
-第一类结果是 regime dependence。作者明确说，Bayesian controller 最有价值的场景是 verifier 昂贵、critic 有信息量但不完美的时候；如果 public-test critic 已经近似 oracle，那么简单 public-test gate 就够了；如果 verifier 很便宜或 generator 先验正确率已经很高，无条件 verify 反而占优。这种“不是到处都赢”的结果反而更可信，因为它说明作者真的在分析控制边界，而不是强行报一个平均提升。
-
-第二类结果是 uncertainty quantification。表 1 里，在 LCB-Medium / LCB-Hard 上，`Bayes Belief State` 的 PRR 平均值是 `0.866`，优于 `Perplexity` 的 `0.367`、`Seq. Prob.` 的 `0.801` 和 `Tool Success Rate` 的 `0.795`。这意味着 belief state 不只是工程上好用，也确实是更好的 patch 可信度代理。
-
-第三类结果是跨 benchmark utility 分析。论文图 3、图 4 都是拿各策略相对于 `always_verify` 的 utility 做比较，而不是只比 pass rate。这一点很重要，因为它把成本显式放回了评估目标里。对真实 agent 系统来说，这比只看是否过 benchmark 更接近部署问题。
-
-**局限和可信度**
-
-它的主要局限不是方法论，而是设定抽象程度。控制器把 critic 和 verifier 看成条件独立、可校准的信号源，这在现实里未必成立。许多 tool 信号之间存在相关性，甚至共享同一类错误模式，Bayesian aggregation 在这时可能会过度自信。
-
-第二，论文关注的是 code-generation / repair 控制层，而不是 repository-level action layer。也就是说，它讨论的是“何时验证一个候选解”，但还没真正进入复杂仓库里的多步工具选择、环境构建失败、测试 flaky 等噪声环境。
-
-第三，它告诉我们何时 Bayesian control 更有价值，但没有直接解决“critic 质量怎么得到稳健估计”这个更底层的问题。如果 critic 本身长期漂移，后验会随之失真。
-
-**与当天主题的关系**
-
-这篇论文代表今天主线里的第二环：**证据不是免费拿的，验证也不是越多越好**。如果 SHERLOC 解决的是“前置证据怎么做得更可用”，Bayesian control 解决的就是“拿到这些证据后，系统怎么更理性地花验证预算”。
-
-### 4. Detecting AI Coding Agents in Open Source：别再把 bot 账号当作生态 adoption 的全貌
-
-**论文信息**
-
-- 标题：*Detecting AI Coding Agents in Open Source: A Validated Multi-Method Census of 180 Million Repositories*
-- 作者：Arsham Khosravani, Audris Mockus
-- 链接：[arXiv:2606.24429](https://arxiv.org/abs/2606.24429)
-- 分类：cs.SE, cs.AI
-- 发布：2026-06-24 的 arXiv 新稿列表，摘要页显示提交日期为 2026-06-23
-
-**一句话 TL;DR**
-
-这篇论文最重要的结论不是“AI coding agents 很流行”，而是：如果你只靠 bot 账号或 PR 通道来量 adoption，你看到的可能只是非常偏的一小块，而且会系统性低估某些 agent 至少一个数量级。
-
-**为什么这个问题重要**
-
-今天讨论 coding agent，很多结论都建立在“我们知道哪些仓库在用 agent”这个前提上。但生态级测量其实非常脆弱。不同 agent 会留下不同痕迹：有些走 bot account，有些把签名写在 commit message，有些通过 author naming pattern 混在人类账号里，还有些几乎只留下配置文件。若研究者只抓其中一类信号，就会把 deployment mode 错当成真实 adoption pattern。
-
-对软件工程研究来说，这是个很硬的问题。因为一旦生态测量错了，后面的影响分析、生产率讨论、维护模式归因都会跟着歪。尤其对“agent 时代的软件演化”这条线，**审计方法本身是否可靠**，和你要研究的对象一样重要。
-
-**方法怎么工作**
-
-论文的方法不是复杂模型，而是多层检测框架 + 手工验证。
-
-第一步，它在 World of Code 基础设施上跑大规模扫描，覆盖 `180M+` Git repositories。这个规模保证了它不是在一小撮流行项目上做 anecdote。
-
-第二步，它把检测信号分成四类 trace type。文中把它们概括为：
-
-- Type A：集中式 bot account
-- Type B：commit-message signature
-- Type C：分布式 human author-name pattern
-- Type D：configuration-file-only presence
-
-这四类信号之所以重要，不在于 taxonomy 本身，而在于它逼迫研究者承认：**不同 agent 的可见性模式从一开始就不一样**。
-
-第三步，它对每个 detection cell 做手工验证。论文总共人工标注了 `495` 个样本，并报告 per-cell precision 与 Wilson confidence interval。换句话说，作者没有停在“大规模 regex 扫描”的脆弱层面，而是给每类模式都补了 construct validity。
-
-第四步，它把 commit channel 和独立的 PR census（AIDev）做对照，观察不同检测通道到底覆盖了哪些 agent population。这个 cross-channel comparison 是整篇最有价值的部分之一。
-
-**关键实验与证据**
-
-论文最强的数字非常扎眼。
-
-- 在 V2510 snapshot 中，多方法联合检测识别出 `850,157` 个 Claude Code commits。
-- 如果只用很多 adoption study 最依赖的 bot-account lookup，只能找回 `28,154` 个，也就是 `3.3%`。
-- 这意味着仅靠 bot 账号信号，对 Claude Code 至少会低估 `30x`。
-
-时间维度上，作者在从 2024 年 12 月到 2026 年 4 月的多个 snapshot 中观察到：到 V2604 为止，commit-attributed agents 每月已产生超过 `320,000` commits。Claude Code 以 `886,122` commits 覆盖 `17,295` projects 领先；而在 Type D 的配置文件普查中，它又出现在 `21,078` 个项目里。这个组合很说明问题：有些 agent 同时在“明确 commit 归因”和“静默配置存在”两端都占优。
-
-论文还给出一个非常值得记的生态判断：PR 通道和 commit 通道看到的 agent population 几乎是“近乎不相交”的。按作者比较，Codex 在 PR 维度上很强，但在 commit 维度近乎缺席；Claude Code 则相反。这意味着“哪个 agent 最常见”根本没有单一答案，它高度依赖你从哪个通道测。
-
-另外一个有洞见的结论是 adoption timing bimodal：很多项目是 born-with-AI，从创建之初就带 agent；另一批则是在多年维护后才引入 agent，属于 legacy integration。这个分布对所有想研究 agent 对仓库演化影响的人都很重要，因为前者几乎没有清晰的 pre-treatment period。
-
-**局限和可信度**
-
-最大的局限是作者自己也承认的：multi-method union 仍然只是 lower bound，不是绝对 recall。换句话说，“单信号一定严重低估”这个结论很稳，但“真实 adoption 到底有多少”仍未被完全识别。
-
-第二，Type D 配置文件只能代表 adoption proxy，而不能保证 active use。仓库里有 `.cursorrules` 或 `AGENTS.md` 不等于 agent 真正在持续提交代码。
-
-第三，这套检测主要面向开源 Git 仓库。企业私有仓、非 Git forge、以及 IDE 内部不可见使用行为都还在视野外。
-
-**与当天主题的关系**
-
-这篇论文看似不做 patch，不做 repair，但它在今天主线里非常关键，因为它补的是最后一环：**如果连 agent 进入真实仓库的痕迹都测不准，所有关于“agent 如何改变软件演化”的结论都会悬空。**
+**与当天主题的关系**  
+它补的是今天主线里的组织层短板：**当 coding work 横跨多个 agent、多个回合、多个会话时，连续性本身就是一种软件工程 artifact，需要像事件流一样被治理。**
 
 ## 中相关论文速读
 
-### AutoSpec：让安全规则随错误案例进化，但仍停留在 general LLM agent 层
+### LemonHarness Technical Report：workspace state 终于被当成一等对象
 
-- 论文：[*AutoSpec: Safety Rule Evolution for LLM Agents via Inductive Logic Programming*](https://arxiv.org/abs/2606.24245)
-- 判断：中相关，偏 agent safety / rule maintenance
+`LemonHarness` 关注的问题很贴近真实 coding agent runtime：agent 实际修改的是文件系统状态，但它通常只能“看到”工具输出和日志碎片，看不到一个清晰的 workspace boundary。论文围绕这一点设计 harness，把文件写入、临时产物、状态扩散等行为变成可约束、可观测的对象。它和今天主线的关系在于：如果没有稳定的工作区边界和状态可见性，仓库级 agent 的审计、回滚、故障归因都会变得很脆弱。之所以没有放进强相关，是因为这篇更偏 runtime/infrastructure report，关于 repository-level task success、patch correctness 或长期演化收益的直接量化还不够。
 
-这篇论文关心的是 deployed expert-designed safety rules 很脆：过严会误杀，过松会漏掉危险行为。作者提出 AutoSpec，用 CEGIS + ILP 根据用户标注的 safe/unsafe traces 自动修订规则。流程大体是：先跑现有规则，挖 false positive / false negative counterexamples；再用 ILP 学哪些 predicates 能区分它们；然后生成候选 rule edits，并通过验证选择最佳修订。它的价值在于把安全 guardrail 从一次性手工编写，推进到“可从运行痕迹迭代演化”的状态。
+### AutoSpec：安全规则也该随 agent 行为与环境共同演化
 
-和今天主题的关联点，在于 agent reliability 不只是 patch correctness，也包括 action boundary 是否可维护。对 coding agents 尤其如此，因为 destructive command、数据泄漏、越权文件操作都是真风险。不过这篇工作离 repository-level software change 还有一层距离：它并没有针对代码修改、测试执行或构建环境设计专门 predicate，也还没展示在真实 coding workflow 中怎么平衡安全与修复成功率。所以值得留意，但今天不必当主菜。
+`AutoSpec` 把 LLM agent 安全规则学习成一个 inductive logic programming 问题，目标是缓解手写规则“过松漏风险、过紧拦好操作”的两难。对做真实代码 agent 的人，这篇的意义在于它把 destructive commands、敏感数据泄露、domain constraint violation 等风险纳入可演化规则空间，而不是只做静态黑名单。它和今天主线是边缘相关，因为讨论重点是 agent safety governance，而非 repository repair 本身；但如果你关心 agent 在 shell、文件系统、企业环境中的可靠部署，这篇值得保留。
 
-### GUI vs. CLI：执行层瓶颈不在“哪个模态更高级”，而在 skill coverage 是否完备
+### Detecting AI Coding Agents in Open Source：agent 已经进入供给链，但痕迹高度碎片化
 
-- 论文：[*GUI vs. CLI: Execution Bottlenecks in Screen-Only and Skill-Mediated Computer-Use Agents*](https://arxiv.org/abs/2606.24551)
-- 判断：中相关，偏 execution-layer benchmarking
+这篇论文做的是供给链侧实证：通过配置文件、commit message、author identity 和 bot signatures 等多层方法，在 **1.8 亿+ Git 仓库**上估计 AI coding agents 的真实存在形态。它的价值不在于算法复杂，而在于提醒我们：agent 代码已不只是实验室现象，而是在开源生态中以多种弱痕迹进入。对软件演化研究，这意味着未来关于 maintainability、review burden、supply-chain trust 的研究，会越来越需要“agent-produced change”这一观测维度。之所以不深挖，是因为它更偏测量研究，和当天的定位/验证主线没有直接方法学耦合。
 
-这篇论文做得比较干净。它构造了一个 matched benchmark：`440` 个桌面任务、`18` 个应用、`12` 类 workflow，让 GUI agent 和 CLI skill agent 在相同目标、相同初始状态、相同 verifier 下比较。结果是最强 GUI agent full pass rate `59.1%`，原始 skill CLI agent `48.2%`；但一旦做 verifier-guided skill augmentation，CLI 可以升到 `69.3%`。这个发现很实在：CLI agent 的弱点未必是模型不行，而是 skill interface 覆盖不全。
+### FirmCure：复杂 runtime 修复值得关注，但目标更偏 firmware rehosting
 
-它和软件变更工程的边缘关联在于，真实 coding agent 经常跨 GUI / CLI / editor / browser 多种界面工作。论文提示我们，执行失败常常是 interface design 问题，而不是 reasoning 本身的问题。为什么它只算中相关？因为任务域仍是一般 computer-use，而不是 repository repair 或 software change。但“skill coverage 是瓶颈”这个判断，和我们看 coding agents 的经验高度一致。
+`FirmCure` 是一篇很强的复杂环境代理修复论文：它把 Linux-based firmware rehosting 的障碍分成 perception、boot-time synthesis、runtime fault resolution 三层，再用 manager + specialist agents 做 sequential handoff。它对你这条研究线有启发的地方，是它证明了复杂环境中的 agent 修复必须消费脏证据、分阶段修复、避免一次性乱改；这和移动平台、复杂工业软件栈上的 bug fixing 很接近。没有放进强相关，主要因为论文对象是 firmware security analysis，而不是 repository-level software change。
 
-### SAFARI：长轨迹 fault attribution 终于不再假设整个 trace 能塞进上下文
+### SemChunk-C：代码分块结构会影响下游 agent，但今天还只是基础能力层
 
-- 论文：[*SAFARI: Scaling Long Horizon Agentic Fault Attribution via Active Investigation*](https://arxiv.org/abs/2606.24626)
-- 判断：中相关，偏 trace diagnosis / failure attribution
-
-这篇论文讨论的不是写 patch，而是 agent 失败后怎么追责。它认为当前很多 failure diagnosis 方法默认“把完整 trajectory 全塞进 LLM 上下文”，一旦轨迹超过 context window 就会崩。SAFARI 的办法是换成工具增强的诊断环：让模型按需读取与搜索轨迹片段，并配一个 persistent short-term memory 跨轮维护判断。实验上它在 Who&When 上相对现有方法提升 `20%`，在 TRAIL GAIA 子集上提升 `19%`；当 fault 位置远到超出模型原生 context `5x` 时，仍能保持 `0.58` precision。
-
-为什么和今天主题有边缘关系？因为 coding agent 走向长链、多轮、多工具以后，failure analysis 本身会成为一项基础设施。你不能只会让 agent 干活，还得能在它失败后解释“为什么失败”。不过它面向的是一般 agentic traces，而不是软件仓库里的 patch/test/build 闭环，因此先放在中相关。
-
-### ESAA-Conversational：跨 agent handoff 的记忆连续性，确实是 coding workflow 的真问题
-
-- 论文：[*ESAA-Conversational: An Event-Sourced Memory Layer for Continuity, Handoff, and Curation Across Heterogeneous LLM Coding Agents*](https://arxiv.org/abs/2606.23752)
-- 判断：中相关，偏 multi-agent memory / workflow continuity
-
-这篇论文抓住了一个很实际的问题：开发者会在 Codex、Claude Code、Grok 等 agent 之间切换，但每个 agent 的对话日志是私有且 vendor-specific 的，导致 goals、decisions、open tasks 无法稳定延续。作者把 visible conversation 当作 local event store，用 hooks/watchers 捕捉可见 turn，规范化进 append-only store，再投影出 tasks、decisions 等 read models。重要的是，底层 capture 不依赖额外 LLM 推理，LLM judgement 只在显式 curation 时使用。
-
-它和软件变更主线的关系不在“模型更强”，而在“流程更稳”。对于真实软件仓库协作，handoff quality、context continuity、decision provenance 都会影响后续 patch 是否可信。之所以不是强相关，是因为这篇更像 workflow plumbing，而不是直接面向 repository-level code change correctness。
+`SemChunk-C` 做的是 C-family 代码的语义分块。它报告在手工测试集上平均 **90.03%** chunk boundary accuracy 和 **96.08%** category accuracy，并展示对 retrieval / generation 下游任务的帮助。这个方向和 `CodeAnchor`、`Exploring Code Analysis` 一类工作有一定接壤，因为 chunk quality 确实会影响大仓库上下文恢复。但这篇更偏基础 representation work，还没直接进入仓库级变更验证链路，因此留在中相关末尾。
 
 ## 可留意 / 可跳过
 
-### Reinforcement Learning for Computer-Use Agents with Autonomous Evaluation
-
-保留的关键词是“autonomous evaluation 作为 reward signal”和“显式建模 evaluator noise”。论文在 macOSWorld、Windows Agent Arena、OSWorld 上报告平均比 zero-shot 提升 `12.6` 个百分点、比 raw evaluator RL 提升 `5.1` 个点。它说明 GUI agent 训练开始认真处理视觉验证噪声，这对将来做 UI/运行行为验证很重要。但今天它和 repository-level software change 的距离仍偏远，可以知道有这么条线，不必深挖。
-
-### Toward Self-Evolution-Ready Workflow Harnesses
-
-这篇工作虽然出现在 6 月 24 日新稿列表里，但摘要页提交日期更早，内容也更偏“如何把已有 LLM+script 工作流迁成可组合、可审计 harness”。它的贡献是可逆迁移路径与 A/B/C convertibility taxonomy，并在一个公众号生产工作流里把 `9` 个 expert functions 迁成 `9` 个独立工具，做到 `0 business-logic changes` 和 `one-flag rollback`。如果你关心 workflow harness 和 legacy migration，可以留意；如果你今天只想抓 coding agent 的核心研究脉络，这篇先跳过也不会错过主线。
+- `NatureBench: Can Coding Agents Match the Published SOTA of Nature-Family Papers?`：可留意它对 containerized scientific environments 的构建思路，但主任务是科研复现，不是软件变更工程。
+- `Privacy Engineering: A Systematic Literature Review`：可留意其中 verification/testing 与 governance/accountability 维度，但它是领域综述，不是 coding agent 论文。
+- `CONDUCTOR: An LLM-Orchestrated Digital Twin for Uncertainty-Aware Distribution Grid Operations`：保留“LLM orchestrates heterogeneous solvers in high-stakes domain”这个判断即可，对 coding agent 本体关联较远。
+- `Critique of Agent Model`：是概念性反思，不是软件工程证据论文。可留意其对“何为 agent”的界定，但当天 digest 不必深挖。
 
 ## 横向比较
 
-| 论文 | 问题定义 | 证据强度 | 工程可迁移性 | 可信度风险 |
+| 论文 | 问题定义 | 最强证据 | 工程可迁移性 | 可信度风险 |
 | --- | --- | --- | --- | --- |
-| SHERLOC | 仓库级 fault localization 如何产出可修复的诊断结果 | 强：SWE-Bench Lite/Verified + 下游 repair 注入增益 | 高：定位组件可独立接到现有 repair agent | 成本较高，生态仍偏 Python |
-| BigBag | breaking update 的修复逻辑能否跨项目迁移 | 强：157 updates，区分编译成功、修复成功、跨项目迁移 | 高：特别适合 API 演化、批量修复、兼容性维护 | 主要验证编译/构建，行为回归风险未解 |
-| Bayesian control | 何时该继续搜证据、验证、停止 | 中强：跨 9 benchmark 的 utility 视角分析 | 中高：可嵌入现有 orchestration 层 | 依赖 critic/verifier 校准假设 |
-| Detecting AI Coding Agents | 如何可靠审计 agent adoption 与生态痕迹 | 强：180M+ 仓库，多方法检测，495 人工验证 | 高：对后续生态研究是基础设施 | union 仍只是 lower bound，私有仓不可见 |
-
-这一比较能看出一个有意思的层次差异。SHERLOC 和 BigBag 直接作用在“变更闭环”里：一个改进定位输入，一个提升修复逻辑复用。Bayesian control 则站在 orchestration 层，管理证据和验证预算。Detecting AI Coding Agents 站得更外层，解决的是“我们到底在研究什么生态现象”。四篇论文不在同一层，但恰好拼出一个完整视角。
+| SHERLOC | repository-level repair 的诊断定位 | SWE-Bench Lite `84.33% acc@1`，Verified `81.27% recall@1`，下游平均 `+5.95pp` resolve | 高，直接可嵌入现有 repair agent | quality filter 依赖外部 judge，deployability 仍待验证 |
+| BigBag | breaking update 修复规则生成与跨项目迁移 | 157 个 breaking updates，最佳 `78.6%` Fix Rate，跨项目 `33.3%` | 高，尤其适合 dependency maintenance | 主要限于 Java/API-level updates |
+| Bayesian Control | verifier / critic / refine 的成本敏感编排 | 6 generators × 9 benchmarks，清楚划分何时 Bayes 有利 | 中高，适合设计 agent harness 控制层 | correctness 二元化较强，需校准数据 |
+| Workflow Harnesses | legacy expert workflow 向可演化 harness 迁移 | 9 functions -> 9 tools，0 业务逻辑变更，可回滚 | 高，尤其适合工业 adoption | 单案例，软件仓库场景外部效度有限 |
+| ESAA-Conversational | 多 agent coding handoff 的连续性治理 | append-only log + deterministic projections 的工件设计 | 中高，适合多 agent 协作流 | 定量评测不足，更像系统设计论文 |
 
 ## 我的判断
 
-如果按“创新性 / 实用价值 / 严谨性 / 与研究方向相关度”四个维度给今天整体打一个简化评级，我会这样看：
+如果只看“能不能直接帮助你这条研究线推进”，今天是一个 **强方法日，不是强 headline 日**。我的主观分级如下。
 
-- 创新性：`A-`
-- 实用价值：`A`
-- 严谨性：`B+`
-- 与“Reliable Coding Agents for Real-World Software Change”相关度：`A`
+- 创新性：`A-`。不是靠单个大模型结果取胜，而是几篇论文一起把 repository-level diagnosis、verification control、migration、continuity 这些长期被弱化的问题推到了前台。
+- 实用价值：`A`。`SHERLOC`、`BigBag`、`Bayesian control`、`Workflow Harnesses` 都有很强的工程可迁移性，尤其适合拿来塑造真实 coding agent 的系统分层。
+- 严谨性：`B+`。`SHERLOC` 和 `BigBag` 的证据最实；`Bayesian control` 的方法学清晰；`Workflow Harnesses` 与 `ESAA-Conversational` 更偏系统/案例论文，量化外部效度有限。
+- 与用户方向相关度：`A`。这一天的主线几乎正对 `LLM-based Software Change Engineering`：不是提示词技巧，不是单文件生成，而是仓库级定位、执行/验证反馈、变更可迁移性、agent 组织结构与连续性。
 
-原因很简单。今天没有那种一眼看去“模型又大了、分数又高了”的 flashy 工作，但有几篇论文明显在把 agent 研究拉回软件工程真正关心的问题：证据结构、控制策略、迁移逻辑、生态可审计性。对真实软件仓库与复杂工程环境来说，这些问题往往比再多 2 个点的 pass rate 更决定系统能不能用。
+不确定性主要有两点。第一，今天部分最有启发性的论文是系统或案例导向，而不是公开 benchmark 上的大规模横向压制，因此“研究价值”高于“立刻拿来刷分”。第二，像 `Workflow Harnesses`、`ESAA-Conversational` 这样的工作非常接近工业真实问题，但短期内还很难靠统一 benchmark 获得漂亮数字，这要求读者自己有能力判断“结构性价值”而不是只看 leaderboard。
 
-不确定性也要说清楚。第一，今天强相关论文里，真正直接落在“复杂工业平台、构建/测试/运行环境闭环”上的还不够多，OpenHarmony/HarmonyOS 这类高价值场景仍然缺位。第二，不少论文还停留在 Python/Java 和 benchmark 语境，离更脏、更长链的真实仓库环境仍有距离。第三，今天的研究趋势虽然明显往“工程证据”走，但很多工作还没有把运行时行为验证、静默错误检测、跨平台迁移这几块真正接上。
-
-尽管如此，如果只允许我用一句话总结今天这批论文，我会说：**coding agent 研究终于开始把“能做事”拆成“凭什么相信它做对了、什么时候值得继续投资源、以及这次修复能否沉淀成未来可复用的工程资产”。**
+如果要给今天一个总判断，我会说：**2026-06-24 这批与 software change engineering 最相关的 arXiv 论文，在共同纠正一个偏差：可靠 coding agent 的中心任务，不是更会写，而是更会定位、更会验证、更会迁移、更会交接。** 这比再多一个“会修 30% SWE-bench”的 agent，更接近真实软件仓库里真正难的问题。
