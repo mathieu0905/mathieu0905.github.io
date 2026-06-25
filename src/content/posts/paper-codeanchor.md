@@ -10,7 +10,9 @@ coverColor: "from-sky-500 to-cyan-600"
 
 > 📄 发表于 **ISSTA 2026** | [PDF](/papers/issta2026-codeanchor.pdf)
 >
-> 作者信息待更新
+> 作者：Zhihao Lin, Mingyi Zhou, Yizhuo Yang, Li Li
+>
+> *Li Li 为通讯作者*
 
 ---
 

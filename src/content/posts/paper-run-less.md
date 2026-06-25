@@ -10,7 +10,9 @@ coverColor: "from-rose-500 to-red-600"
 
 > 📄 发表于 **ISSTA 2026** | [PDF](/papers/issta2026-to-run-or-not-to-run.pdf)
 >
-> 作者信息待更新
+> 作者：Zhihao Lin*, Junhua Zhu*, Mingyi Zhou, Xin Wang, Zhensu Sun, Renyu Yang, David Lo, Li Li
+>
+> *\* 共同一作；Li Li 为通讯作者*
 
 ---
 
