@@ -169,7 +169,7 @@ export default function Home() {
                   我的研究围绕一个核心问题展开：<em>如何将 LLM 的生成能力与程序分析的严谨性结合，打造真正可信赖的软件工程工具？</em>
                 </p>
                 <p className="mt-2">
-                  具体来说，这意味着：在<strong className="text-gray-900 dark:text-white">程序修复</strong>场景中，让 LLM 不仅能生成补丁，还能通过静态分析验证其正确性（如 <a href="/papers/_FSE_Industry2025__Learn_to_Repair_OpenHarmony_Apps.pdf" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">HapRepair</a>）；
+                  具体来说，这意味着：在<strong className="text-gray-900 dark:text-white">程序修复</strong>场景中，让 LLM 不仅能生成补丁，还能通过静态分析验证其正确性（如 <a href="https://doi.org/10.1145/3696630.3728556" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">HapRepair</a>）；
                   在<strong className="text-gray-900 dark:text-white">安全</strong>场景中，系统性地评估和加固 LLM 的防御能力（如 <a href="/papers/ICSE_2026.pdf" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">MazeBreaker</a>）；
                   在<strong className="text-gray-900 dark:text-white">新兴生态</strong>中，弥合数据稀缺带来的工具缺口（如面向 Cangjie 语言的微调研究）。
                 </p>

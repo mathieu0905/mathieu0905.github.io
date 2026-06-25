@@ -81,7 +81,7 @@ export const papers: Paper[] = [
     authors: ["Zhihao Lin", "Mingyi Zhou", "Wei Ma", "Chi Chen", "Yun Yang", "Jun Wang", "Chunming Hu", "Li Li"],
     tags: ["Program Repair", "Static Analysis"],
     status: "accepted",
-    pdfFile: "_FSE_Industry2025__Learn_to_Repair_OpenHarmony_Apps.pdf",
+    pdfFile: "https://doi.org/10.1145/3696630.3728556",
   },
   {
     id: "codebridge-emse-2026",

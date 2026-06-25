@@ -8,7 +8,7 @@ coverColor: "from-green-500 to-emerald-600"
 
 # HapRepair：让 AI 学会修复鸿蒙应用
 
-> 📄 发表于 **FSE Industry 2025** | [PDF](/papers/_FSE_Industry2025__Learn_to_Repair_OpenHarmony_Apps.pdf)
+> 📄 发表于 **FSE Industry 2025** | [DOI](https://doi.org/10.1145/3696630.3728556)
 >
 > 作者：Zhihao Lin, Mingyi Zhou, Wei Ma, Chi Chen, Yun Yang, Jun Wang, Chunming Hu, Li Li
 
