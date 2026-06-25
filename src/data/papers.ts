@@ -4,6 +4,7 @@ export type PaperTag =
   | "Static Analysis"
   | "Performance"
   | "Survey"
+  | "Code Agents"
   | "Vision"
   | "Misc";
 
@@ -50,6 +51,28 @@ function titleFromFilename(pdfFile: string) {
 }
 
 export const papers: Paper[] = [
+  {
+    id: "run-less-issta-2026",
+    title: "To Run or Not to Run: Analyzing the Cost-Effectiveness of Code Execution in LLM-Based Program Repair",
+    venue: "ISSTA",
+    year: 2026,
+    acceptedYear: 2026,
+    tags: ["Program Repair", "Code Agents"],
+    status: "accepted",
+    abstract: "An empirical study of execution behavior in LLM-based program repair, showing when generate-run-revise loops pay off and when execution costs dominate.",
+    pdfFile: "issta2026-to-run-or-not-to-run.pdf",
+  },
+  {
+    id: "codeanchor-issta-2026",
+    title: "How Much Static Structure Do Code Agents Need? A Study of Deterministic Anchoring",
+    venue: "ISSTA",
+    year: 2026,
+    acceptedYear: 2026,
+    tags: ["Static Analysis", "Code Agents"],
+    status: "accepted",
+    abstract: "Studies deterministic anchoring: injecting lightweight static structure into code-agent navigation to make localization and trajectories more disciplined and reproducible.",
+    pdfFile: "issta2026-codeanchor.pdf",
+  },
   {
     id: "phantom-rendering-fse-2026",
     title: "Phantom Rendering Detection: Identifying and Analyzing Unnecessary UI Computations",
@@ -130,3 +153,4 @@ export const acceptedPapers = papers.filter((paper) => paper.status === "accepte
 export const manuscriptPapers = papers.filter((paper) => paper.status === "manuscript");
 
 export const acceptedPapers2025 = acceptedPapers.filter((paper) => paper.acceptedYear === 2025);
+export const acceptedPapers2026 = acceptedPapers.filter((paper) => paper.acceptedYear === 2026);

@@ -13,7 +13,9 @@ export type NewsItem =
     };
 
 export const news: NewsItem[] = [
-  { type: "other", date: "2026.04", title: "两篇一作论文同日收到 ISSTA 2026 Major Revision" },
+  { type: "other", date: "2026.06", title: "两篇 ISSTA 2026 论文大修后正式接收：To Run or Not to Run 与 CodeAnchor" },
+  { type: "paper", date: "2026.06", paperId: "run-less-issta-2026" },
+  { type: "paper", date: "2026.06", paperId: "codeanchor-issta-2026" },
   { type: "paper", date: "2026.04", paperId: "eager-parallel-execution" },
   { type: "paper", date: "2026.04", paperId: "codebridge-emse-2026" },
   { type: "other", date: "2026.03", title: "获得华为 AI 软件开发实习 Offer，计划开展 Android → HarmonyOS 迁移相关研究" },
