@@ -3,7 +3,7 @@ import Link from "next/link";
 import { FaEnvelope, FaGithub, FaGoogleScholar } from "react-icons/fa6";
 import { acceptedPapers, papers } from "@/data/papers";
 import { sortedNews } from "@/data/news";
-import { collaborators } from "@/data/collaborators";
+import { collaborators, type CollaboratorOrg } from "@/data/collaborators";
 import { AboutResearchDirectionsZh } from "./components/AboutResearchDirectionsZh";
 import { ResearchCards } from "./components/ResearchCard";
 
@@ -12,6 +12,40 @@ function pdfHref(pdfFile?: string) {
   if (/^https?:\/\//i.test(pdfFile)) return pdfFile;
   return `/papers/${encodeURIComponent(pdfFile)}`;
 }
+
+const collaborationGroups: {
+  org: CollaboratorOrg;
+  initial: string;
+  name: string;
+  subtitle: string;
+  topics: string[];
+  badgeClassName: string;
+}[] = [
+  {
+    org: "Huawei",
+    initial: "H",
+    name: "Huawei",
+    subtitle: "OpenHarmony / 移动应用质量",
+    topics: ["OpenHarmony 应用修复", "Phantom Rendering / UI 性能分析", "Cangjie 低资源语言微调"],
+    badgeClassName: "bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400",
+  },
+  {
+    org: "BTH",
+    initial: "B",
+    name: "Blekinge Institute of Technology (BTH)",
+    subtitle: "LLM 代码理解 / 安全评测",
+    topics: ["LLM 代码理解与语义评估", "LLM 越狱与安全评测", "AI4SE 开源生态与实证研究"],
+    badgeClassName: "bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400",
+  },
+  {
+    org: "SMU",
+    initial: "S",
+    name: "Singapore Management University (SMU)",
+    subtitle: "LLM Agent / 执行效率",
+    topics: ["LLM 编程智能体", "执行成本与延迟优化", "代码生成与程序修复评估"],
+    badgeClassName: "bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400",
+  },
+];
 
 export default function Home() {
   return (
@@ -171,7 +205,7 @@ export default function Home() {
                 <p className="mt-2">
                   具体来说，这意味着：在<strong className="text-gray-900 dark:text-white">程序修复</strong>场景中，让 LLM 不仅能生成补丁，还能通过静态分析验证其正确性（如 <a href="https://doi.org/10.1145/3696630.3728556" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">HapRepair</a>）；
                   在<strong className="text-gray-900 dark:text-white">安全</strong>场景中，系统性地评估和加固 LLM 的防御能力（如 <a href="/papers/ICSE_2026.pdf" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">MazeBreaker</a>）；
-                  在<strong className="text-gray-900 dark:text-white">新兴生态</strong>中，弥合数据稀缺带来的工具缺口（如面向 Cangjie 语言的微调研究）。
+                  在<strong className="text-gray-900 dark:text-white">智能体</strong>场景中，分析执行反馈到底何时值得使用（如 <a href="/papers/issta2026-to-run-or-not-to-run.pdf" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">To Run or Not to Run</a>），并用轻量静态结构提升代码定位稳定性（如 <a href="/papers/issta2026-codeanchor.pdf" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">CodeAnchor</a>）。
                 </p>
                 <p className="mt-2">
                   长远愿景是<strong className="text-blue-600 dark:text-blue-400">构建高效可靠的智能体（Agent）</strong>——它不仅能生成代码，更能自主地理解代码库结构、定位缺陷、评估变更影响、生成可验证的修复方案，最终实现从「AI 辅助编码」到「AI 自主工程」的跨越。
@@ -182,38 +216,37 @@ export default function Home() {
               <div className="mt-6 space-y-3">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">代表性工作</h3>
                 <div className="grid md:grid-cols-2 gap-3">
+                  <div className="p-4 bg-rose-50 dark:bg-rose-900/20 rounded-xl border border-rose-100 dark:border-rose-800">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="px-2 py-0.5 bg-rose-100 dark:bg-rose-800 text-rose-700 dark:text-rose-300 rounded text-xs font-medium">ISSTA 2026</span>
+                      <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">程序修复</span>
+                    </div>
+                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm mb-1">To Run or Not to Run</h4>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">系统分析 LLM 程序修复智能体中的代码执行成本与收益，说明执行反馈应被当作有成本的资源，而不是默认动作。</p>
+                  </div>
+                  <div className="p-4 bg-sky-50 dark:bg-sky-900/20 rounded-xl border border-sky-100 dark:border-sky-800">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="px-2 py-0.5 bg-sky-100 dark:bg-sky-800 text-sky-700 dark:text-sky-300 rounded text-xs font-medium">ISSTA 2026</span>
+                      <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded text-xs font-medium">Code Agent</span>
+                    </div>
+                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm mb-1">CodeAnchor</h4>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">研究轻量静态结构如何作为 deterministic anchors，提升代码智能体在真实仓库中的定位稳定性、复现性和导航效率。</p>
+                  </div>
+                  <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-100 dark:border-orange-800">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="px-2 py-0.5 bg-orange-100 dark:bg-orange-800 text-orange-700 dark:text-orange-300 rounded text-xs font-medium">FSE 2026</span>
+                      <span className="px-2 py-0.5 bg-yellow-100 dark:bg-yellow-800 text-yellow-700 dark:text-yellow-300 rounded text-xs font-medium">性能分析</span>
+                    </div>
+                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm mb-1">Phantom Rendering Detection</h4>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">识别和分析 UI 中不必要的渲染计算，帮助开发者发现隐藏的性能瓶颈，提升移动应用的流畅度。</p>
+                  </div>
                   <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-100 dark:border-purple-800">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-800 text-purple-700 dark:text-purple-300 rounded text-xs font-medium">ICSE 2026</span>
                       <span className="px-2 py-0.5 bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-300 rounded text-xs font-medium">LLM 安全</span>
                     </div>
                     <h4 className="font-semibold text-gray-900 dark:text-white text-sm mb-1">MazeBreaker</h4>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">提出多智能体强化学习框架，动态评估 LLM 安全防线的越狱漏洞。通过多个 Agent 协作生成自适应攻击策略，揭示了现有防御机制的系统性弱点。</p>
-                  </div>
-                  <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="px-2 py-0.5 bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300 rounded text-xs font-medium">FSE Industry 2025</span>
-                      <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">程序修复</span>
-                    </div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm mb-1">HapRepair</h4>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">面向 OpenHarmony 生态的自动化应用修复工具，结合领域规则挖掘与 LLM 补丁生成，在真实华为项目中验证了工程落地能力。</p>
-                  </div>
-                  <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-100 dark:border-orange-800">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="px-2 py-0.5 bg-orange-100 dark:bg-orange-800 text-orange-700 dark:text-orange-300 rounded text-xs font-medium">FSE 2026</span>
-                      <span className="px-2 py-0.5 bg-yellow-100 dark:bg-yellow-800 text-yellow-700 dark:text-yellow-300 rounded text-xs font-medium">性能分析</span>
-                      <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-300 rounded text-xs font-bold">4, 4, 3 高分</span>
-                    </div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm mb-1">Phantom Rendering Detection</h4>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">识别和分析 UI 中不必要的渲染计算，帮助开发者发现隐藏的性能瓶颈，提升移动应用的流畅度。审稿获得 4, 4, 3 的高分评价。</p>
-                  </div>
-                  <div className="p-4 bg-cyan-50 dark:bg-cyan-900/20 rounded-xl border border-cyan-100 dark:border-cyan-800">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="px-2 py-0.5 bg-cyan-100 dark:bg-cyan-800 text-cyan-700 dark:text-cyan-300 rounded text-xs font-medium">EMSE 2026</span>
-                      <span className="px-2 py-0.5 bg-pink-100 dark:bg-pink-800 text-pink-700 dark:text-pink-300 rounded text-xs font-medium">低资源语言</span>
-                    </div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm mb-1">Cangjie 语言微调</h4>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">探索低资源编程语言场景下的 LLM 有效微调策略，以华为仓颉语言为案例，为新兴语言生态的工具链建设提供了可行路径。</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">提出多智能体强化学习框架，动态评估 LLM 安全防线的越狱漏洞，揭示现有防御机制的系统性弱点。</p>
                   </div>
                 </div>
               </div>
@@ -240,7 +273,7 @@ export default function Home() {
                   <div className="relative">
                     <div className="absolute -left-[25px] w-3 h-3 rounded-full bg-purple-500" />
                     <div className="text-sm font-mono text-blue-600 dark:text-blue-400">2024.09</div>
-                    <div>本科毕业，正式开始硕博连读；同时开启与<strong className="text-gray-900 dark:text-white">华为</strong>和 <strong className="text-gray-900 dark:text-white">SMU</strong> 的合作研究</div>
+                    <div>本科毕业，正式开始硕博连读；同时开启与<strong className="text-gray-900 dark:text-white">华为</strong>、<strong className="text-gray-900 dark:text-white">BTH</strong> 和 <strong className="text-gray-900 dark:text-white">SMU</strong> 的合作研究</div>
                   </div>
                   <div className="relative">
                     <div className="absolute -left-[25px] w-3 h-3 rounded-full bg-orange-500" />
@@ -262,7 +295,7 @@ export default function Home() {
 
               {/* 合作与发表 */}
               <p className="mt-4">
-                我与<strong className="text-gray-900 dark:text-white">华为</strong>（OpenHarmony 生态质量、UI 性能分析）和<strong className="text-gray-900 dark:text-white">新加坡管理大学（SMU）</strong>（LLM Agent、程序分析）保持紧密合作。
+                我与<strong className="text-gray-900 dark:text-white">华为</strong>（OpenHarmony 生态质量、UI 性能分析）、<strong className="text-gray-900 dark:text-white">BTH 的 Wei Ma</strong>（LLM 代码理解与安全评测）以及 <strong className="text-gray-900 dark:text-white">SMU 的 Zhensu Sun</strong>（LLM 编程智能体与执行效率）保持紧密合作。
                 迄今已在 <strong className="text-gray-900 dark:text-white">ICSE</strong>、<strong className="text-gray-900 dark:text-white">FSE</strong>、<strong className="text-gray-900 dark:text-white">TOSEM</strong>、<strong className="text-gray-900 dark:text-white">EMSE</strong> 等软件工程顶级会议和期刊发表论文，另有多篇工作在投。
               </p>
 
@@ -421,71 +454,64 @@ export default function Home() {
         {/* 合作 */}
         <section className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">合作</h2>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center text-red-600 dark:text-red-400 font-bold">
-                  H
+          <div className="grid lg:grid-cols-3 gap-4">
+            {collaborationGroups.map((group) => (
+              <div key={group.org} className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${group.badgeClassName}`}>
+                    {group.initial}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-medium text-gray-900 dark:text-white">{group.name}</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">{group.subtitle}</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="font-medium text-gray-900 dark:text-white">Huawei</div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">OpenHarmony / 移动应用质量</div>
-                </div>
-              </div>
-              <div className="text-sm text-gray-700 dark:text-gray-300">
-                <div className="font-semibold text-gray-900 dark:text-white mb-2">相关人员</div>
-                <ul className="space-y-1">
-                  {collaborators
-                    .filter((c) => c.org === "Huawei")
-                    .map((c) => (
-                      <li key={c.name} className="flex items-center justify-between gap-3">
-                        <span>• {c.name}</span>
-                        {c.links && c.links.length > 0 && (
-                          <span className="flex flex-wrap gap-2">
-                            {c.links.map((l) => (
-                              <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
-                                {l.label}
-                              </a>
-                            ))}
-                          </span>
-                        )}
-                      </li>
+
+                <div className="text-sm text-gray-700 dark:text-gray-300">
+                  <div className="font-semibold text-gray-900 dark:text-white mb-2">合作人员与工作</div>
+                  <div className="space-y-4">
+                    {collaborators
+                      .filter((c) => c.org === group.org)
+                      .map((c) => (
+                        <div key={c.name} className="border-t border-gray-100 dark:border-gray-700 pt-3 first:border-t-0 first:pt-0">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <div className="font-medium text-gray-900 dark:text-white">{c.name}</div>
+                              {c.role && <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{c.role.zh}</div>}
+                            </div>
+                            {c.links && c.links.length > 0 && (
+                              <div className="flex flex-wrap justify-end gap-2">
+                                {c.links.map((l) => (
+                                  <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
+                                    {l.label}
+                                  </a>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          {c.works && c.works.length > 0 && (
+                            <ul className="mt-2 space-y-1 text-xs text-gray-600 dark:text-gray-400">
+                              {c.works.map((work) => (
+                                <li key={work.zh} className="flex items-start gap-2">
+                                  <span className="mt-[5px] h-1 w-1 rounded-full bg-blue-500 flex-shrink-0" />
+                                  <span>{work.zh}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+
+                  <div className="font-semibold text-gray-900 dark:text-white mt-5 mb-2">合作主题</div>
+                  <ul className="space-y-1 text-gray-600 dark:text-gray-400">
+                    {group.topics.map((topic) => (
+                      <li key={topic}>• {topic}</li>
                     ))}
-                </ul>
-              </div>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold">
-                  S
-                </div>
-                <div>
-                  <div className="font-medium text-gray-900 dark:text-white">Singapore Management University (SMU)</div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">AI for SE</div>
+                  </ul>
                 </div>
               </div>
-              <div className="text-sm text-gray-700 dark:text-gray-300">
-                <div className="font-semibold text-gray-900 dark:text-white mb-2">相关人员</div>
-                <ul className="space-y-1">
-                  {collaborators
-                    .filter((c) => c.org === "SMU")
-                    .map((c) => (
-                      <li key={c.name} className="flex items-center justify-between gap-3">
-                        <span>• {c.name}</span>
-                        {c.links && c.links.length > 0 && (
-                          <span className="flex flex-wrap gap-2">
-                            {c.links.map((l) => (
-                              <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
-                                {l.label}
-                              </a>
-                            ))}
-                          </span>
-                        )}
-                      </li>
-                    ))}
-                </ul>
-              </div>
-            </div>
+            ))}
           </div>
         </section>
 

@@ -67,6 +67,7 @@ What you can expect to see:
 • Failure mode analysis to guide safer & more reliable SE tools`,
     tags: [{ label: "Code Intelligence", color: "blue" }],
     borderColor: "border-blue-500",
+    relatedPapers: ["Exploring Code Analysis (TOSEM 2026)", "CodeAnchor (ISSTA 2026)"],
   },
   {
     id: "code-localization",
@@ -94,6 +95,7 @@ End goal:
 • A practical pipeline that improves debugging speed and consistency on real projects`,
     tags: [{ label: "Fault Localization", color: "purple" }],
     borderColor: "border-purple-500",
+    relatedPapers: ["CodeAnchor (ISSTA 2026)", "To Run or Not to Run (ISSTA 2026)"],
   },
   {
     id: "openharmony-defect",
@@ -125,7 +127,7 @@ What we build:
     ],
     borderColor: "border-green-500",
     status: "Extending to TOSEM",
-    relatedPapers: ["HapRepair (FSE Industry 2025)"],
+    relatedPapers: ["HapRepair (FSE Industry 2025)", "Phantom Rendering Detection (FSE 2026)", "Cangjie Fine-tuning (EMSE 2026)"],
   },
   {
     id: "change-impact",
@@ -147,6 +149,7 @@ Research Approach:
 This work aims to help developers understand the ripple effects of their changes before committing, reducing regression bugs and improving code review efficiency.`,
     tags: [{ label: "Impact Analysis", color: "orange" }],
     borderColor: "border-orange-500",
+    relatedPapers: ["CodeAnchor (ISSTA 2026)", "Open-Source AI-based SE Tools (TOSEM 2024)"],
   },
   {
     id: "codebase-health",
@@ -168,6 +171,7 @@ Key Ideas:
 We are developing techniques that integrate seamlessly into the development workflow, helping teams maintain high code quality without sacrificing velocity.`,
     tags: [{ label: "Code Quality", color: "pink" }],
     borderColor: "border-pink-500",
+    relatedPapers: ["To Run or Not to Run (ISSTA 2026)", "Open-Source AI-based SE Tools (TOSEM 2024)"],
   },
   {
     id: "prompt-robustness",
@@ -189,6 +193,7 @@ Research Problem:
 We are investigating techniques to automatically detect and adapt prompts when model behavior changes, ensuring stable performance across model versions.`,
     tags: [{ label: "Prompt Engineering", color: "cyan" }],
     borderColor: "border-cyan-500",
+    relatedPapers: ["MazeBreaker (ICSE 2026)"],
   },
 ];
 
@@ -220,6 +225,7 @@ export const researchProjectsZh: ResearchProject[] = [
 • 失败模式分析，指导更安全可靠的 SE 工具`,
     tags: [{ label: "代码智能", color: "blue" }],
     borderColor: "border-blue-500",
+    relatedPapers: ["Exploring Code Analysis (TOSEM 2026)", "CodeAnchor (ISSTA 2026)"],
   },
   {
     id: "code-localization",
@@ -247,6 +253,7 @@ export const researchProjectsZh: ResearchProject[] = [
 • 一个实用的流程，提高真实项目的调试速度和一致性`,
     tags: [{ label: "故障定位", color: "purple" }],
     borderColor: "border-purple-500",
+    relatedPapers: ["CodeAnchor (ISSTA 2026)", "To Run or Not to Run (ISSTA 2026)"],
   },
   {
     id: "openharmony-defect",
@@ -278,7 +285,7 @@ OpenHarmony 的特殊性：
     ],
     borderColor: "border-green-500",
     status: "扩展至 TOSEM",
-    relatedPapers: ["HapRepair (FSE Industry 2025)"],
+    relatedPapers: ["HapRepair (FSE Industry 2025)", "Phantom Rendering Detection (FSE 2026)", "Cangjie Fine-tuning (EMSE 2026)"],
   },
   {
     id: "change-impact",
@@ -300,6 +307,7 @@ OpenHarmony 的特殊性：
 该工作旨在帮助开发者在提交前理解其变更的连锁效应，减少回归缺陷并提高代码审查效率。`,
     tags: [{ label: "影响分析", color: "orange" }],
     borderColor: "border-orange-500",
+    relatedPapers: ["CodeAnchor (ISSTA 2026)", "Open-Source AI-based SE Tools (TOSEM 2024)"],
   },
   {
     id: "codebase-health",
@@ -321,6 +329,7 @@ OpenHarmony 的特殊性：
 我们正在开发无缝集成到开发流程的技术，帮助团队在不牺牲速度的情况下保持高代码质量。`,
     tags: [{ label: "代码质量", color: "pink" }],
     borderColor: "border-pink-500",
+    relatedPapers: ["To Run or Not to Run (ISSTA 2026)", "Open-Source AI-based SE Tools (TOSEM 2024)"],
   },
   {
     id: "prompt-robustness",
@@ -342,6 +351,7 @@ OpenHarmony 的特殊性：
 我们正在研究当模型行为变化时自动检测和适配提示词的技术，确保跨模型版本的稳定性能。`,
     tags: [{ label: "提示词工程", color: "cyan" }],
     borderColor: "border-cyan-500",
+    relatedPapers: ["MazeBreaker (ICSE 2026)"],
   },
 ];
 
@@ -393,6 +403,21 @@ export function ResearchCards({ locale = "en" }: { locale?: "en" | "zh" }) {
                   </li>
                 ))}
               </ul>
+            )}
+            {project.relatedPapers && project.relatedPapers.length > 0 && (
+              <div className="mt-3">
+                <div className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1">{t.relatedPubs}</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {project.relatedPapers.slice(0, 2).map((paper) => (
+                    <span
+                      key={paper}
+                      className="px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-[11px] text-gray-600 dark:text-gray-300"
+                    >
+                      {paper}
+                    </span>
+                  ))}
+                </div>
+              </div>
             )}
             <div className="mt-3 flex items-center justify-between gap-3">
               <span className="text-xs text-gray-400 dark:text-gray-500">

@@ -13,7 +13,6 @@ export type NewsItem =
     };
 
 export const news: NewsItem[] = [
-  { type: "other", date: "2026.06", title: "两篇 ISSTA 2026 论文大修后正式接收：To Run or Not to Run 与 CodeAnchor" },
   { type: "paper", date: "2026.06", paperId: "run-less-issta-2026" },
   { type: "paper", date: "2026.06", paperId: "codeanchor-issta-2026" },
   { type: "paper", date: "2026.04", paperId: "eager-parallel-execution" },

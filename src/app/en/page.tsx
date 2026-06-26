@@ -5,13 +5,47 @@ import { AboutResearchDirections } from "../components/AboutResearchDirections";
 import { ResearchCards } from "../components/ResearchCard";
 import { acceptedPapers, papers } from "@/data/papers";
 import { sortedNews } from "@/data/news";
-import { collaborators } from "@/data/collaborators";
+import { collaborators, type CollaboratorOrg } from "@/data/collaborators";
 
 function pdfHref(pdfFile?: string) {
   if (!pdfFile) return undefined;
   if (/^https?:\/\//i.test(pdfFile)) return pdfFile;
   return `/papers/${encodeURIComponent(pdfFile)}`;
 }
+
+const collaborationGroups: {
+  org: CollaboratorOrg;
+  initial: string;
+  name: string;
+  subtitle: string;
+  topics: string[];
+  badgeClassName: string;
+}[] = [
+  {
+    org: "Huawei",
+    initial: "H",
+    name: "Huawei",
+    subtitle: "OpenHarmony / mobile app quality",
+    topics: ["OpenHarmony app repair", "Phantom Rendering / UI performance analysis", "Cangjie low-resource language fine-tuning"],
+    badgeClassName: "bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400",
+  },
+  {
+    org: "BTH",
+    initial: "B",
+    name: "Blekinge Institute of Technology (BTH)",
+    subtitle: "LLM code understanding / security evaluation",
+    topics: ["LLM code understanding and semantic evaluation", "LLM jailbreak and security evaluation", "AI4SE open-source ecosystem studies"],
+    badgeClassName: "bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400",
+  },
+  {
+    org: "SMU",
+    initial: "S",
+    name: "Singapore Management University (SMU)",
+    subtitle: "LLM agents / execution efficiency",
+    topics: ["LLM coding agents", "Execution cost and latency optimization", "Code generation and program repair evaluation"],
+    badgeClassName: "bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400",
+  },
+];
 
 export default function HomeEn() {
   return (
@@ -132,8 +166,9 @@ export default function HomeEn() {
               </div>
 
               <p className="mt-4">
-                I collaborate closely with researchers from <strong className="text-gray-900 dark:text-white">Huawei</strong> and
-                <strong className="text-gray-900 dark:text-white"> Singapore Management University (SMU)</strong>.
+                I collaborate closely with <strong className="text-gray-900 dark:text-white">Huawei</strong> on OpenHarmony quality and UI performance,{" "}
+                <strong className="text-gray-900 dark:text-white">Wei Ma at BTH</strong> on LLM code understanding and security evaluation, and{" "}
+                <strong className="text-gray-900 dark:text-white">Zhensu Sun at SMU</strong> on LLM coding agents and execution efficiency.
                 My work has been published at top SE venues including <strong className="text-gray-900 dark:text-white">ICSE</strong>,
                 <strong className="text-gray-900 dark:text-white"> FSE</strong>, <strong className="text-gray-900 dark:text-white">TOSEM</strong>, and <strong className="text-gray-900 dark:text-white">EMSE</strong>.
               </p>
@@ -279,83 +314,64 @@ export default function HomeEn() {
         {/* Collaborations */}
         <section className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Collaborations</h2>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center text-red-600 dark:text-red-400 font-bold">
-                  H
+          <div className="grid lg:grid-cols-3 gap-4">
+            {collaborationGroups.map((group) => (
+              <div key={group.org} className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${group.badgeClassName}`}>
+                    {group.initial}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-medium text-gray-900 dark:text-white">{group.name}</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">{group.subtitle}</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="font-medium text-gray-900 dark:text-white">Huawei</div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">OpenHarmony / mobile app reliability</div>
-                </div>
-              </div>
-              <div className="text-sm text-gray-700 dark:text-gray-300">
-                <div className="font-semibold text-gray-900 dark:text-white mb-2">People</div>
-                <ul className="space-y-1">
-                  {collaborators
-                    .filter((c) => c.org === "Huawei")
-                    .map((c) => (
-                      <li key={c.name} className="flex items-center justify-between gap-3">
-                        <span>• {c.name}</span>
-                        {c.links && c.links.length > 0 && (
-                          <span className="flex flex-wrap gap-2">
-                            {c.links.map((l) => (
-                              <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
-                                {l.label}
-                              </a>
-                            ))}
-                          </span>
-                        )}
-                      </li>
+
+                <div className="text-sm text-gray-700 dark:text-gray-300">
+                  <div className="font-semibold text-gray-900 dark:text-white mb-2">People and Works</div>
+                  <div className="space-y-4">
+                    {collaborators
+                      .filter((c) => c.org === group.org)
+                      .map((c) => (
+                        <div key={c.name} className="border-t border-gray-100 dark:border-gray-700 pt-3 first:border-t-0 first:pt-0">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <div className="font-medium text-gray-900 dark:text-white">{c.name}</div>
+                              {c.role && <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{c.role.en}</div>}
+                            </div>
+                            {c.links && c.links.length > 0 && (
+                              <div className="flex flex-wrap justify-end gap-2">
+                                {c.links.map((l) => (
+                                  <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
+                                    {l.label}
+                                  </a>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          {c.works && c.works.length > 0 && (
+                            <ul className="mt-2 space-y-1 text-xs text-gray-600 dark:text-gray-400">
+                              {c.works.map((work) => (
+                                <li key={work.en} className="flex items-start gap-2">
+                                  <span className="mt-[5px] h-1 w-1 rounded-full bg-blue-500 flex-shrink-0" />
+                                  <span>{work.en}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+
+                  <div className="font-semibold text-gray-900 dark:text-white mt-5 mb-2">Topics</div>
+                  <ul className="space-y-1 text-gray-600 dark:text-gray-400">
+                    {group.topics.map((topic) => (
+                      <li key={topic}>• {topic}</li>
                     ))}
-                </ul>
-                <div className="font-semibold text-gray-900 dark:text-white mt-4 mb-2">Topics</div>
-                <ul className="space-y-1 text-gray-600 dark:text-gray-400">
-                  <li>• OpenHarmony defect detection & repair</li>
-                  <li>• UI performance (rendering) analysis</li>
-                  <li>• Tooling feedback loop with practitioners</li>
-                </ul>
-              </div>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold">
-                  S
-                </div>
-                <div>
-                  <div className="font-medium text-gray-900 dark:text-white">Singapore Management University (SMU)</div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">AI for software engineering</div>
+                  </ul>
                 </div>
               </div>
-              <div className="text-sm text-gray-700 dark:text-gray-300">
-                <div className="font-semibold text-gray-900 dark:text-white mb-2">People</div>
-                <ul className="space-y-1">
-                  {collaborators
-                    .filter((c) => c.org === "SMU")
-                    .map((c) => (
-                      <li key={c.name} className="flex items-center justify-between gap-3">
-                        <span>• {c.name}</span>
-                        {c.links && c.links.length > 0 && (
-                          <span className="flex flex-wrap gap-2">
-                            {c.links.map((l) => (
-                              <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
-                                {l.label}
-                              </a>
-                            ))}
-                          </span>
-                        )}
-                      </li>
-                    ))}
-                </ul>
-                <div className="font-semibold text-gray-900 dark:text-white mt-4 mb-2">Topics</div>
-                <ul className="space-y-1 text-gray-600 dark:text-gray-400">
-                  <li>• LLM-based agents for code analysis</li>
-                  <li>• Program analysis + learning hybrid methods</li>
-                  <li>• Robust evaluation and benchmarks</li>
-                </ul>
-              </div>
-            </div>
+            ))}
           </div>
         </section>
 

@@ -1,7 +1,7 @@
 ---
 title: "CodeAnchor：代码智能体到底需要多少静态结构？"
 date: "2026-06-25"
-description: "我们研究轻量静态结构如何作为 deterministic anchors，帮助代码智能体更稳定、更可复现地定位代码。论文大修后被 ISSTA 2026 正式接收。"
+description: "我们研究轻量静态结构如何作为 deterministic anchors，帮助代码智能体更稳定、更可复现地定位代码。论文被 ISSTA 2026 正式接收。"
 tags: ["论文解读", "静态分析", "Code Agent"]
 coverColor: "from-sky-500 to-cyan-600"
 ---
@@ -63,4 +63,4 @@ CodeAnchor 的答案比较克制：不一定需要重型系统，但可以给它
 
 ---
 
-*大修后正式接收 ISSTA 2026。两篇一起接收，快乐有点超标。*
+*正式接收 ISSTA 2026。两篇一起接收，快乐有点超标。*

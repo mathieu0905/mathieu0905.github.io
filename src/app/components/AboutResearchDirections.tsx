@@ -35,7 +35,11 @@ export function AboutResearchDirections() {
         ],
         methods: ["Static analysis (call/data flow, slicing)", "Agentic search and iterative refinement", "Knowledge graph construction + queries"],
         outputs: ["Repair/localization artifacts", "Benchmarks + ablation studies", "Tooling that integrates with developer workflows"],
-        related: [{ label: "Accepted paper PDFs", href: "/papers" }],
+        related: [
+          { label: "To Run or Not to Run (ISSTA 2026)", href: "/papers/issta2026-to-run-or-not-to-run.pdf" },
+          { label: "CodeAnchor (ISSTA 2026)", href: "/papers/issta2026-codeanchor.pdf" },
+          { label: "HapRepair (FSE Industry 2025)", href: "https://doi.org/10.1145/3696630.3728556" },
+        ],
       },
       {
         id: "llm-security",
@@ -53,7 +57,10 @@ export function AboutResearchDirections() {
         ],
         methods: ["Multi-agent evaluation", "Adversarial testing harnesses", "Regression testing for prompts"],
         outputs: ["Robustness benchmarks", "Defense/mitigation insights", "Practical guidelines for safe deployment"],
-        related: [{ label: "Accepted paper PDFs", href: "/papers" }],
+        related: [
+          { label: "MazeBreaker (ICSE 2026)", href: "/papers/ICSE_2026.pdf" },
+          { label: "Exploring Code Analysis (TOSEM 2026)", href: "https://dl.acm.org/doi/10.1145/3818607" },
+        ],
       },
       {
         id: "domain-se",
@@ -71,7 +78,11 @@ export function AboutResearchDirections() {
         ],
         methods: ["Domain rule mining", "Ecosystem-aware static analysis", "Tool evaluation with industry feedback"],
         outputs: ["Ecosystem-specific tooling", "Actionable rules and repair hints", "Reusable datasets (when possible)"],
-        related: [{ label: "Accepted paper PDFs", href: "/papers" }],
+        related: [
+          { label: "Phantom Rendering Detection (FSE 2026)", href: "/papers/hapray_fse.pdf" },
+          { label: "HapRepair (FSE Industry 2025)", href: "https://doi.org/10.1145/3696630.3728556" },
+          { label: "Cangjie Fine-tuning (EMSE 2026)", href: "https://link.springer.com/article/10.1007/s10664-026-10878-4" },
+        ],
       },
     ],
     []
@@ -172,4 +183,3 @@ export function AboutResearchDirections() {
     </>
   );
 }
-

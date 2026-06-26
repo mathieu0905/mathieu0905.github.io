@@ -1,23 +1,93 @@
-export type CollaboratorOrg = "Huawei" | "SMU";
+export type CollaboratorOrg = "Huawei" | "BTH" | "SMU";
 
 export interface Collaborator {
   name: string;
   org: CollaboratorOrg;
-  role?: string;
+  role?: { zh: string; en: string };
   links?: { label: string; href: string }[];
+  works?: { zh: string; en: string }[];
 }
 
 export const collaborators: Collaborator[] = [
   {
     name: "Wei Ma",
-    org: "SMU",
+    org: "BTH",
+    role: {
+      zh: "瑞典布莱金厄理工学院（BTH）助理高级讲师",
+      en: "Associate Senior Lecturer, Blekinge Institute of Technology",
+    },
     links: [
+      { label: "BTH", href: "https://www.bth.se/english/about-bth/departments/department-of-software-engineering/staff-at-the-department-of-software-engineering" },
       { label: "Google Scholar", href: "https://scholar.google.com/citations?user=ZubTNs0AAAAJ" },
     ],
+    works: [
+      {
+        zh: "MazeBreaker：面向 LLM 越狱评测的多智能体强化学习框架",
+        en: "MazeBreaker: multi-agent RL for LLM jailbreak evaluation",
+      },
+      {
+        zh: "HapRepair：面向 OpenHarmony 应用的 LLM 辅助修复",
+        en: "HapRepair: LLM-guided repair for OpenHarmony apps",
+      },
+      {
+        zh: "Exploring Code Analysis：LLM 代码语法与语义理解评估",
+        en: "Exploring Code Analysis: syntax and semantic probing with LLMs",
+      },
+      {
+        zh: "Open-source AI-based SE Tools：AI4SE 开源生态综述",
+        en: "Open-source AI-based SE tools survey",
+      },
+    ],
   },
-  { name: "Chi Chen", org: "Huawei" },
-  { name: "Han Hu", org: "Huawei" },
-  { name: "Bo Sun", org: "Huawei" },
-  { name: "Gang Fan", org: "Huawei" },
+  {
+    name: "Zhensu Sun",
+    org: "SMU",
+    role: {
+      zh: "新加坡管理大学（SMU）博士候选人",
+      en: "PhD candidate, Singapore Management University",
+    },
+    links: [
+      { label: "Homepage", href: "https://v587su.github.io/" },
+      { label: "Google Scholar", href: "https://scholar.google.com/citations?user=AlpdlkYAAAAJ" },
+    ],
+    works: [
+      {
+        zh: "EAGER：在 LLM 生成代码时并行执行以隐藏延迟",
+        en: "EAGER: executing code as LLMs generate it",
+      },
+      {
+        zh: "To Run or Not to Run：LLM 修复智能体中的执行成本收益分析",
+        en: "To Run or Not to Run: execution cost-effectiveness in LLM repair agents",
+      },
+    ],
+  },
+  {
+    name: "Chi Chen",
+    org: "Huawei",
+    works: [
+      { zh: "HapRepair：OpenHarmony 应用修复", en: "HapRepair: OpenHarmony app repair" },
+      { zh: "Cangjie：低资源编程语言微调", en: "Cangjie low-resource language fine-tuning" },
+    ],
+  },
+  {
+    name: "Han Hu",
+    org: "Huawei",
+    works: [
+      { zh: "Phantom Rendering Detection：移动 UI 性能分析", en: "Phantom Rendering detection for mobile UI performance" },
+    ],
+  },
+  {
+    name: "Bo Sun",
+    org: "Huawei",
+    works: [
+      { zh: "Phantom Rendering Detection：移动 UI 性能分析", en: "Phantom Rendering detection for mobile UI performance" },
+    ],
+  },
+  {
+    name: "Gang Fan",
+    org: "Huawei",
+    works: [
+      { zh: "Phantom Rendering Detection：移动 UI 性能分析", en: "Phantom Rendering detection for mobile UI performance" },
+    ],
+  },
 ];
-

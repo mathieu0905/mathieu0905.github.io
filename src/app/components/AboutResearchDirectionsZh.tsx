@@ -30,7 +30,11 @@ export function AboutResearchDirectionsZh() {
         focus: ["混合信号的缺陷定位（静态分析 + LLM/Agent）", "带约束的补丁生成（可编译/测试/语义）", "基于代码知识图谱的变更影响分析", "在真实项目上系统评估与复现"],
         methods: ["静态分析（调用/数据流、切片等）", "Agent 式搜索与迭代改进", "知识图谱构建与查询"],
         outputs: ["定位/修复流程与工具原型", "基准数据与消融实验", "可集成到开发流程的工程化产物"],
-        related: [{ label: "已接收论文 PDF", href: "/papers" }],
+        related: [
+          { label: "To Run or Not to Run (ISSTA 2026)", href: "/papers/issta2026-to-run-or-not-to-run.pdf" },
+          { label: "CodeAnchor (ISSTA 2026)", href: "/papers/issta2026-codeanchor.pdf" },
+          { label: "HapRepair (FSE Industry 2025)", href: "https://doi.org/10.1145/3696630.3728556" },
+        ],
       },
       {
         id: "llm-security",
@@ -43,7 +47,10 @@ export function AboutResearchDirectionsZh() {
         focus: ["越狱评估（自适应/迭代攻击）", "防御机制与度量（安全 vs 可用）", "提示词鲁棒性（模型更新导致的退化）", "稳定行为的优化策略"],
         methods: ["多智能体评测", "对抗测试框架", "提示词回归测试与自动修复"],
         outputs: ["鲁棒性/安全基准", "防御与缓解经验", "可落地的安全部署建议"],
-        related: [{ label: "已接收论文 PDF", href: "/papers" }],
+        related: [
+          { label: "MazeBreaker (ICSE 2026)", href: "/papers/ICSE_2026.pdf" },
+          { label: "Exploring Code Analysis (TOSEM 2026)", href: "https://dl.acm.org/doi/10.1145/3818607" },
+        ],
       },
       {
         id: "domain-se",
@@ -56,7 +63,11 @@ export function AboutResearchDirectionsZh() {
         focus: ["OpenHarmony 应用缺陷与修复", "生态感知规则（ArkTS/HarmonyOS API）", "低资源语言（如 Cangjie）应用场景探索", "与工程实践结合的反馈闭环"],
         methods: ["领域规则挖掘", "生态感知静态分析", "与产业伙伴的评测与迭代"],
         outputs: ["面向生态的工具与规则", "可操作的修复建议", "可复用的数据与案例（在条件允许时）"],
-        related: [{ label: "已接收论文 PDF", href: "/papers" }],
+        related: [
+          { label: "Phantom Rendering Detection (FSE 2026)", href: "/papers/hapray_fse.pdf" },
+          { label: "HapRepair (FSE Industry 2025)", href: "https://doi.org/10.1145/3696630.3728556" },
+          { label: "Cangjie Fine-tuning (EMSE 2026)", href: "https://link.springer.com/article/10.1007/s10664-026-10878-4" },
+        ],
       },
     ],
     []
@@ -157,4 +168,3 @@ export function AboutResearchDirectionsZh() {
     </>
   );
 }
-
