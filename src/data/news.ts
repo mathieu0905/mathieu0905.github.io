@@ -13,6 +13,7 @@ export type NewsItem =
     };
 
 export const news: NewsItem[] = [
+  { type: "other", date: "2026.06", title: "整理代码基模与 Agentic Training 前沿长文，并上线基模组备战交互式学习台", link: "/blog/agentic-code-model-training-2026" },
   { type: "paper", date: "2026.06", paperId: "run-less-issta-2026" },
   { type: "paper", date: "2026.06", paperId: "codeanchor-issta-2026" },
   { type: "paper", date: "2026.04", paperId: "eager-parallel-execution" },

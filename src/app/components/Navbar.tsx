@@ -16,11 +16,13 @@ export function Navbar() {
       ? [
           { label: "Home", href: "/en" },
           { label: "Blog", href: "/blog" },
+          { label: "Prep", href: "/prep" },
           { label: "Papers", href: "/en/papers" },
         ]
       : [
           { label: "首页", href: "/" },
           { label: "博客", href: "/blog" },
+          { label: "基模备战", href: "/prep" },
           { label: "论文 PDF", href: "/papers" },
         ];
 
