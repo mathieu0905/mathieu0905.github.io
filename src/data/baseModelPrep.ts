@@ -19,7 +19,10 @@ export interface ConceptCard {
   oneLiner: string;
   mechanism: string;
   interviewAnswer: string;
-  checkpoints: string[];
+  checkpoints: {
+    question: string;
+    answer: string;
+  }[];
 }
 
 export interface InterviewQuestion {
@@ -40,6 +43,7 @@ export interface FrontierPaper {
   priority: "必读" | "精读" | "跟踪";
   sourceLabel: string;
   sourceUrl: string;
+  aiMarkdownUrl?: string;
   whyItMatters: string;
   keyIdeas: string[];
   trainingLens: string[];
@@ -153,7 +157,20 @@ export const conceptCards: ConceptCard[] = [
       "模型输出 vocabulary logits，softmax 得到概率分布；cross entropy 等价于最小化正确 token 的 negative log likelihood。训练 loss 每下降一点，都意味着模型给真实序列分配了更高概率。",
     interviewAnswer:
       "我会把 LM loss 看成 token 级别的 NLL；perplexity 是 exp(loss)，代表模型平均每一步的有效困惑度。代码模型里，低 loss 不一定等于强 agent，因为仓库修复还需要检索、执行、工具选择和长程信用分配。",
-    checkpoints: ["能写出 CE = -log p(y)", "能解释 perplexity", "能说出 loss 与 pass rate 不完全一致"],
+    checkpoints: [
+      {
+        question: "写出 CE = -log p(y) 的前提和含义。",
+        answer: "对单个 token 或分类样本，如果真实标签是 y，模型给 y 的概率是 p(y)，交叉熵就是 -log p(y)。语言模型训练时通常对所有预测位置取平均；p(y) 越大，loss 越小。",
+      },
+      {
+        question: "解释 perplexity。",
+        answer: "perplexity 通常是 exp(平均 NLL loss)，可以直觉理解为模型每一步面对的有效候选数。PPL 越低，说明模型越能把概率集中到真实下一个 token 上。",
+      },
+      {
+        question: "为什么 loss 与 pass rate 不完全一致？",
+        answer: "loss 是 token 级分布拟合，pass rate 是任务级成功率。真实代码任务还需要检索、定位、编辑、执行测试、根据日志迭代；这些多轮决策不一定由更低 next-token loss 直接保证。",
+      },
+    ],
   },
   {
     id: "adamw",
@@ -164,7 +181,20 @@ export const conceptCards: ConceptCard[] = [
       "Adam 用一阶矩估计方向、二阶矩估计尺度；AdamW 将 weight decay 从梯度更新中解耦，避免正则项被自适应学习率扭曲。Warmup 用较小学习率度过早期不稳定区间，cosine/linear decay 则逐步降低更新幅度。",
     interviewAnswer:
       "如果训练初期 loss spike，我会先看学习率、warmup 长度、梯度范数、bf16/fp16 溢出、数据 batch 是否异常；如果中后期 spike，则更像数据分布、并行同步、optimizer state 或长序列样本导致的问题。",
-    checkpoints: ["能区分 Adam 和 AdamW", "能解释 warmup", "能给出 loss spike 排查顺序"],
+    checkpoints: [
+      {
+        question: "Adam 和 AdamW 的核心区别是什么？",
+        answer: "Adam 用一阶/二阶矩做自适应更新；传统 Adam 里的 L2 regularization 会被自适应学习率缩放。AdamW 把 weight decay 从梯度更新中解耦，直接衰减权重，正则效果更稳定。",
+      },
+      {
+        question: "为什么大模型训练通常需要 warmup？",
+        answer: "训练初期参数、梯度尺度和优化器状态都不稳定。如果一开始用目标学习率，容易 loss spike 或发散。warmup 先用小学习率建立稳定动量和尺度，再逐步升到目标值。",
+      },
+      {
+        question: "loss spike 的排查顺序是什么？",
+        answer: "先看优化设置：learning rate、warmup、gradient norm、clipping；再查数值问题：NaN/Inf、fp16 overflow；然后定位数据 batch/shard；最后查分布式同步、optimizer state 和 checkpoint resume。",
+      },
+    ],
   },
   {
     id: "attention",
@@ -175,7 +205,20 @@ export const conceptCards: ConceptCard[] = [
       "Query 表示当前位置要找什么，Key 表示历史 token 提供什么索引，Value 表示可被聚合的内容。causal mask 限制模型只能看当前位置之前的信息，multi-head 则允许模型在多个子空间学习不同关系。",
     interviewAnswer:
       "代码场景里 attention 不只是记关键词，还要跨文件跟踪调用、变量、约束和测试反馈。长上下文模型的关键不是把所有东西塞进去，而是如何让注意力预算真正落在有用结构上。",
-    checkpoints: ["能解释 Q/K/V", "能解释 mask", "能联系 repo context 和结构检索"],
+    checkpoints: [
+      {
+        question: "Q/K/V 分别是什么？",
+        answer: "Query 表示当前位置要找什么信息，Key 表示历史 token 可被匹配的索引，Value 表示真正被加权聚合的内容。attention 用 Q 和 K 算权重，再用权重加权 V。",
+      },
+      {
+        question: "causal mask 在 decoder-only LM 里做什么？",
+        answer: "它把当前位置之后的 token 屏蔽掉，确保模型只能利用过去和当前位置之前的信息预测下一个 token，避免训练时看到未来答案。",
+      },
+      {
+        question: "attention 如何联系到 repo context 和结构检索？",
+        answer: "真实仓库里关键信息分散在调用、依赖、测试和配置中。结构检索/anchor 的作用是把高价值证据放进上下文，并降低无关 token 对 attention 预算的干扰。",
+      },
+    ],
   },
   {
     id: "kv-cache",
@@ -186,7 +229,20 @@ export const conceptCards: ConceptCard[] = [
       "自回归推理时，新 token 只需要计算自己的 Q，但要复用历史 token 的 K/V。context 越长，KV cache 线性增长；当上下文到 128K、1M 级别时，注意力 FLOPs 和显存管理都成为核心系统问题。",
     interviewAnswer:
       "GLM-5.2、DeepSeek-V4 这类报告都把 1M context 的效率作为核心卖点，说明 agentic engineering 的瓶颈已经从单轮生成转向长会话、长仓库、长工具轨迹的经济性。",
-    checkpoints: ["能估算 KV cache 组成", "能比较 GQA/MLA/稀疏注意力", "能解释为什么 agent 需要长上下文"],
+    checkpoints: [
+      {
+        question: "KV cache 主要由什么组成？",
+        answer: "自回归推理时，每层会缓存历史 token 的 Key 和 Value。显存量大致随 batch size、层数、序列长度、KV head 数、head dim 和 dtype bytes 线性增长。",
+      },
+      {
+        question: "GQA、MLA、稀疏注意力分别在省什么？",
+        answer: "GQA 减少 KV head 数，降低 KV cache；MLA/压缩注意力把 KV 表示压缩得更小；稀疏注意力减少需要参与 attention 的历史位置，从 FLOPs 和显存访问上降成本。",
+      },
+      {
+        question: "为什么代码 agent 需要长上下文？",
+        answer: "SWE agent 需要保留 issue、仓库证据、工具调用、测试日志和修改历史。但长上下文只是上限，仍需要结构检索和反馈调度来避免噪声淹没关键信息。",
+      },
+    ],
   },
   {
     id: "data-mixture",
@@ -197,7 +253,20 @@ export const conceptCards: ConceptCard[] = [
       "预训练数据通常混合自然语言、代码、数学、仓库、合成数据与轨迹数据。去重减少记忆和泄漏，污染检测避免模型在评测集上靠见过答案取胜。代码模型还要考虑文件粒度、仓库粒度和 commit/PR 粒度。",
     interviewAnswer:
       "我的优势在这里很直接：我做过 repo-level benchmark、低泄漏任务构建和执行受控实验，能帮助把真实软件工程任务变成干净、可验证、可扩展的训练数据。",
-    checkpoints: ["能解释 packing", "能解释 contamination", "能把 benchmark 构建转成 training data 语言"],
+    checkpoints: [
+      {
+        question: "packing 是什么，为什么训练时常用？",
+        answer: "packing 是把多个短样本拼到同一个固定长度 sequence 里，提高 token 利用率，减少 padding 浪费。做 SFT/对话数据 packing 时要特别注意 loss mask 和样本边界。",
+      },
+      {
+        question: "contamination 指什么？",
+        answer: "contamination 是训练数据包含评测题、答案、测试用例或近重复内容，导致模型在 benchmark 上像是会做，其实可能只是见过。代码模型尤其要查 repo、commit、issue 和测试泄漏。",
+      },
+      {
+        question: "benchmark 构建如何翻译成 training data 语言？",
+        answer: "一个好的 benchmark task 可以变成训练实例：prompt/issue 是输入，repo context 是环境，tests/verifier 是 reward，成功/失败轨迹可用于 SFT、DPO 或 RLVR。",
+      },
+    ],
   },
   {
     id: "distributed",
@@ -208,7 +277,20 @@ export const conceptCards: ConceptCard[] = [
       "显存主要来自 model weights、gradients、optimizer states、activations 和临时通信 buffer。Data parallel 复制模型切 batch，tensor parallel 切矩阵，pipeline parallel 切层，ZeRO/FSDP 切参数、梯度和优化器状态。",
     interviewAnswer:
       "我不需要假装自己已经训过千卡 pretrain，但我要能说清楚训练系统的瓶颈：activation checkpointing 用计算换显存，ZeRO/FSDP 用通信换显存，长序列还会放大 activation 和 attention 成本。",
-    checkpoints: ["能列出显存四大块", "能区分 DP/TP/PP", "能解释 ZeRO/FSDP 的 trade-off"],
+    checkpoints: [
+      {
+        question: "训练显存主要由哪几块组成？",
+        answer: "主要是模型参数、梯度、优化器状态、activations，以及临时通信/attention buffer。Adam 类优化器还会有一阶和二阶矩，显存压力通常很大。",
+      },
+      {
+        question: "DP、TP、PP 的区别是什么？",
+        answer: "Data Parallel 复制模型切 batch；Tensor Parallel 把单层矩阵计算切到多卡；Pipeline Parallel 把不同层放到不同卡。三者常组合使用，以平衡显存、通信和吞吐。",
+      },
+      {
+        question: "ZeRO/FSDP 的 trade-off 是什么？",
+        answer: "ZeRO/FSDP 把参数、梯度、优化器状态切分到多卡，显著省显存；代价是更多 all-gather/reduce-scatter 通信和实现复杂度。它本质上是用通信换显存。",
+      },
+    ],
   },
   {
     id: "sft-dpo",
@@ -219,7 +301,20 @@ export const conceptCards: ConceptCard[] = [
       "SFT 对高质量示范轨迹做 teacher forcing；DPO 直接从 chosen/rejected pair 优化偏好，不显式训练 reward model；PPO/RLHF 则通常先训练 reward model，再让 policy 在约束下最大化 reward。",
     interviewAnswer:
       "代码模型不能只靠漂亮的 SFT 轨迹。SFT 可能学会风格，却没有学会在真实 repo 中试错；DPO 需要高质量对比样本，执行反馈和单测结果可以构造成更可靠的偏好来源。",
-    checkpoints: ["能解释 response masking", "能说 DPO 和 RLHF 区别", "能联系 chosen/rejected patch"],
+    checkpoints: [
+      {
+        question: "SFT 里的 response masking 是什么？",
+        answer: "对指令/对话 SFT，通常只对 assistant response 计算 loss，不让 user prompt、system prompt 或工具 observation 参与监督。这样模型学的是回答/动作，而不是复述输入。",
+      },
+      {
+        question: "DPO 和 RLHF/PPO 的区别是什么？",
+        answer: "RLHF/PPO 通常先训练 reward model，再用 RL 优化 policy；DPO 直接用 chosen/rejected pair 优化偏好目标，不显式训练 reward model，流程更简单但依赖高质量偏好对。",
+      },
+      {
+        question: "chosen/rejected patch 怎么用于代码模型？",
+        answer: "通过测试、review 或 verifier，把通过且简洁的 patch 作为 chosen，把失败、过度修改或引入回归的 patch 作为 rejected，就能构造偏好学习样本。",
+      },
+    ],
   },
   {
     id: "rlvr",
@@ -230,7 +325,20 @@ export const conceptCards: ConceptCard[] = [
       "RLVR 用可验证环境给奖励，比如测试通过、程序输出正确、工具任务完成。SWE agent 的难点是 reward 稀疏、episode 长、环境贵、一次成功可能包含许多无关动作。",
     interviewAnswer:
       "我的 To Run or Not to Run 与 CodeAnchor 可以直接接到 RLVR：前者回答何时值得花执行成本拿 reward/observation，后者回答如何给 agent 稳定的结构锚点降低探索难度。",
-    checkpoints: ["能解释 sparse reward", "能解释 credit assignment", "能把 unit test/verifier 说成 reward"],
+    checkpoints: [
+      {
+        question: "什么是 sparse reward？",
+        answer: "sparse reward 指大多数中间步骤没有奖励，只有最终成功/失败才给信号。SWE agent 里通常是最后测试通过给 1，否则给 0，训练信号非常稀疏。",
+      },
+      {
+        question: "credit assignment 为什么难？",
+        answer: "一次成功修复可能包含搜索、阅读、错误尝试、测试和最终 patch。最终 reward 很难告诉模型哪一步真正有贡献，哪些动作只是噪声或碰巧存在。",
+      },
+      {
+        question: "为什么 unit test/verifier 可以说成 reward？",
+        answer: "如果测试、编译、静态检查或运行结果能判断当前 patch 是否满足目标，它们就能给 agent 可验证反馈。训练时可以把通过/失败转成 reward、偏好对或 rerank 信号。",
+      },
+    ],
   },
   {
     id: "agentic-trajectories",
@@ -241,7 +349,20 @@ export const conceptCards: ConceptCard[] = [
       "一个 SWE trajectory 包含问题描述、repo 观察、搜索、打开文件、编辑、执行测试、失败日志、反思与提交。训练时要决定哪些 token 计 loss，哪些 observation mask 掉，以及如何处理超长失败轨迹。",
     interviewAnswer:
       "我会特别关注轨迹质量：成功轨迹是否真的因果有效，失败轨迹能否提供反例，测试日志是否泄漏答案，执行成本是否值得。这个正是 SE 背景能补到基模组的地方。",
-    checkpoints: ["能区分 prompt 数据和 trajectory 数据", "能解释 observation masking", "能指出 reward hacking 风险"],
+    checkpoints: [
+      {
+        question: "prompt 数据和 trajectory 数据有什么区别？",
+        answer: "prompt 数据通常是输入到输出的一次映射；trajectory 数据包含多轮 observation、action、tool result、reflection 和 final answer，更接近 agent 与环境交互的完整过程。",
+      },
+      {
+        question: "observation masking 是什么？",
+        answer: "工具输出、测试日志和文件内容通常是环境给模型看的 observation，不一定要让模型学习去生成它们。mask 掉这些 token，可以让 loss 主要监督模型自己的动作和回答。",
+      },
+      {
+        question: "SWE agent 的 reward hacking 风险是什么？",
+        answer: "模型可能学会迎合弱测试、删除测试、过度修改、利用环境漏洞或输出看似通过的假结果。verifier 必须防止 agent 优化指标而不是修好问题。",
+      },
+    ],
   },
   {
     id: "cv-translation",
@@ -252,7 +373,20 @@ export const conceptCards: ConceptCard[] = [
       "基模组会关心数据、训练目标、reward、verifier、评测和系统吞吐。你的论文如果只按 SE 讲，是程序修复/静态分析/benchmark；按模型训练讲，则是 repo-level context、execution feedback、agent trajectory、verifiable reward 和 low-leakage training tasks。",
     interviewAnswer:
       "我的优势不是已经训过最大规模 pretrain，而是知道 code model 在真实仓库任务中为什么失败，以及怎样把这些失败转化成训练和评测信号。训练基础我正在补齐，目标是把 SE 场景资产接到 post-training 和 agent RL pipeline。",
-    checkpoints: ["能把每篇论文映射到 training signal", "能避免说自己是 ML 新手", "能明确短期可贡献位置"],
+    checkpoints: [
+      {
+        question: "如何把自己的论文映射到 training signal？",
+        answer: "CodeAnchor 是结构上下文和检索信号；To Run or Not to Run 是执行反馈调度和 verifier 成本收益；RepoRescue/SWE-OpenHarmony 是可执行环境；AtomicCommitBench 是变更轨迹数据。",
+      },
+      {
+        question: "为什么不要把自己说成 ML 新手？",
+        answer: "更准确的定位是：你已经掌握 code agent 真实任务和反馈侧，现在补齐训练侧共同语言。这样不是弱化背景，而是把 SE 优势接到基模训练闭环。",
+      },
+      {
+        question: "短期最能贡献在哪里？",
+        answer: "最现实的是 code data、repo-level eval、verifier、agent trajectory quality control、execution feedback scheduling 和 post-training task construction，而不是一上来负责整套 pretrain infra。",
+      },
+    ],
   },
 ];
 
@@ -351,8 +485,9 @@ export const frontierPapers: FrontierPaper[] = [
     year: "2026",
     theme: "模型报告",
     priority: "必读",
-    sourceLabel: "GLM-5 GitHub + arXiv 技术报告",
-    sourceUrl: "https://github.com/zai-org/GLM-5",
+    sourceLabel: "alphaXiv 阅读页",
+    sourceUrl: "https://www.alphaxiv.org/abs/2026.glm-5-2",
+    aiMarkdownUrl: "https://www.alphaxiv.org/abs/2026.glm-5-2.md",
     whyItMatters: "它把目标从 vibe coding 明确推进到 agentic engineering：长上下文、复杂系统工程、异步 RL、agent 长程任务。",
     keyIdeas: [
       "GLM-5 采用 744B total / 40B active MoE，并把预训练数据扩展到 28.5T tokens。",
@@ -374,14 +509,15 @@ export const frontierPapers: FrontierPaper[] = [
     year: "2026",
     theme: "模型报告",
     priority: "必读",
-    sourceLabel: "DeepSeek-V4 technical report on Hugging Face",
-    sourceUrl: "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/blob/main/DeepSeek_V4.pdf",
+    sourceLabel: "alphaXiv 阅读页",
+    sourceUrl: "https://www.alphaxiv.org/abs/deepseek-v4",
+    aiMarkdownUrl: "https://www.alphaxiv.org/abs/deepseek-v4.md",
     whyItMatters: "它把 1M context 的核心问题讲成工程经济性：FLOPs、KV cache、压缩注意力和长程 agent serving 成本。",
     keyIdeas: [
       "公开卡片显示 V4-Pro 为 1.6T total / 49B active MoE，V4-Flash 为更轻量的 284B / 13B active 路线。",
       "报告主线是 hybrid attention：Compressed Sparse Attention 与 Heavily Compressed Attention 共同降低 1M context 成本。",
       "两类模型都在超过 32T tokens 上预训练，并引入 mHC residual mapping 与 Muon optimizer 来提升稳定性和收敛效率。",
-      "NVIDIA NIM 卡片称 V4-Pro 在 1M context 下单 token inference FLOPs 约为 DeepSeek-V3.2 的 27%。",
+      "技术报告称 V4-Pro 在 1M context 下单 token inference FLOPs 约为 DeepSeek-V3.2 的 27%，KV cache 约为 10%。",
     ],
     trainingLens: [
       "长上下文模型的胜负不只在训练 loss，还在 KV cache、attention pattern、memory hierarchy。",
@@ -398,8 +534,9 @@ export const frontierPapers: FrontierPaper[] = [
     year: "2026",
     theme: "代码模型",
     priority: "必读",
-    sourceLabel: "arXiv:2603.16733",
-    sourceUrl: "https://arxiv.org/abs/2603.16733",
+    sourceLabel: "alphaXiv 阅读页",
+    sourceUrl: "https://www.alphaxiv.org/abs/2603.16733",
+    aiMarkdownUrl: "https://www.alphaxiv.org/abs/2603.16733.md",
     whyItMatters: "这是最贴近你目标组的材料：code-flow multi-stage training、repo-scale 128K context、reasoning RL、agentic trajectories。",
     keyIdeas: [
       "IQuest-Coder-V1 包含 7B/14B/40B/40B-Loop 系列。",
@@ -444,8 +581,9 @@ export const frontierPapers: FrontierPaper[] = [
     year: "2025-2026",
     theme: "模型报告",
     priority: "精读",
-    sourceLabel: "arXiv:2507.20534",
-    sourceUrl: "https://arxiv.org/abs/2507.20534",
+    sourceLabel: "alphaXiv 阅读页",
+    sourceUrl: "https://www.alphaxiv.org/abs/2507.20534",
+    aiMarkdownUrl: "https://www.alphaxiv.org/abs/2507.20534.md",
     whyItMatters: "它把 agentic data synthesis、joint RL、optimizer stability 和开放 MoE 模型放在同一个报告里。",
     keyIdeas: [
       "K2 是 1T total / 32B active MoE。",
@@ -467,8 +605,9 @@ export const frontierPapers: FrontierPaper[] = [
     year: "2024-2025",
     theme: "SWE Agent 训练",
     priority: "必读",
-    sourceLabel: "arXiv:2412.21139",
-    sourceUrl: "https://arxiv.org/abs/2412.21139",
+    sourceLabel: "alphaXiv 阅读页",
+    sourceUrl: "https://www.alphaxiv.org/abs/2412.21139",
+    aiMarkdownUrl: "https://www.alphaxiv.org/abs/2412.21139.md",
     whyItMatters: "它把 SWE agent 训练环境、真实 Python 任务、unit tests 和 verifier 放在一起，是入门 agentic code training 的标准材料。",
     keyIdeas: [
       "包含 2,438 个真实 Python task instances，每个实例有 codebase、runtime、unit tests 和自然语言任务。",
@@ -490,8 +629,9 @@ export const frontierPapers: FrontierPaper[] = [
     year: "2025",
     theme: "评测与数据",
     priority: "精读",
-    sourceLabel: "arXiv:2504.21798",
-    sourceUrl: "https://arxiv.org/abs/2504.21798",
+    sourceLabel: "alphaXiv 阅读页",
+    sourceUrl: "https://www.alphaxiv.org/abs/2504.21798",
+    aiMarkdownUrl: "https://www.alphaxiv.org/abs/2504.21798.md",
     whyItMatters: "它正面处理 SWE agent 数据稀缺和环境昂贵问题，是理解 scalable task synthesis 的关键论文。",
     keyIdeas: [
       "指出现有 SWE 训练数据规模小、repo 数量少、人工构建成本高、环境存储重。",
@@ -513,8 +653,9 @@ export const frontierPapers: FrontierPaper[] = [
     year: "2025",
     theme: "Agent RL",
     priority: "必读",
-    sourceLabel: "arXiv:2506.11425",
-    sourceUrl: "https://arxiv.org/abs/2506.11425",
+    sourceLabel: "alphaXiv 阅读页",
+    sourceUrl: "https://www.alphaxiv.org/abs/2506.11425",
+    aiMarkdownUrl: "https://www.alphaxiv.org/abs/2506.11425.md",
     whyItMatters: "它讨论为什么 RLVR 从数学题迁移到 agentic environments 会变难，以及如何用 guidance + environment reward 缓解。",
     keyIdeas: [
       "RLVR 在 math/competitive programming 中有效，但在多步 agent 环境里 reward 稀疏、失败率高。",
@@ -536,8 +677,9 @@ export const frontierPapers: FrontierPaper[] = [
     year: "2025",
     theme: "Agent RL",
     priority: "精读",
-    sourceLabel: "arXiv:2504.20073",
-    sourceUrl: "https://arxiv.org/abs/2504.20073",
+    sourceLabel: "alphaXiv 阅读页",
+    sourceUrl: "https://www.alphaxiv.org/abs/2504.20073",
+    aiMarkdownUrl: "https://www.alphaxiv.org/abs/2504.20073.md",
     whyItMatters: "它把 multi-turn RL 的训练病灶讲得比较清楚：长程交互、环境随机性、自我演化与训练崩塌。",
     keyIdeas: [
       "提出 StarPO 框架和 RAGEN 系统来训练/评估 LLM agents。",
@@ -606,8 +748,9 @@ export const frontierPapers: FrontierPaper[] = [
     year: "2025",
     theme: "SWE Agent 训练",
     priority: "精读",
-    sourceLabel: "arXiv:2506.07636",
-    sourceUrl: "https://arxiv.org/abs/2506.07636",
+    sourceLabel: "alphaXiv 阅读页",
+    sourceUrl: "https://www.alphaxiv.org/abs/2506.07636",
+    aiMarkdownUrl: "https://www.alphaxiv.org/abs/2506.07636.md",
     whyItMatters: "它把训练数据扩展和 inference scaling 一起讲，适合作为 agent 训练闭环的补充材料。",
     keyIdeas: [
       "用合成测试用例和扩展 agent trajectories 构建训练数据。",

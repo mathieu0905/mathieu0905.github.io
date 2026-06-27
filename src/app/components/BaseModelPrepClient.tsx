@@ -242,12 +242,16 @@ export function BaseModelPrepClient() {
                   <p>{currentConcept.interviewAnswer}</p>
                 </div>
               </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {currentConcept.checkpoints.map((checkpoint) => (
-                  <span key={checkpoint} className="rounded-full bg-white px-2.5 py-1 text-xs text-gray-600 shadow-sm dark:bg-gray-800 dark:text-gray-300">
-                    {checkpoint}
-                  </span>
-                ))}
+              <div className="mt-5">
+                <div className="mb-2 text-sm font-semibold text-gray-950 dark:text-white">自测题与参考答案</div>
+                <div className="space-y-3">
+                  {currentConcept.checkpoints.map((checkpoint) => (
+                    <div key={checkpoint.question} className="rounded-lg bg-white p-3 text-sm leading-6 shadow-sm dark:bg-gray-800">
+                      <div className="font-semibold text-gray-950 dark:text-white">{checkpoint.question}</div>
+                      <div className="mt-1 text-gray-600 dark:text-gray-300">{checkpoint.answer}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -423,15 +427,27 @@ export function BaseModelPrepClient() {
                 </div>
                 <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-sm leading-6 text-gray-500 dark:text-gray-400">{paper.readFor}</p>
-                  <a
-                    href={paper.sourceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex flex-shrink-0 items-center justify-center gap-2 rounded-lg bg-gray-950 px-3 py-2 text-sm font-semibold text-white hover:bg-gray-800 dark:bg-white dark:text-gray-950 dark:hover:bg-gray-200"
-                  >
-                    {paper.sourceLabel}
-                    <FaArrowRight className="text-xs" />
-                  </a>
+                  <div className="flex flex-shrink-0 flex-wrap gap-2">
+                    {paper.aiMarkdownUrl && (
+                      <a
+                        href={paper.aiMarkdownUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-white dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-900"
+                      >
+                        AI Markdown
+                      </a>
+                    )}
+                    <a
+                      href={paper.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-950 px-3 py-2 text-sm font-semibold text-white hover:bg-gray-800 dark:bg-white dark:text-gray-950 dark:hover:bg-gray-200"
+                    >
+                      {paper.sourceLabel}
+                      <FaArrowRight className="text-xs" />
+                    </a>
+                  </div>
                 </div>
               </article>
             ))}

@@ -1,350 +1,306 @@
 ---
 title: "代码基模与 Agentic Training 前沿：从 GLM-5.2、DeepSeek-V4 到 SWE Agent RL"
 date: "2026-06-27"
-description: "一份面向基模组备战的详细阅读笔记：补齐 ML/训练地基，梳理 GLM-5.2、DeepSeek-V4、IQuest-Coder、Qwen3-Coder、Kimi K2，以及 SWE-Gym、DeepSWE、Agent-RLVR 等 agentic code training 论文。"
+description: "一份更像读论文现场的深度笔记：用 alphaXiv、论文图和官方技术报告，把代码基模、长上下文、verifier、SWE 环境和 agent RL 的训练闭环讲清楚。"
 tags: ["大模型", "代码模型", "Agentic Training", "SWE Agent", "论文阅读"]
 coverColor: "from-slate-900 to-blue-600"
 ---
 
-这篇文章不是普通的“模型新闻汇总”。它更像我给自己准备的一份基模组备战笔记：我已经有比较强的软件工程和代码智能体研究经历，真正需要补的是两件事。
+这篇文章不是模型新闻列表，也不是为了证明我"懂很多新模型"。我真正想整理的是另一件事：代码基模正在从单函数 code generation，走到 repo-level、tool-use、long-horizon 的 agentic engineering。这个变化对软件工程研究者很实在，因为很多训练问题的源头不在模型结构，而在任务、数据、环境、verifier 和反馈预算。
 
-第一，补齐模型训练的共同语言。面试官问 loss、optimizer、attention、long context、SFT、RLVR、显存和训练事故时，不能只靠“我做过 benchmark”来回答。
+我这次主要用 alphaXiv 的 paper/overview 页面复习论文，再对照 arXiv HTML 里的原图和官方技术报告页面。这样读起来比只看 PDF 更顺，图也更接近论文现场。下面每一节我都会尽量按同一个顺序写：
 
-第二，理解前沿代码模型到底怎么从“会写代码”走向“能做工程”。现在的关键词已经不是 HumanEval，而是 repo-level context、tool-use、execution feedback、verifier、trajectory data、long-horizon RL 和 inference-time scaling。
+1. 这篇材料到底在解决什么问题。
+2. 图里应该看哪几个细节。
+3. 它的训练 recipe 或系统 recipe 是什么。
+4. 我不完全买账或需要小心的地方。
+5. 它怎么接回我的 CodeAnchor、To Run or Not to Run、RepoRescue、AtomicCommitBench、SWE-OpenHarmony 这些工作。
 
-所以我把阅读范围分成两层：
+如果只想带走一句话，我会这样概括：现在的 code model 不只是在比谁会写函数，而是在比谁能在真实软件仓库里持续工作；而持续工作需要的不只是更大模型，还需要可执行环境、结构化上下文、稳定 verifier、可靠轨迹和能承担成本的训练系统。
 
-- **模型报告层**：GLM-5/5.2、DeepSeek-V4、IQuest-Coder-V1、Qwen3-Coder、Kimi K2。
-- **Agent 训练层**：SWE-Gym、SWE-smith、SWE-Dev、Agent-RLVR、RAGEN、DeepSWE，以及长上下文多轮 SWE-RL。
+## 1. 先把训练语言对齐
 
-我关心的不是谁榜单最高，而是每篇报告/论文回答了训练闭环里的哪一环：数据从哪里来，环境怎么跑，reward/verifier 怎么设计，长上下文和工具调用成本如何控制，以及这些东西怎样和我的 CodeAnchor、To Run or Not to Run、RepoRescue、AtomicCommitBench、SWE-OpenHarmony 连接起来。
+我先把最底层的几个概念放在前面。原因很简单：读 GLM-5、DeepSeek-V4、Kimi K2 这类报告时，如果 loss、perplexity、attention、KV cache、SFT、DPO、RLVR 这些词还只是"听过"，后面的模型报告很容易读成营销稿。
 
-## 0. 先定一个判断：代码基模正在从 code generation 走向 agentic engineering
+### 1.1 cross entropy、perplexity 和 pass rate 不是一回事
 
-过去两年，代码模型的竞争焦点已经发生了变化。
+大模型预训练通常是 next-token prediction。给定上下文，模型输出 vocabulary logits，softmax 后得到下一个 token 的概率分布。对一个真实 token `y`，如果模型给它的概率是 `p(y)`，单点交叉熵就是：
 
-早期代码模型最容易展示的是单函数生成：HumanEval、MBPP、LeetCode-style problems。这类任务非常重要，因为它们干净、可验证、便于快速迭代。但它们也有明显局限：真实软件工程不是给一个函数签名写实现，而是在一个已有仓库里读代码、定位问题、理解依赖、修改多个文件、运行测试、分析日志、回滚错误路径，最后给出可验证 patch。
+```text
+CE = -log p(y)
+```
 
-因此，前沿模型报告里的语言开始变化：
+训练时会对大量位置取平均。loss 越低，说明模型越能把概率分给真实文本。perplexity 通常是 `exp(loss)`，直觉上可以理解成模型平均每一步面对的"有效候选数"。如果 loss 是 2，perplexity 大约是 7.39；如果 loss 是 1，perplexity 大约是 2.72。这个解释不完美，但面试里够用。
 
-- GLM-5 把目标写成从 **vibe coding** 走向 **agentic engineering**。
-- GLM-5.2 强调 solid **1M-token context**、复杂系统工程和 flexible reasoning effort。
-- DeepSeek-V4 把重点放在 million-token context 的高效推理，尤其是压缩/稀疏注意力。
-- IQuest-Coder-V1 直接提出 **code-flow multi-stage training**，并把 repo-scale、agentic trajectories、reasoning RL 放进训练管线。
-- Qwen3-Coder 强调 **agentic coding in the world**，并明确讨论 20,000 个并行环境上的 long-horizon RL。
-- Kimi K2 把大规模 MoE、optimizer stability、agentic data synthesis 和 joint RL 放在同一个训练叙事里。
+真正容易混的是另一件事：pretraining loss 下降，不等于 SWE-bench resolved rate 一定上升。
 
-这说明一件事：代码模型不是只比“生成一段正确代码”的能力，而是在比“能不能作为一个长期工作的工程 agent”。这对软件工程背景的人反而是机会，因为 agentic engineering 的难点很多不是传统 NLP 问题，而是真实工程任务、执行环境、工具反馈、测试信号、仓库结构和评测协议。
+loss 是 token-level objective。SWE-bench resolved rate 是一个长程任务结果。中间隔着很多环节：找文件、理解 issue、定位 bug、编辑 patch、跑测试、读日志、修失败、避免破坏其它行为。一个模型可能在代码语料上 loss 更低，但在真实仓库里仍然不会用工具，或者会把上下文塞满却找不到关键文件。
 
-我的简历里最该被翻译成训练语言的部分是：
+所以我现在更喜欢把 code agent 成功率拆成：
 
-| SE 说法 | 基模组说法 |
-|---|---|
-| CodeAnchor | repo-level structural retrieval / deterministic context anchoring / long-context noise reduction |
-| To Run or Not to Run | execution feedback scheduling / verifier cost-benefit / agent environment budget |
-| RepoRescue | dependency drift repair environment / realistic repository-level training tasks |
-| AtomicCommitBench | patch-intent reconstruction / commit trajectory modeling / ordered code-change data |
-| Chain-Tracking | causal credit assignment over CI, execution logs, and patch actions |
-| SWE-OpenHarmony / HomeTrans | domain-specific coding environments / low-leakage agentic benchmark generation |
+- base model 懂不懂代码和自然语言；
+- repo context 是否给对了；
+- trajectory 是否教会模型用工具；
+- verifier 是否可靠；
+- execution feedback 是否值得花；
+- 推理时是否有足够但不过量的 search/test budget。
 
-这篇文章后面的所有阅读，都会围绕这个翻译表展开。
+这也是为什么我的 To Run or Not to Run 不能只叫"执行测试策略"。放到训练语言里，它是在问 execution feedback 作为 observation/reward 的边际收益。
 
-## 1. 地基：面试里必须能讲清楚的训练概念
+### 1.2 attention 和长上下文：能塞进去，不代表能用出来
 
-我不需要把自己包装成已经训过千卡 pretrain 的人。但如果目标是基模组，就必须能和训练同学正常对话。最低要求是：看到一个训练现象，能说出可能机制和排查路径。
+decoder-only Transformer 的 causal self-attention 可以粗略写成：
 
-### 1.1 Next-token loss 与 perplexity
+```text
+softmax(QK^T / sqrt(d)) V
+```
 
-大模型预训练的核心目标通常是 next-token prediction。给定上下文 token 序列，模型输出 vocabulary logits，softmax 后得到下一个 token 的概率分布。cross entropy loss 本质上就是最小化真实 token 的 negative log likelihood。
+Query 表示当前位置要找什么，Key 表示历史 token 怎么被匹配，Value 是真正被聚合的信息。causal mask 保证模型预测当前 token 时不能看未来。
 
-如果 loss 是 `L`，perplexity 通常可以理解成 `exp(L)`。它表示模型平均每一步面对多少“有效候选”。loss 越低，模型越能把概率分配给真实文本。
+推理时，历史 token 的 Key/Value 会缓存下来，这就是 KV cache。它让自回归推理不用每一步重算所有历史 token，但代价是上下文越长，KV cache 越大。到了 128K、200K、1M context，问题就不只是"显存够不够"，还包括带宽、attention FLOPs、prefill 延迟、以及上下文里噪声太多时模型是否还能定位证据。
 
-但这里有个很重要的面试点：**pretraining loss 下降，不等于 SWE-bench resolved rate 一定上升。**
+这点和代码任务非常贴。真实 SWE agent 的上下文可能包括 issue、repo 文件、搜索结果、测试输出、失败日志、之前的修改、自己的反思。1M context 的确提高上限，但如果没有结构检索、文件锚点、调用关系、测试相关性排序，它也可能只是把更多无关 token 放到模型面前。
 
-原因是 LM loss 是 token-level objective，而 SWE-bench 是一个长程 agent task。中间隔着：
+CodeAnchor 在这个语境下就不是传统静态分析的小工具。它更像 deterministic anchors：在长上下文里给模型一组稳定的结构入口，减少盲搜。
 
-- 仓库理解和检索；
-- 多文件定位；
-- patch planning；
-- 工具调用；
-- 执行反馈；
-- 测试日志理解；
-- 失败后的策略修正；
-- 最终 patch 是否通过隐藏测试。
+### 1.3 SFT、DPO、RLVR：代码任务为什么适合做 verifier
 
-所以代码基模的训练目标会从单纯 token likelihood 逐步扩展到 SFT、preference learning、verifier reranking、RLVR 和 test-time scaling。
+SFT 教模型模仿高质量示范。对 code agent 来说，示范不是一句答案，而是 observation-action 轨迹：搜索、打开文件、编辑、运行测试、读日志、提交 patch。
 
-### 1.2 AdamW、warmup 与 loss spike
+DPO 用 chosen/rejected pair 调偏好。代码里 chosen/rejected 很自然：通过测试、改动小、解释清楚的 patch 可以是 chosen；失败、删测试、过度修改、引入回归的 patch 可以是 rejected。
 
-Adam 维护梯度的一阶矩和二阶矩，用自适应步长稳定训练。AdamW 的关键是把 weight decay 从梯度更新里解耦出来，避免正则项被 Adam 的自适应学习率扭曲。
+RLVR 更吸引人，因为代码任务有天然 verifier：unit tests、编译、lint、静态检查、运行输出。问题也在这里。SWE agent 的 reward 往往很稀疏：最后通过是 1，不通过是 0。它不告诉你哪次搜索有效，哪次测试值得跑，哪次修改只是碰巧没炸。环境还很贵，每次 rollout 都要容器、依赖、测试和超时控制。
 
-大模型训练通常需要 warmup。直觉是：训练初期参数还没有进入稳定区域，梯度方向和尺度都很不可靠，如果一开始学习率太大，很容易造成 loss spike 甚至发散。warmup 让学习率从小逐渐升到目标值，后续再用 cosine decay 或 linear decay 慢慢减小更新幅度。
+我读下面这些论文时，一直用这个问题做尺子：它们是在改模型，还是在改训练信号？是在扩大上下文，还是在提高上下文信噪比？是在增加 rollout，还是在让每一次 rollout 更值钱？
 
-如果面试官问 “loss spike 怎么排查”，我会按四类说：
+## 2. GLM-5 / GLM-5.2：agentic engineering 不是一句口号
 
-1. **优化问题**：learning rate、warmup、gradient clipping、batch size、optimizer hyperparameters。
-2. **数据问题**：异常 batch、重复/污染数据、过长 sequence、坏样本、分布突变。
-3. **数值问题**：fp16 overflow、bf16/fp32 cast、loss scaling、NaN/Inf。
-4. **系统问题**：并行通信、optimizer state、checkpoint resume、不同 rank 数据不一致。
+GLM-5 的题目很直接：[GLM-5: from Vibe Coding to Agentic Engineering](https://www.alphaxiv.org/abs/2602.15763)。我喜欢这个题目，因为它把这两年代码模型的变化说得很白：从人类不断提示模型写一小段代码，变成模型自己读、改、跑、修、再验证。
 
-这个回答比“调小学习率试试”更像训练组语言。
+![GLM-5 在 alphaXiv 上的论文页面截图。左侧能看到首页摘要和 Figure 1 的多任务结果，右侧是 alphaXiv 的辅助阅读区。](/images/blog/agentic-training/alphaxiv-glm5.jpg)
 
-### 1.3 Attention、KV cache 和长上下文
+论文里几个数字值得记：
 
-Transformer decoder 的核心是 causal self-attention。每个 token 生成 Query，历史 token 提供 Key 和 Value。attention score 大致是 `QK^T / sqrt(d)`，softmax 后对 Value 加权求和。causal mask 保证当前位置不能看未来。
+- GLM-5 是 744B total / 40B active 的 MoE，比 GLM-4.5 更大。
+- 训练 token budget 到 28.5T。
+- 用 DeepSeek Sparse Attention (DSA) 降低长上下文训练和推理成本。
+- 继续使用 slime 作为 post-training / RL 基础设施，把 rollout serving 和 training 解耦。
+- 任务覆盖 reasoning、coding、agentic、terminal 和 long-horizon 工程任务。
 
-推理时，历史 token 的 K/V 可以缓存起来，这就是 KV cache。每生成一个新 token，只需要计算新 token 的 Q/K/V，并和历史 K/V 做 attention。问题是：context 越长，KV cache 越大；上下文到 128K、1M 之后，显存和带宽压力会非常明显。
+我不建议只背这些数字。更值得看的其实是 Figure 5，也就是训练管线。
 
-因此 GQA、MLA、稀疏注意力、压缩注意力、IndexShare、DSA 这些技术，本质上都在回答同一个问题：**长上下文 agent 到底怎样才能算得起？**
+![GLM-5 论文 Figure 5：从 base model training 到 SFT、reasoning RL、coding/agent RL、general RL 的整体训练管线。来源：arXiv HTML / alphaXiv 对应论文页面。](/images/blog/agentic-training/glm5-training-pipeline.png)
 
-这和代码 agent 非常相关。一个真实 SWE agent 的上下文可能包括：
+这张图的读法是：GLM-5 不是"预训练完再随便 SFT 一下"。它把 base training、mid/long-context training、SFT、reasoning RL、coding RL、agent RL、general RL 串成了一个多阶段过程。对 code agent 来说，后面的 RL 阶段不是锦上添花，而是在把模型从会回答题，推向会在环境里行动。
 
-- issue description；
-- 仓库文件；
-- 搜索结果；
-- 多轮工具调用；
-- 测试输出；
-- failed logs；
-- 自己的反思和修改历史。
+这里有两个细节我会在面试里主动说。
 
-所以长上下文不是“能塞 1M token 就结束了”。真正的问题是：关键信息能不能被模型找到，KV 和 attention 成本能不能承受，无关上下文会不会降低定位能力。
+第一，DSA 的价值不是让论文多一个结构创新，而是让长上下文 agent 变得算得起。SWE agent 的一次任务可能不是一个 prompt，而是几十轮工具调用。如果每轮都带很长上下文，attention 成本和 KV cache 成本会直接变成 serving 成本。
 
-CodeAnchor 正好可以被解释成这条线上的工作：在长上下文时代，静态结构不只是程序分析技巧，而是帮助模型降低上下文噪声、稳定定位路径的 deterministic anchors。
+第二，slime 这类异步 RL infra 说明了一个现实：agentic post-training 的瓶颈不只是算法。rollout 太慢、环境太贵、tail latency 太长，都会让训练吞吐掉下来。报告里提到 server-based rollouts、Prefill-Decode disaggregation、fault tolerance，我读到这里的感觉是：现在 code model 训练组越来越像半个系统组。
 
-### 1.4 SFT、DPO、RLVR 与代码 verifier
+GLM-5.2 的 alphaXiv 页面 [GLM-5.2: Built for Long-Horizon Tasks](https://www.alphaxiv.org/abs/2026.glm-5-2) 又把这条线往长任务推进了一步。它强调 1M-token context、IndexShare、flexible reasoning effort 和 speculative decoding 相关优化。这个方向和 GLM-5 的关系很清楚：GLM-5 把 agentic engineering 作为目标，GLM-5.2 继续补长上下文和长程任务的系统能力。
 
-SFT 教模型模仿高质量示范。对聊天模型来说，它学习 instruction-following；对 code agent 来说，它可以学习如何读文件、用工具、编辑 patch、解释日志。
+![GLM-5.2 在 alphaXiv 上的页面截图。页面把 1M context、long-horizon tasks、IndexShare 和 agentic RL 放在同一条叙事里。](/images/blog/agentic-training/alphaxiv-glm52.png)
 
-但 SFT 有两个问题：
+我会怎么把它接回自己的工作？CodeAnchor 可以接到 long-context repo understanding；To Run or Not to Run 可以接到 agent rollout 和执行反馈预算；RepoRescue/SWE-OpenHarmony 可以接到可执行环境构造。也就是说，我不是只做"应用层 benchmark"，而是在做 agentic engineering 需要的任务侧基础设施。
 
-- 它依赖 teacher trajectory 的质量；
-- 它优化的是模仿，不直接优化最终任务成功。
+我也会保留一点警惕。模型报告里的 benchmark 很多，Terminal-Bench、Vending-Bench、SWE 相关任务都很热，但模型到底是不是学会了稳定工程推理，还要看任务是否泄漏、环境是否可复现、失败轨迹是否被分析。只看平均分，很容易把 agent 的偶然成功当成能力。
 
-DPO 通过 chosen/rejected pair 直接优化偏好，不需要显式 reward model。代码任务里，chosen/rejected 可以来自 pass/fail patch、好/坏 trajectory、简洁/冗长工具使用路径。
+## 3. DeepSeek-V4：1M context 的问题是经济性
 
-RLVR 更适合代码场景，因为代码任务有天然 verifier：unit tests、编译、静态检查、lint、runtime behavior。问题在于 SWE agent 的 reward 很稀疏：一次最终测试通过只告诉你 episode 成功了，但不告诉你中间哪一步真正有贡献。环境还贵，每次 rollout 都要启动容器、安装依赖、运行测试。
+DeepSeek-V4 现在也可以直接从 alphaXiv 读：[DeepSeek-V4: Towards Highly Efficient Million-Token Context Intelligence](https://www.alphaxiv.org/abs/deepseek-v4)。这比只看官方 release 更适合复习，因为 alphaXiv 的 `.md` 入口能把报告正文直接交给 AI 做二次提问。
 
-这就是我自己的 To Run or Not to Run 可以接入的地方：execution feedback 不是免费的，每次运行测试都要消耗时间和计算；在 agentic training/inference 中，反馈调度本身就是策略问题。
+![DeepSeek-V4 在 alphaXiv 上的技术报告页面截图。报告开头就把 1M context、CSA/HCA、mHC 和 Muon optimizer 放在一起。](/images/blog/agentic-training/alphaxiv-deepseek-v4.png)
 
-## 2. 模型报告：前沿代码基模怎么变强
+报告开头列出的核心信息包括：
 
-### 2.1 GLM-5 / GLM-5.2：从 vibe coding 到 agentic engineering
+- DeepSeek-V4-Pro：1.6T total / 49B active parameters。
+- DeepSeek-V4-Flash：284B total / 13B active parameters。
+- 两个模型都面向 1M context。
+- 架构上用 Compressed Sparse Attention (CSA) 和 Heavily Compressed Attention (HCA) 做 hybrid attention。
+- 引入 Manifold-Constrained Hyper-Connections (mHC) 和 Muon optimizer。
+- 报告称在 1M context 下，V4-Pro 的单 token inference FLOPs 约为 DeepSeek-V3.2 的 27%，KV cache 约为 10%。
 
-GLM-5 技术报告的标题就是 [GLM-5: from Vibe Coding to Agentic Engineering](https://arxiv.org/abs/2602.15763)。这句话很适合当作整篇笔记的主线。
+我把它放在 GLM-5.2 后面读，是因为两者都在回答同一个问题：长上下文不是宣传口径，而是 agent serving 的成本问题。
 
-公开材料里，GLM-5 的几个核心点是：
+对代码 agent 来说，1M context 至少会遇到四个问题。
 
-- 模型从 GLM-4.5 的 355B total / 32B active 扩到 **744B total / 40B active**。
-- 预训练数据从 23T tokens 扩到 **28.5T tokens**。
-- 引入 DeepSeek Sparse Attention (DSA)，降低长上下文训练和推理成本。
-- 使用名为 **slime** 的异步 RL 基础设施，将 generation 与 training decouple，提高 post-training throughput。
-- 目标场景不只是 coding benchmark，而是 complex systems engineering 和 long-horizon agentic tasks。
+第一，prefill 成本。把一个大仓库、日志、历史 action 全塞进去，第一步生成前就已经很贵。
 
-GLM-5.2 在 GLM-5 系列基础上进一步强调：
+第二，KV cache。多轮推理时，缓存越来越大，batching 和内存管理都会变难。
 
-- **solid 1M-token context**；
-- stronger coding with flexible effort；
-- IndexShare：每四个 sparse attention layers 复用同一个 indexer，在 1M context 下减少 per-token FLOPs；
-- 改进 MTP layer 做 speculative decoding，提高 accepted length。
+第三，证据定位。长上下文里有更多噪声，模型可能"看到了"关键文件，但 attention 没有落到那里。
 
-我读 GLM-5/5.2 时最关心三件事。
+第四，反馈预算。运行测试和保留日志都能提供信号，但它们也会继续拉长上下文。
 
-第一，长上下文能力和 agentic engineering 是绑定的。复杂工程任务需要长会话和长证据链，但长上下文如果没有高效 attention/serving 机制，就会变成成本黑洞。
+这就是我觉得 DeepSeek-V4 对 SWE agent 的启发：它让"长上下文经济性"变成一个必须认真回答的问题。我的 To Run or Not to Run 可以翻译成同一类问题：什么时候值得花环境成本换 observation？什么时候继续把日志放进上下文反而降低信噪比？
 
-第二，RL infra 变成核心竞争力。传统 SFT 可以离线做，但 agentic RL 需要大量 rollout、环境交互和反馈收集。slime 的意义不是一个框架名字，而是说明训练瓶颈已经变成“如何高吞吐地收集和利用 agent 轨迹”。
+DeepSeek-V4 也提醒我，不要把 1M context 讲成单纯的"能塞更多代码"。它真正关心的是每个历史 token 的表示成本、检索成本、cache 成本和服务吞吐。如果未来 code agent 每个任务都带着几十轮工具轨迹，那么上下文长度本身会变成训练和推理预算的一部分。
 
-第三，benchmark 也在变化。Terminal-Bench、SWE-bench Pro、Vending Bench 这类任务都在逼模型处理长期目标、工具调用、资源管理和现实约束。
+## 4. IQuest-Coder-V1：把 code model 训练写成 pipeline
 
-对我的启发是：如果面试代码基模或 agentic training 相关岗位，不能只讲“我做了 SWE-bench 实验”。更好的说法是：
+[IQuest-Coder-V1 Technical Report](https://www.alphaxiv.org/abs/2603.16733) 是这份清单里最贴近代码基模训练的一篇。它不像有些模型报告那样只给 benchmark 表，而是明确提出 code-flow multi-stage training。
 
-> 我的工作关注 agentic engineering 里的反馈预算、结构上下文和仓库级任务构造；这些正是长上下文代码基模和异步 agent RL 需要的任务侧基础设施。
+![IQuest-Coder-V1 论文 Figure 2：Code-Flow Training pipeline。图里能看到 pre-training、32K/128K mid-training、thinking/instruct 两条 post-training 路径。来源：arXiv HTML / alphaXiv。](/images/blog/agentic-training/iquest-codeflow-pipeline.png)
 
-### 2.2 DeepSeek-V4：1M context 的经济性
+这张图值得慢慢看。它把训练分成几块：
 
-DeepSeek-V4 公开报告的标题是 [Towards Highly Efficient Million-Token Context Intelligence](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/blob/main/DeepSeek_V4.pdf)。我会把它放在 GLM-5.2 旁边读，因为两者都在强调 million-token context，但重点略有不同。
+- pre-training 和 high-quality annealing：代码、文档、仓库、completion、FIM、repo evolution data。
+- 32K mid-training：加入 reasoning、agentic trajectories 和 code tasks。
+- 128K mid-training：把 repo-scale context 放进训练。
+- bifurcated post-training：thinking path 更偏 reasoning/RL，instruct path 更偏通用助手。
+- LoopCoder：用 loop transformer 变体做部署 footprint 和模型容量之间的折中。
 
-DeepSeek-V4 的公开材料给出的主线是：**百万 token 上下文必须在效率上成立。**
+我最关心的是"32K 到 128K"这个变化。它不是简单把 context length 拉长，而是把训练分布从单文件/短任务推到 repository-level reasoning。真实仓库任务的证据分散在 issue、文件、调用链、配置、测试和历史修改里。模型如果只学过短上下文代码补全，很难在 repo-scale 任务里稳定导航。
 
-公开卡片/报告里几个值得记的点：
+IQuest 的 post-training 也很有意思。thinking path 和 instruct path 分开，说明代码模型已经不再是一个统一"会聊天的模型"就够了。你可以希望模型在复杂问题上显式推理，也可以希望它在工具场景里快速听指令，这两个目标可能需要不同的数据和 RL 配方。
 
-- DeepSeek-V4-Pro 是大规模 MoE，公开卡片显示 **1.6T total / 49B active**。
-- DeepSeek-V4-Flash 是更轻的路线，公开卡片显示 **284B total / 13B active**。
-- 两类模型都在超过 **32T tokens** 上预训练。
-- 报告强调 hybrid attention：Compressed Sparse Attention (CSA) 与 Heavily Compressed Attention (HCA)，共同降低 1M context 成本。
-- 报告还提到 mHC residual mapping 和 Muon optimizer，用于稳定性与收敛效率。
-- NVIDIA NIM 的模型卡片提到 V4-Pro 在 1M context 下单 token inference FLOPs 约为 DeepSeek-V3.2 的 27%。
+这篇对我的简历映射非常直接：
 
-我读 DeepSeek-V4 时不会急着背 benchmark，而是抓三个训练/系统问题：
+- CodeAnchor：repo-scale context 里的结构锚点。
+- AtomicCommitBench：commit/patch evolution data 的任务来源。
+- RepoRescue：可执行仓库修复环境。
+- To Run or Not to Run：agentic trajectories 里的 execution feedback scheduling。
 
-1. **历史信息怎么压缩？**  
-   SWE agent 的历史包括文件、日志、命令、失败尝试。不是所有历史都需要同等精度地保留。
+我会这样解释自己和 IQuest 这条线的关系：IQuest 这种训练 pipeline 需要高质量 repo tasks、agent trajectories、verifier 和低泄漏评测。我过去做的 SE 工作，正好可以提供这些训练信号，而不是只在模型外面做 demo。
 
-2. **KV cache 和 attention FLOPs 怎么控？**  
-   一次 agent task 可能有几百轮工具调用，serving 成本会被放大。
+需要小心的是，报告里的 code-flow 说法很漂亮，但真正落地时最难的仍然是数据质量。repo evolution data 如果没有严格去重和泄漏控制，很容易把 benchmark 变成记忆题；agent trajectories 如果只是强模型的漂亮演示，也可能教会模型冗长、低效或不可复现的路径。
 
-3. **长上下文是否真的提升 resolved rate？**  
-   如果无关文件和日志淹没了关键信息，1M context 也可能不如结构化 32K context。
+## 5. Qwen3-Coder：20,000 环境背后是 code RL 的工程问题
 
-这对 To Run or Not to Run 很有启发。执行反馈、长上下文、工具调用其实都可以被看成“昂贵但可能有用的资源”。好的 agent 不是无限运行、无限塞上下文，而是学会什么时候运行、保留什么证据、丢弃什么噪声。
+Qwen3-Coder 的官方博客 [Agentic Coding in the World](https://qwenlm.github.io/blog/qwen3-coder/) 给出的是开源 code model scaling 的另一条路线。
 
-### 2.3 IQuest-Coder-V1：最贴近目标组的 code-flow 训练路线
+公开信息里最值得记的点：
 
-[IQuest-Coder-V1 Technical Report](https://arxiv.org/abs/2603.16733) 是这份清单里最需要精读的材料之一。它非常贴近代码基模和 agentic SWE 训练方向，也和我的经历最容易对齐。
+- Qwen3-Coder-480B-A35B-Instruct 是 480B total / 35B active 的 MoE。
+- 原生 256K context，可通过 YaRN 扩到 1M。
+- pretraining 使用 7.5T tokens，其中代码占比约 70%。
+- post-training 强调 hard-to-solve but easy-to-verify 的 Code RL。
+- 构建了 20,000 个并行环境支持 long-horizon RL。
 
-报告介绍了 IQuest-Coder-V1 系列，包括 7B、14B、40B 和 40B-Loop。它最重要的概念是 **code-flow multi-stage training**：不只是让模型看静态代码，而是捕捉软件逻辑在训练 pipeline 不同阶段的动态演化。
+我没有使用那张官方网页截图，因为本地浏览器抓取时被页面弹窗挡住了。这里直接用官方链接，不把一张脏截图放进文章。
 
-报告中的训练路线可以粗略理解成：
+Qwen3-Coder 最值得读的不是 480B/35B 这个数字，而是"20,000 parallel environments"。这句话背后有一整套工程问题：环境怎么启动，依赖怎么装，测试怎么跑，失败怎么记录，超时怎么处理，rollout 怎么排队，reward 怎么回传，训练时如何避免环境吞吐成为瓶颈。
 
-1. **Initial pre-training**  
-   数据包括 code facts、repository、completion data。
+hard-to-solve but easy-to-verify 也很适合代码任务。题目难，模型需要探索；验证容易，测试/编译/运行可以给 reward。但 SWE 任务比竞赛题复杂，因为验证通常不完美。测试可能弱，环境可能 flaky，patch 可能过拟合，模型还可能学会删测试或绕过 harness。
 
-2. **Continual pre-training / mid-training**  
-   加入 32K context 的 code understanding、reasoning、agentic trajectory 数据。
+这条线和我的 OpenHarmony 工作连接很自然。Android 到 HarmonyOS 迁移、OpenHarmony app 修复、UI 性能问题、依赖漂移修复，都可以构造成领域化可执行环境。它们不一定替代通用 SWE-bench，但可以提供低泄漏、可控、带 verifier 的训练/评测补充。
 
-3. **Long-context repository training**  
-   扩展到 128K repo-scale context。
+如果面试里问"代码任务为什么适合 RL"，我会答得更具体一点：不是因为代码有测试就万事大吉，而是因为测试让我们可以构造 verifiable reward；真正困难的是环境规模、reward 稀疏、测试质量和 trajectory filtering。
 
-4. **Post-training**  
-   分成 thinking path 和 instruct path。thinking path 更偏 reasoning-driven RL，instruct path 更偏通用助手与指令能力。
+## 6. Kimi K2：我最想背的是 MuonClip，不是榜单
 
-我认为它对我的意义非常直接。
+[Kimi K2: Open Agentic Intelligence](https://www.alphaxiv.org/abs/2507.20534) 很容易被读成又一个大 MoE 报告：1T total / 32B active，SWE-bench 分数，agentic intelligence。可我觉得最值得认真看的其实是 optimizer stability。
 
-CodeAnchor 可以被放到 repo-scale context 的训练/推理问题里：模型不是缺上下文长度，而是缺可靠的结构锚点。
+![Kimi K2 论文 Figure 2：MuonClip 通过 QK-Clip 控制 attention logits，避免 vanilla Muon 下 attention logits 快速变大带来的不稳定。来源：arXiv HTML / alphaXiv。](/images/blog/agentic-training/kimi-muonclip.png)
 
-To Run or Not to Run 可以被放到 agentic trajectory 和 harness scheduling 里：模型什么时候需要执行，执行反馈何时带来净收益，都是 agentic training 需要回答的问题。
+报告里说 Kimi K2 使用 MuonClip，在 15.5T token pretraining 中没有观察到 loss spike。这里的重点不是"zero loss spike"这句话有多好听，而是它把训练稳定性讲成了 attention dynamics 的问题。
 
-RepoRescue、AtomicCommitBench、SWE-OpenHarmony 可以被放到训练数据构造里：它们提供低泄漏、可执行、仓库级、带环境反馈的任务源。
+Muon 本身是近来很受关注的优化器方向。Kimi K2 在它基础上加入 QK-Clip，控制 attention logits。图里左边显示 vanilla Muon 的 attention logits 很快冲到非常高的量级，右边显示 MuonClip 能把 logits 控在更稳定范围。对训练组来说，这比一个 benchmark 表更硬，因为 loss spike 往往不是一句"调小学习率"能解决的。
 
-如果面试官问 “你和基模训练有什么关系”，我应该直接答：
+Kimi K2 的另一条线是 agentic data synthesis 和 joint RL。报告里提到工具使用数据、合成工具、agent/task 组合、以及后续 RL。我的理解是：真实 agent 交互数据太贵，人工标注太慢，所以模型团队会越来越依赖可验证的合成任务和可回放环境。
 
-> IQuest-Coder 这类路线需要 repo-scale data、agentic trajectories、verifier 和 code-flow 任务构造。我过去做的不是外围应用，而是这些训练信号的来源和评测闭环。
+这和 AtomicCommitBench 的思路有点像。我们不一定能无限收集真实 issue，但可以构造带意图、顺序、patch、测试或验证信号的任务，让模型学习变更链路。难点是合成任务不能只有形式，它得保留软件工程里的因果结构。
 
-### 2.4 Qwen3-Coder：代码 RL 与大规模并行环境
+我对 Kimi K2 的保留意见也很明确：agentic data synthesis 容易制造分布幻觉。如果工具、任务、轨迹都由模型合成，模型可能学会合成世界里的捷径，而不是真实 repo 里的工程约束。要缓解这个问题，就需要真实环境、真实测试、真实失败分析。这里正是 SE 研究能补进去的位置。
 
-[Qwen3-Coder](https://qwenlm.github.io/blog/qwen3-coder/) 的官方博客标题是 Agentic Coding in the World。它给出了非常清楚的 code model scaling 叙事。
+## 7. SWE-Gym：训练环境的起点不是 prompt，而是可执行实例
 
-公开博客里，Qwen3-Coder-480B-A35B-Instruct 是一个 **480B total / 35B active** 的 MoE 模型，原生支持 256K context，并可通过 YaRN 扩展到 1M context。预训练使用 7.5T tokens，其中代码占比 70%。
+[SWE-Gym](https://www.alphaxiv.org/abs/2412.21139) 是我认为所有 SWE agent training 都应该先读的一篇。它回答一个很基本但经常被低估的问题：什么叫一个可训练的软件工程任务？
 
-更值得关注的是 post-training：
+论文的答案不是"一个 issue prompt"。一个可训练的 SWE task 至少要有：
 
-- 它强调 hard-to-solve but easy-to-verify 的 Code RL。
-- 不只关注竞技编程，也关注更真实的 coding tasks。
-- 构建了 **20,000 个并行环境** 支持 long-horizon RL。
-- 还推出 Qwen Code 这类 CLI agent 工具，把模型能力释放到真实开发流程里。
-
-这说明 code RL 的难点已经不是“有没有 reward”。代码任务当然有 reward：编译是否通过、测试是否通过、输出是否正确。但真正难的是：
-
-- 任务是否足够难，能推动模型进步；
-- 任务是否足够可验证，reward 不会乱；
-- 环境是否能大规模并行；
-- 失败轨迹如何过滤；
-- rollout 成本如何控制；
-- 训练后模型是否真的迁移到真实仓库。
-
-这里和我的 OpenHarmony 方向连接很自然。Android 到 HarmonyOS 的迁移、OpenHarmony app 修复、UI 迁移、需求抽取和自动评测系统，本质上可以构造成领域化 SWE agent environment。它不是通用 benchmark 的替代，而是一个更干净、更可控、泄漏风险更低的训练/评测补充。
-
-### 2.5 Kimi K2：优化器稳定性与 agentic data synthesis
-
-[Kimi K2: Open Agentic Intelligence](https://arxiv.org/abs/2507.20534) 报告里，我最关注两个点。
-
-第一是模型规模和 optimizer。Kimi K2 是 **1T total / 32B active** 的 MoE 模型。报告提出 MuonClip，在 Muon 基础上加入 QK-clip 来缓解训练不稳定，并报告在 15.5T tokens pretraining 中 zero loss spike。
-
-这对训练基础很有价值：很多人读模型报告只看 benchmark，但 optimizer stability 是基模训练里非常硬的能力。loss spike、QK norm、attention logits、数值稳定性，这些都是训练组会关心的东西。
-
-第二是 post-training。Kimi K2 报告强调大规模 agentic data synthesis 和 joint RL。在我看来，这代表一种趋势：真实环境数据太贵，单纯人工标注太慢，模型必须学会从合成但可验证的 agentic tasks 中提升。
-
-这和 AtomicCommitBench、RepoRescue 这类想法很像。我们不一定能人工收集无限真实 issue，但可以构造可回放、可验证、结构清楚的工程任务，让模型学习变更顺序、依赖关系和修复路径。
-
-## 3. SWE Agent 训练论文：从数据、环境到 RL
-
-### 3.1 SWE-Gym：训练环境 + verifier 的标准起点
-
-[SWE-Gym](https://arxiv.org/abs/2412.21139) 可以看作 SWE agent training 的一个标准起点。它提出了一个用于训练真实软件工程 agent 的环境，包含 2,438 个真实 Python task instances。每个实例有：
-
+- natural language task specification；
 - codebase；
 - executable runtime environment；
 - unit tests；
-- natural language task specification。
+- gold patch 或可验证目标；
+- agent 交互轨迹或可生成轨迹的环境。
 
-论文使用 SWE-Gym 训练 SWE agents，并在 SWE-Bench Verified/Lite 上报告最高 19% 的 absolute gains。同时它也探索 inference-time scaling 和 verifier。
+SWE-Gym 包含 2,438 个真实 Python task instances。论文还做了 SWE-Gym Lite，用于更快原型验证。
 
-我读 SWE-Gym 时关注三个问题。
+![SWE-Gym 论文 Figure 1：训练时间 scaling 和 inference-time scaling 都能提升 SWE agent 表现。来源：arXiv HTML / alphaXiv。](/images/blog/agentic-training/swegym-scaling.png)
 
-第一，什么叫一个可训练的 SWE task？不是一段 prompt，而是 prompt + codebase + runtime + tests + stable evaluation。
+这张 Figure 1 很适合教学。上半部分说 training-time scaling：更多高质量训练轨迹能提高模型表现。下半部分说 inference-time scaling：推理时多采样、多 rollout、用 verifier 选解，也能提高 resolved rate。
 
-第二，verifier 有双重身份。它既是评测器，也是训练和搜索信号。一个好的 verifier 可以用于 reranking、filtering、preference data，也可以进入 RL reward。
+但图里真正值得问的是：scaling 的资源从哪里来？
 
-第三，任务污染非常关键。SWE-bench 类任务经常被模型训练数据污染，所以 repository split、commit time、issue leakage、test leakage 都必须被认真处理。
+训练时间 scaling 需要任务和轨迹。轨迹从环境里跑出来，环境需要 Docker、依赖、测试和日志。inference-time scaling 需要多次尝试和 verifier。多次尝试会增加成本，verifier 质量又决定你选出来的是好 patch 还是碰巧过弱测试的 patch。
 
-我的 RepoRescue 和 SWE-OpenHarmony 可以沿着这个方向讲：它们不是普通 benchmark，而是潜在的训练环境。
+SWE-Gym 的贡献是把 SWE agent 从"prompting proprietary model"推进到"open-weight model 可以在公开环境里训练"。没有可执行环境，RLVR、DPO、verifier reranking 都会变成纸上谈兵。
 
-### 3.2 SWE-smith：规模化构造 SWE agent 数据
+我最警惕的点是污染和可复现。SWE-bench 系列任务已经非常有名，训练数据里是否见过相关 issue、patch、测试、讨论，都需要严肃处理。环境也可能因为依赖版本变化而不可复现。RepoRescue 在依赖漂移上的工作，可以很好地接到这个问题。
 
-[SWE-smith](https://arxiv.org/abs/2504.21798) 处理的是另一个痛点：SWE agent 训练数据太少、构造太贵、环境太重。
+## 8. SWE-smith：数据规模不是抓更多 GitHub
 
-论文指出，已有数据集通常只有几千个训练实例，来自很少的 GitHub repositories；构造过程需要大量人工，环境也可能占用 TB 级存储。这对大规模 agent training 来说显然不够。
+[SWE-smith](https://www.alphaxiv.org/abs/2504.21798) 处理的是 SWE-Gym 之后的另一个痛点：真实 SWE agent 训练数据太少，构造太贵，环境太重。
 
-SWE-smith 的价值在于把问题从“收集更多 issue”推进到“怎样规模化生成可验证软件工程任务”。这正是基模组会关心的方向，因为 RL/SFT 都需要足够多、足够干净、足够稳定的任务。
+论文构造了 50k+ task instances，来自 128 个 GitHub repositories。它还把存储问题讲得很具体：如果沿用 SWE-bench 那种 image-per-instance 思路，同样规模可能需要几十 TB 到上百 TB；SWE-smith 通过 repository-level environment 设计，把规模化变得更现实。
 
-这里有一个容易被忽略的点：合成任务不是越多越好。如果任务带有强模板痕迹，模型会学会 exploit generation artifacts；如果测试太弱，reward 会被 hack；如果环境不可复现，训练信号会噪声很大。
+![SWE-smith 论文 Figure 2：从 codebase 出发，设置环境、生成 bug、验证测试失败/通过，再形成可训练的 SWE task。来源：arXiv HTML / alphaXiv。](/images/blog/agentic-training/swesmith-data-pipeline.png)
 
-所以我的 benchmark 经验应该这样表达：
+这张图是我最想拿来讲 benchmark-to-training 的。它不是从 issue 收集开始，而是从 codebase 开始，自动设置环境，再通过多种策略生成 bug，让原本通过的测试失败，然后再构造 agent 要修复的任务。
 
-> 我做 benchmark 不是只为了评测，而是在学习如何构造低泄漏、可执行、可回放、带 verifier 的 code tasks。这些任务可以进一步进入 SFT、DPO 或 RLVR。
+这里有一个值得记住的转变：benchmark 不只是评测终点，也可以是训练数据来源。一个 task instance 如果有环境、有 failing tests、有目标行为、有可验证修复，就可以进入 SFT、DPO、RLVR 或 verifier training。
 
-### 3.3 SWE-Dev：训练 scaling 与 inference scaling
+但是 SWE-smith 也暴露出合成任务的老问题。合成 bug 如果太模板化，模型会学模板；测试如果太弱，模型会学 reward hacking；issue 描述如果由模型生成，可能和真实开发者提 issue 的风格不一样。规模化不等于真实，50k 也不自动等于高质量。
 
-[SWE-Dev](https://arxiv.org/abs/2506.07636) 关注 training and inference scaling。论文使用合成测试用例和扩展 agent trajectories 来构建训练数据，并报告 7B 和 32B 模型在 SWE-bench Verified 上分别达到 23.4% 和 36.6%。
+我会把自己的 benchmark 经验这样翻译给基模训练同学听：我关心的不是"又做了一个排行榜"，而是如何构造低泄漏、可执行、可回放、带 verifier 的 code tasks。这样的任务可以评测，也可以进入训练。
 
-我觉得 SWE-Dev 值得读，是因为它把两个问题放在一起：
+## 9. SWE-Dev：训练 scaling 和 inference scaling 要一起看
 
-- 训练时如何构造更多高质量轨迹；
-- 推理时如何通过更多交互预算提升成功率。
+[SWE-Dev](https://www.alphaxiv.org/abs/2506.07636) 的标题是 Building Software Engineering Agents with Training and Inference Scaling。它把两个经常分开讨论的问题放到一起：训练时如何扩数据，推理时如何扩交互预算。
 
-这和 To Run or Not to Run 非常贴。inference scaling 不是简单“给 agent 更多轮数”。更多轮数意味着更多执行、更多上下文、更高延迟、更高成本，也意味着更多走偏的机会。因此执行反馈应该被当成稀缺资源调度。
+论文从大量 PyPI/GitHub 资源中筛选仓库和实例，构造 SWE-Dev 数据，并用合成测试用例和扩展 agent trajectories 做训练。它报告 7B 和 32B SWE-Dev 模型在 SWE-bench Verified 上分别达到 23.4% 和 36.6% resolved rate。
 
-如果一个模型每轮都跑测试，它可能很贵；如果它从不跑测试，它可能缺少可靠反馈。中间的策略空间就是我的论文能接上的地方。
+我读 SWE-Dev 时主要盯三件事。
 
-### 3.4 Agent-RLVR：为什么 agentic 环境里的 RLVR 更难
+第一，测试用例生成。SWE agent 的 reward 很依赖 tests。测试太弱，模型会过拟合；测试太强或不稳定，模型拿不到有效信号。测试生成不是辅助步骤，而是 verifier 质量的核心。
 
-[Agent-RLVR](https://arxiv.org/abs/2506.11425) 的问题意识很清楚：RLVR 在数学和竞赛编程中很有效，因为答案相对容易验证；但迁移到 agentic environments 后，效果会明显下降。
+第二，trajectory expansion。扩轨迹并不是简单让模型多跑几次。要决定哪些轨迹可学、哪些失败轨迹可作为反例、哪些 observation 要 mask 掉、哪些工具调用只是噪声。
 
-原因包括：
+第三，inference budget。给 agent 更多轮数通常能提高上限，但也会放大成本和错误机会。更多交互不等于更好，尤其当模型会陷入重复搜索、不断运行同一组测试、或在错误文件里越改越远时。
 
-- 任务是多步的，不是一问一答；
-- 环境反馈会改变后续状态；
-- reward 稀疏；
-- frontier LLM 也会大量失败；
-- 有效正样本少，训练信号弱；
-- credit assignment 很难。
+这正好接到 To Run or Not to Run。执行反馈不是免费资源。一次测试运行可能带来强信号，也可能只是浪费时间、污染上下文、诱导模型在弱测试上过拟合。SWE-Dev 告诉我们 training scaling 和 inference scaling 都有用；我的问题是：预算该怎么花，什么时候该停？
 
-论文提出通过 guidance 和 environment rewards 来训练软件工程 agents。对我来说，最重要的不是具体算法细节，而是它确认了一件事：**可验证 reward 不等于容易训练。**
+## 10. Agent-RLVR：可验证 reward 不等于容易 RL
 
-代码任务当然可以跑测试，但测试通过只是 episode-level signal。agent 中间读了哪个文件、哪次搜索有效、哪次执行有帮助、哪次修改是关键，都需要进一步分析。
+[Agent-RLVR](https://www.alphaxiv.org/abs/2506.11425) 的问题意识很直接：RLVR 在数学题、竞赛编程里有效，但到了 agentic environment，事情会难很多。
 
-CodeAnchor 可以作为 guidance：给模型更稳定的结构入口，降低 blind exploration。
+![Agent-RLVR 论文 Figure 1：左边是用 environment feedback 做 RLVR，右边是通过 agent guidance 降低探索难度。来源：arXiv HTML / alphaXiv。](/images/blog/agentic-training/agentrlvr-loop.png)
 
-Execution feedback 可以作为 environment reward/observation：告诉模型当前路径是否走通，但也要控制成本。
+这张图可以分成两半看。
 
-### 3.5 RAGEN：multi-turn agent RL 的训练病灶
+左边是训练 loop：policy 生成 trajectory，环境给 observation 和 reward，再用 DPO/RLVR 类方法更新模型。右边是 guidance：先收集环境信息，生成 guidance，把 agent 往更可能成功的方向引。
 
-[RAGEN](https://arxiv.org/abs/2504.20073) 讨论 multi-turn RL for LLM agents，提出 StarPO 框架和 RAGEN 系统。它适合用来理解 agent RL 为什么比单轮 RL 更麻烦。
+为什么需要 guidance？因为 SWE agent 的 reward 太稀疏。一个 episode 可能很长，最后失败就是 0。对模型来说，它不知道是搜索错了、文件读少了、patch 写错了、测试没跑、还是环境超时。正样本太少时，RL 很难学到东西。
 
-单轮任务里，模型输出答案，环境给分。多轮 agent 里，模型会反复观察、思考、行动，环境状态也会被行动改变。一个错误动作可能污染后续状态；一个看似无用的动作可能后来变成关键信息来源。
+论文里还包括 27 个 repos，593 个来自 SWE-Gym 的 problems 和 219 个自收集 problems。这个设置本身说明了一点：agent RL 的 task coverage 很难靠一个 benchmark 解决。真实训练需要多来源任务和环境。
 
-这会带来几个训练病灶：
+我会把 Agent-RLVR 看成对 RLVR 乐观叙事的修正。代码任务有 verifier，所以适合 RL；但代码 agent 是长程交互，所以 RL 信号很稀疏。两句话都对，中间差的是 guidance、curriculum、trajectory filtering、verifier quality 和环境吞吐。
 
-- trajectory 很长，credit assignment 难；
-- environment feedback 有随机性；
-- reward 可能鼓励冗长或投机动作；
-- 模型可能陷入重复模式或 self-confirmation；
-- 训练稳定性不只看 reward，还要看动作分布、长度分布和工具使用分布。
+CodeAnchor 在这里可以被看成一种 guidance：不是直接告诉答案，而是给模型更稳定的结构入口。execution feedback 则是 environment observation/reward，但它也需要调度，否则会变成高成本噪声。
 
-这和 MazeBreaker 也能对齐。MazeBreaker 虽然是安全红队方向，但本质上也涉及多智能体、多轮策略、动态环境反馈和攻击路径优化。把它放到 agent RL 语言里，会比单纯说“LLM 安全评测”更贴近基模组。
+## 11. RAGEN：多轮 agent RL 最怕学出自我重复
 
-### 3.6 DeepSWE：非常工程化的 SWE RL recipe
+[RAGEN](https://www.alphaxiv.org/abs/2504.20073) 不是专门写 SWE 的，但它对理解 agent RL 很有帮助。它研究 multi-turn RL for LLM agents，并提出 StarPO 框架。alphaXiv 的 overview 对这篇很适合做第一遍阅读，因为它把 StarPO、Echo Trap、multi-turn collapse 这些概念先拆开讲，再回到论文实验。
 
-[DeepSWE](https://www.together.ai/blog/deepswe) 是我认为最值得精读的 SWE agent RL 工程材料之一。它不是只说“我们做 RL 提升了”，而是把环境、动作、reward、rollout 系统和训练 trick 都讲得很具体。
+传统 RLHF 或数学题 RL 常常是单轮：给 prompt，模型输出答案，环境/标注器给分。agent 不一样。agent 会观察环境、思考、行动，再观察，再行动。每一步都可能改变后续状态。
+
+RAGEN 的 StarPO 把 trajectory 写成 state、thinking、actions、reward 的链路。这个建模很适合拿来解释 SWE agent：repo 是 state，模型的分析是 thinking，search/edit/test 是 actions，测试结果或最终通过是 reward。
+
+论文里让我印象最深的是训练崩塌和 Echo Trap 这类现象。模型在多轮 RL 中可能学会重复自己的推理、过度自信、动作分布变窄，最后 reward 可能短期上升但真实泛化变差。这个问题在 SWE 里也很容易出现：agent 反复 grep 同一个关键词，反复运行同一个测试，或者不断在错误文件上做小改。
+
+这让我对 "just scale RL" 保持警惕。agent RL 不是只看最终 reward 曲线，还要看轨迹长度、工具调用分布、重复动作比例、测试运行次数、失败日志类型、patch diff 大小。这些恰好是软件工程研究者更敏感的地方。
+
+MazeBreaker 也能接到这条线。它表面上是 LLM 安全和多智能体攻击，但放到 agent RL 语言里，它研究的是多轮策略、环境反馈和路径优化。这个翻译比单纯说"我做过安全评测"更有训练组语感。
+
+## 12. DeepSWE：SWE RL 终于写成了工程 recipe
+
+[DeepSWE](https://www.together.ai/blog/deepswe) 是我觉得最像工程 recipe 的一份材料。它不只说"RL 提升了 SWE-bench"，而是把环境、动作空间、reward、rollout 系统和训练 trick 都摆出来。
+
+![DeepSWE 官方博客页面截图：这篇材料把 coding agent 的 RL 训练写成了比较具体的系统配方。](/images/blog/agentic-training/deepswe-official.jpg)
 
 公开博客里的关键信息包括：
 
@@ -358,174 +314,100 @@ Execution feedback 可以作为 environment reward/observation：告诉模型当
 - 讨论 compact filtering、training-time scaling 和 hybrid test-time scaling；
 - 报告 Pass@1 42.2%，hybrid test-time scaling 后 SWE-Bench Verified 约 59%。
 
-DeepSWE 给我最大的启发是：SWE RL 是环境系统工程，不只是算法。
+这篇的价值在于它把 SWE RL 的麻烦讲得很具体。环境启动慢，依赖安装慢，测试 flaky，轨迹太长，成功样本少，超时样本多，reward collapse，teacher trajectory 未必好。每一个问题都不是抽象算法词，而是训练系统会真实遇到的工程事故。
 
-它会遇到非常具体的问题：
+我最想记住的是 compact filtering。长轨迹不一定更有价值。很多超长轨迹只是模型在迷路，或者在失败后不断补救。把这些样本直接喂给 RL，可能会强化坏习惯。这个判断和 To Run or Not to Run 很近：执行、搜索、编辑都应该被看成有成本的动作，而不是越多越好。
 
-- 任务环境启动慢；
-- dependency install 慢；
-- test flaky；
-- agent 轨迹超长；
-- reward collapse；
-- 成功样本稀少；
-- 某些轨迹因为 timeout 变成无效训练信号；
-- teacher trajectory 未必比 cold-start RL 更好。
+DeepSWE 也提醒我，SFT teacher trajectory 不一定总是好东西。强模型生成的轨迹可能很漂亮，但也可能冗长、依赖隐式知识、不适合小模型模仿。冷启动 RL 如果环境和 reward 做得好，反而可能学出更适合自身能力的策略。
 
-这些问题和我的研究非常贴。To Run or Not to Run 可以解释为什么执行反馈要调度；Chain-Tracking 可以分析成功 patch 是否有因果链；RepoRescue 可以提供依赖漂移环境；CodeAnchor 可以降低探索空间。
+如果要把我的研究接到 DeepSWE，我会这样说：
 
-一句话：DeepSWE 证明了 SWE agent RL 已经从“想法”进入“系统 recipe”阶段。
+- CodeAnchor 降低 repo navigation 的探索空间。
+- To Run or Not to Run 控制执行反馈预算。
+- Chain-Tracking 帮助判断成功 patch 是否有因果链。
+- RepoRescue 提供依赖漂移环境。
+- SWE-OpenHarmony 提供垂域可执行任务。
 
-## 4. 把前沿材料压缩成一个训练闭环
+这些不是模型外的"应用经验"，而是 SWE RL recipe 里会影响训练信号质量的部件。
 
-读完这些材料，我会把 code model / SWE agent training 画成一个闭环：
+## 13. 把这些论文压成一个训练闭环
 
-1. **Base model pretraining**  
-   自然语言、代码、数学、仓库、合成数据，目标是形成基础语言、推理和代码能力。
+读完上面这些材料，我会把 code model / SWE agent training 压成一个闭环：
 
-2. **Code/repo continual training**  
-   加入 repository、completion、code facts、long-context repo data，让模型理解跨文件结构。
+| 阶段 | 在训练里做什么 | 对应材料 | 我的工作怎么接 |
+|---|---|---|---|
+| base pretraining | 学语言、代码、数学、基础推理 | GLM-5、Kimi K2、DeepSeek-V4 | 需要理解 loss、optimizer、data mixture |
+| long-context / repo training | 学 repo-level 结构和长证据链 | GLM-5.2、IQuest-Coder、DeepSeek-V4 | CodeAnchor、AtomicCommitBench |
+| SFT / trajectory imitation | 学工具使用和修复流程 | SWE-Gym、SWE-Dev、DeepSWE | 高质量 agent trajectories |
+| verifier / preference | 用测试、编译、review 构造 chosen/rejected | SWE-Gym、Agent-RLVR | To Run、Chain-Tracking |
+| RLVR / agent RL | 在环境里 rollout，按 reward 更新 | Agent-RLVR、RAGEN、DeepSWE | 可执行任务、反馈调度 |
+| inference-time scaling | 多采样、多 rollout、verifier rerank | SWE-Gym、SWE-Dev、DeepSWE | 执行预算、停止策略 |
+| failure flywheel | 分析失败，回流数据和环境 | SWE-smith、RAGEN | RepoRescue、SWE-OpenHarmony |
 
-3. **SFT / trajectory imitation**  
-   用高质量 tool-use trajectories 教模型怎样读仓库、查文件、编辑、运行测试、总结。
+这个闭环比单独背每篇论文更有用。因为面试里真正有价值的问题通常不是"你读过哪篇"，而是"你知道这些东西怎样连起来吗"。
 
-4. **Verifier / preference data**  
-   用测试、编译、静态检查、人工偏好或强模型判断构造 chosen/rejected。
+我会坚持一个定位：我不是把自己伪装成已经负责过千卡 pretraining 的人。更准确的说法是，我站在 code agent training 的任务与反馈侧，正在补齐训练侧共同语言。代码基模想做 agentic engineering，就必须有人把真实软件工程问题变成可训练、可验证、可复现的环境和数据。
 
-5. **RLVR / agent RL**  
-   在可执行环境中 rollout，用环境 reward 优化策略。
+## 14. 一些可以直接拿去用的回答
 
-6. **Inference-time scaling**  
-   多样采样、rerank、verifier、更多交互预算、self-consistency、test-time compute。
-
-7. **Failure analysis / data flywheel**  
-   分析失败轨迹，构造新任务和新训练数据，进入下一轮。
-
-我的简历可以对应到这个闭环的多个点：
-
-- CodeAnchor：第 2、3、6 点，结构上下文与定位稳定性。
-- To Run or Not to Run：第 4、5、6 点，执行反馈的收益、成本与调度。
-- RepoRescue：第 5、7 点，真实依赖漂移环境和修复任务。
-- AtomicCommitBench：第 3、4 点，变更意图和 patch trajectory 建模。
-- Chain-Tracking：第 5、7 点，失败日志、测试行为和代码修改的因果链。
-- SWE-OpenHarmony：第 2、5、7 点，领域代码环境和低泄漏任务生成。
-
-这就是我在面试里应该坚持的定位：
-
-> 我不是从零转 ML 的软工学生，而是已经站在 code agent training 的任务、数据、verifier 和反馈侧。现在我补齐训练基础，是为了把这些 SE 资产接到基模组的 pretraining、post-training 和 agent RL pipeline。
-
-## 5. 面试复习路线：怎么把这些材料真正学会
-
-我给自己定一个三周版本。
-
-### 第 1 周：ML 与训练曲线
-
-目标：能解释训练现象。
-
-必须会讲：
-
-- cross entropy / NLL / perplexity；
-- backprop 和 gradient；
-- batch size、gradient accumulation、learning rate；
-- Adam / AdamW；
-- warmup、cosine decay；
-- gradient clipping；
-- overfitting、validation loss、data leakage；
-- loss spike 排查。
-
-这一周的关键不是刷公式，而是能回答“训练出问题时你怎么看”。
-
-### 第 2 周：Transformer、长上下文和训练系统
-
-目标：能从 token 到 logits 讲完整个 decoder-only Transformer。
-
-必须会讲：
-
-- embedding、RoPE、causal attention、MLP、RMSNorm、residual；
-- Q/K/V、MHA、GQA、MQA、MLA；
-- KV cache 为什么加速，也为什么吃显存；
-- long context 为什么贵；
-- MoE 的 total params 和 active params；
-- mixed precision；
-- activation checkpointing；
-- FSDP / ZeRO / tensor parallel / pipeline parallel。
-
-这一周要能把 GLM-5.2 和 DeepSeek-V4 里的长上下文效率读懂。
-
-### 第 3 周：Post-training 与 agentic SWE
-
-目标：能把 SWE 任务讲成训练信号。
-
-必须会讲：
-
-- SFT 和 response masking；
-- DPO、PPO、GRPO、RLVR 的区别；
-- reward model 与 verifier；
-- unit test as reward；
-- reward hacking；
-- trajectory-level credit assignment；
-- environment rollout；
-- inference-time scaling；
-- SWE-bench resolved rate 和 pass@k。
-
-这一周要精读 IQuest-Coder、SWE-Gym、Agent-RLVR、DeepSWE。
-
-## 6. 一套我想背熟的回答
-
-如果被问：“你的背景主要是软件工程，为什么适合基模组？”
-
-我会这样答：
-
-> 我过去做的是代码模型在真实软件工程场景里的任务侧闭环：仓库级代码理解、执行反馈、工具调用轨迹、verifier、benchmark 和低资源代码建模。现在代码基模的竞争已经从单函数生成走向 repo-level、tool-use、long-horizon agentic engineering，这些能力需要真实任务、可执行环境和可靠反馈信号。我正在补齐模型训练基础，这样可以把我的 SE 经验接到 code model 的 pretraining、post-training 和 agent RL pipeline 里。
-
-如果被问：“你觉得 code agent training 最大难点是什么？”
+如果被问："为什么 pretraining loss 下降不等于 SWE-bench 提升？"
 
 我会答：
 
-> 不是有没有测试 reward，而是 reward 是否稀疏、是否可靠、是否能归因。SWE agent 的 episode 很长，环境很贵，成功 patch 可能包含很多无关动作。训练系统需要解决任务构造、环境吞吐、trajectory filtering、verifier 质量和执行预算调度。我的 To Run or Not to Run 研究的就是执行反馈的成本收益边界，CodeAnchor 则是降低 repo navigation 探索难度。
+> pretraining loss 是 token-level NLL，衡量模型对下一个 token 分布的拟合。SWE-bench 是长程 agent task，中间有 repo retrieval、bug localization、patch editing、test execution、log understanding 和 iterative repair。loss 更低能提高基础代码能力，但 resolved rate 还依赖工具使用、上下文组织、verifier 和反馈调度。
 
-如果被问：“长上下文是不是能解决 repo-level coding？”
+如果被问："1M context 能不能解决 repo-level coding？"
 
 我会答：
 
-> 长上下文提高了上限，但不会自动解决 repo-level coding。1M context 会带来 KV cache、attention FLOPs、噪声和定位问题。真实代码任务需要把长上下文和结构检索、deterministic anchors、execution feedback、memory compression 结合起来。否则模型只是看到了更多 token，不代表找到了关键证据。
+> 1M context 提高上限，但不会自动解决 repo-level coding。长上下文带来 KV cache、prefill、attention FLOPs 和噪声问题。真实仓库任务需要结构检索、deterministic anchors、context compression 和 execution feedback。否则模型只是看到了更多 token，不代表找到了关键证据。
 
-## 7. 必读清单
+如果被问："SWE agent 为什么适合 RLVR？"
 
-### 模型报告
+我会答：
 
-| 材料 | 为什么读 | 链接 |
-|---|---|---|
-| GLM-5 / GLM-5.2 | agentic engineering、1M context、DSA/IndexShare、异步 RL infra | [GitHub](https://github.com/zai-org/GLM-5), [arXiv](https://arxiv.org/abs/2602.15763) |
-| DeepSeek-V4 | million-token context、hybrid compressed attention、长上下文经济性 | [PDF](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/blob/main/DeepSeek_V4.pdf) |
-| IQuest-Coder-V1 | code-flow multi-stage training、repo-scale context、agentic trajectories | [arXiv](https://arxiv.org/abs/2603.16733) |
-| Qwen3-Coder | 代码 RL、大规模并行环境、agentic coding | [Official Blog](https://qwenlm.github.io/blog/qwen3-coder/) |
-| Kimi K2 | MoE、MuonClip、zero loss spike、agentic data synthesis、joint RL | [arXiv](https://arxiv.org/abs/2507.20534) |
+> 因为代码任务有天然 verifier，比如 unit tests、编译和运行输出，可以把结果转成 reward 或 preference。但难点是 reward 稀疏、episode 长、环境贵、credit assignment 难。最终测试通过不能告诉模型哪一步有贡献，所以还需要 guidance、trajectory filtering、verifier 质量控制和执行预算调度。
 
-### Agentic SWE 训练
+如果被问："你的 SE 背景怎么接到 code model training？"
 
-| 材料 | 为什么读 | 链接 |
-|---|---|---|
-| SWE-Gym | 真实 SWE agent 训练环境、verifier、SWE-Bench gains | [arXiv](https://arxiv.org/abs/2412.21139) |
-| SWE-smith | 规模化构造 SWE agent 数据 | [arXiv](https://arxiv.org/abs/2504.21798) |
-| SWE-Dev | training scaling + inference scaling | [arXiv](https://arxiv.org/abs/2506.07636) |
-| Agent-RLVR | agentic environment 中 RLVR 为什么难 | [arXiv](https://arxiv.org/abs/2506.11425) |
-| RAGEN | multi-turn agent RL、trajectory-level optimization | [arXiv](https://arxiv.org/abs/2504.20073) |
-| DeepSWE | SWE agent RL 工程 recipe、环境 rollout、GRPO++ | [Together AI](https://www.together.ai/blog/deepswe) |
+我会答：
 
-## 8. 结语：补地基，不要丢掉自己的优势
+> 我的研究集中在真实软件工程 agent 的任务侧闭环：仓库级上下文、执行反馈、benchmark、verifier、轨迹和低泄漏环境。现在 code model 从 HumanEval 走向 repo-level tool-use agent，这些能力需要真实任务和可靠反馈。我补齐训练基础后，可以把这些 SE 资产接到 post-training、RLVR、eval 和 data flywheel 里。
 
-我现在最不该做的是把自己伪装成一个普通 ML 学生，然后从头和别人比谁更懂经典机器学习。我的优势已经很清楚：代码智能体、执行反馈、仓库级任务、verifier、benchmark 和 OpenHarmony 工程场景。
+## 15. 我接下来会怎么复习
 
-真正需要补的是地基：
+我会按三层复习，不再把论文当成孤立材料。
 
-- 能讲清模型训练机制；
-- 能读懂前沿技术报告；
-- 能把 SE 任务翻译成训练信号；
-- 能设计小规模 post-training / verifier / agent RL 实验；
-- 能在面试里把自己的研究放到 code model training loop 里。
+第一层是训练地基。能讲清 cross entropy、perplexity、AdamW、warmup、loss spike、attention、KV cache、MoE、FSDP/ZeRO、SFT、DPO、GRPO、RLVR。每个概念都要能说出一个代码 agent 场景里的例子。
 
-如果这层补牢，我的简历就不是“软工很强但模型薄”，而是：
+第二层是模型报告。GLM-5/5.2 看 long-context agentic engineering 和 slime；DeepSeek-V4 看 1M context 的经济性；IQuest-Coder 看 code-flow multi-stage training；Qwen3-Coder 看大规模并行环境；Kimi K2 看 MuonClip 和 agentic data synthesis。
 
-> 一个已经掌握真实软件工程 agent 问题的人，正在把任务、数据、反馈和 verifier 接入下一代代码基模训练。
+第三层是 SWE agent 训练。SWE-Gym 看可执行训练环境；SWE-smith 看规模化任务合成；SWE-Dev 看 training/inference scaling；Agent-RLVR 看 reward sparsity 和 guidance；RAGEN 看 multi-turn RL 的训练病灶；DeepSWE 看完整工程 recipe。
 
-这才是最有竞争力的叙事。
+最后，我会把自己的工作统一翻译成训练语言：
+
+- CodeAnchor：repo-level structural anchoring。
+- To Run or Not to Run：execution feedback scheduling。
+- RepoRescue：dependency-drift repair environment。
+- AtomicCommitBench：patch-intent and commit trajectory data。
+- Chain-Tracking：trajectory credit assignment over CI/log/code changes。
+- SWE-OpenHarmony：domain-specific executable agent benchmark。
+
+这不是为了把所有东西硬贴到大模型上，而是因为前沿代码基模确实在往这个方向走。真实软件工程越进入训练闭环，软件工程研究者越不应该只站在评测终点看热闹。
+
+## 参考材料
+
+alphaXiv 的 `.md` 入口很好用，适合直接喂给 AI 做逐段问答。我自己复习时会先看页面和图，再用 Markdown 入口追细节。
+
+- GLM-5: [alphaXiv](https://www.alphaxiv.org/abs/2602.15763), [AI Markdown](https://www.alphaxiv.org/abs/2602.15763.md), [GitHub](https://github.com/zai-org/GLM-5)
+- GLM-5.2: [alphaXiv](https://www.alphaxiv.org/abs/2026.glm-5-2), [AI Markdown](https://www.alphaxiv.org/abs/2026.glm-5-2.md), [official blog](https://z.ai/blog/glm-5.2)
+- DeepSeek-V4: [alphaXiv](https://www.alphaxiv.org/abs/deepseek-v4), [AI Markdown](https://www.alphaxiv.org/abs/deepseek-v4.md), [official release](https://api-docs.deepseek.com/news/news260424)
+- IQuest-Coder-V1: [alphaXiv](https://www.alphaxiv.org/abs/2603.16733), [AI Markdown](https://www.alphaxiv.org/abs/2603.16733.md)
+- Qwen3-Coder: [official blog](https://qwenlm.github.io/blog/qwen3-coder/)
+- Kimi K2: [alphaXiv](https://www.alphaxiv.org/abs/2507.20534), [AI Markdown](https://www.alphaxiv.org/abs/2507.20534.md)
+- SWE-Gym: [alphaXiv](https://www.alphaxiv.org/abs/2412.21139), [AI Markdown](https://www.alphaxiv.org/abs/2412.21139.md)
+- SWE-smith: [alphaXiv](https://www.alphaxiv.org/abs/2504.21798), [AI Markdown](https://www.alphaxiv.org/abs/2504.21798.md)
+- SWE-Dev: [alphaXiv](https://www.alphaxiv.org/abs/2506.07636), [AI Markdown](https://www.alphaxiv.org/abs/2506.07636.md)
+- Agent-RLVR: [alphaXiv](https://www.alphaxiv.org/abs/2506.11425), [AI Markdown](https://www.alphaxiv.org/abs/2506.11425.md)
+- RAGEN: [alphaXiv](https://www.alphaxiv.org/abs/2504.20073), [AI Markdown](https://www.alphaxiv.org/abs/2504.20073.md)
+- DeepSWE: [Together AI blog](https://www.together.ai/blog/deepswe)
