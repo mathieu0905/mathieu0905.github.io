@@ -394,7 +394,7 @@ export const frontierPapers: FrontierPaper[] = [
   {
     id: "iquest",
     title: "IQuest-Coder-V1 Technical Report",
-    organization: "IQuest / 九坤相关方向",
+    organization: "IQuest",
     year: "2026",
     theme: "代码模型",
     priority: "必读",

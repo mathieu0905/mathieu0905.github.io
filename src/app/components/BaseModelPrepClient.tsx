@@ -126,7 +126,7 @@ export function BaseModelPrepClient() {
             <div className="p-7 md:p-9">
               <div className="mb-4 flex flex-wrap gap-2">
                 <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-900/50 dark:text-blue-200">
-                  九坤基模组备战
+                  代码基模训练备战
                 </span>
                 <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
                   ML 地基 + Agentic Training
