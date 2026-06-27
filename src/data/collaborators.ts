@@ -4,6 +4,7 @@ export interface Collaborator {
   name: string;
   org: CollaboratorOrg;
   role?: { zh: string; en: string };
+  acknowledgement?: { zh: string; en: string };
   links?: { label: string; href: string }[];
   works?: { zh: string; en: string }[];
 }
@@ -15,6 +16,10 @@ export const collaborators: Collaborator[] = [
     role: {
       zh: "瑞典布莱金厄理工学院（BTH）助理高级讲师",
       en: "Associate Senior Lecturer, Blekinge Institute of Technology",
+    },
+    acknowledgement: {
+      zh: "衷心感谢 Wei Ma 老师带我走上科研道路。刚开始接触科研时，是他在选题、论文阅读、实验设计和写作上给予了持续而耐心的帮助；我的许多早期科研训练都离不开他的指导与支持。",
+      en: "Heartfelt thanks to Wei Ma for guiding me into research. When I first began, he patiently helped me with topic selection, paper reading, experiment design, and writing; much of my early research training was shaped by his guidance and support.",
     },
     links: [
       { label: "BTH", href: "https://www.bth.se/english/about-bth/departments/department-of-software-engineering/staff-at-the-department-of-software-engineering" },
@@ -45,6 +50,10 @@ export const collaborators: Collaborator[] = [
     role: {
       zh: "新加坡管理大学（SMU）博士候选人",
       en: "PhD candidate, Singapore Management University",
+    },
+    acknowledgement: {
+      zh: "也衷心感谢 Zhensu Sun。在我逐渐能够独立提出研究想法之后，他仍然在问题定义、实验设计、论文叙事和局限分析等方面给予了许多建设性的意见，帮助我学会把初步 idea 打磨成更完整、更扎实的研究工作。",
+      en: "Heartfelt thanks also to Zhensu Sun. After I became able to develop research ideas more independently, he continued to offer constructive advice on problem framing, experiment design, paper narrative, and limitation analysis, helping me learn how to refine early ideas into more complete and solid research work.",
     },
     links: [
       { label: "Homepage", href: "https://v587su.github.io/" },
