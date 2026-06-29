@@ -186,6 +186,25 @@ export default function Home() {
           </div>
         </section>
 
+        <section className="mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <div className="mb-2 inline-flex rounded-full bg-cyan-100 px-2.5 py-1 text-xs font-semibold text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-200">
+                  ARIS-in-AI-Offer 整合
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">AI 知识库</h2>
+                <p className="mt-2 max-w-3xl text-gray-600 dark:text-gray-300 leading-relaxed">
+                  28 个 AI / LLM / 多模态 / Diffusion / Agent 面试知识点，支持分类浏览、关键词搜索和中英文切换。
+                </p>
+              </div>
+              <Link href="/ai-knowledge" className="self-start rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700">
+                打开知识库
+              </Link>
+            </div>
+          </div>
+        </section>
+
         {/* 关于我 */}
         <section id="about" className="mb-8">
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">

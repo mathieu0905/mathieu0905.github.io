@@ -163,9 +163,10 @@ export default function AdminPage() {
   useEffect(() => {
     const saved = localStorage.getItem("gh_admin_token");
     if (saved) {
-      verifyAndLoad(saved);
+      void Promise.resolve().then(() => verifyAndLoad(saved));
     } else {
-      setAuthLoading(false);
+      const timeout = window.setTimeout(() => setAuthLoading(false), 0);
+      return () => window.clearTimeout(timeout);
     }
   }, [verifyAndLoad]);
 

@@ -13,18 +13,22 @@ export function TableOfContents() {
   const [activeId, setActiveId] = useState("");
 
   useEffect(() => {
-    const els = Array.from(document.querySelectorAll(".prose h2, .prose h3"));
-    const items: Heading[] = els.map((el) => {
-      if (!el.id) {
-        el.id = el.textContent?.replace(/\s+/g, "-").replace(/[^\w\u4e00-\u9fff-]/g, "").toLowerCase() || "";
-      }
-      return {
-        id: el.id,
-        text: el.textContent || "",
-        level: el.tagName === "H2" ? 2 : 3,
-      };
+    const frame = requestAnimationFrame(() => {
+      const els = Array.from(document.querySelectorAll(".prose h2, .prose h3"));
+      const items: Heading[] = els.map((el) => {
+        if (!el.id) {
+          el.id = el.textContent?.replace(/\s+/g, "-").replace(/[^\w\u4e00-\u9fff-]/g, "").toLowerCase() || "";
+        }
+        return {
+          id: el.id,
+          text: el.textContent || "",
+          level: el.tagName === "H2" ? 2 : 3,
+        };
+      });
+      setHeadings(items);
     });
-    setHeadings(items);
+
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {

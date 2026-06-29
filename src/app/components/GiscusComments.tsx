@@ -4,13 +4,14 @@ import Giscus from "@giscus/react";
 import { useEffect, useState } from "react";
 
 export default function GiscusComments() {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
-
-  useEffect(() => {
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") return "light";
     const isDark = document.documentElement.classList.contains("dark") ||
       window.matchMedia("(prefers-color-scheme: dark)").matches;
-    setTheme(isDark ? "dark" : "light");
+    return isDark ? "dark" : "light";
+  });
 
+  useEffect(() => {
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const handler = (e: MediaQueryListEvent) => setTheme(e.matches ? "dark" : "light");
     mq.addEventListener("change", handler);

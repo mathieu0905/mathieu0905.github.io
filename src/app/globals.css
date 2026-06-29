@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+@import "katex/dist/katex.min.css";
 
 :root {
   --background: #ffffff;
@@ -27,6 +28,22 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+}
+
+.prose :where(h2, h3, h4) {
+  scroll-margin-top: 5rem;
+}
+
+.prose .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25rem 0;
+}
+
+.prose table {
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
 }
 
 /* Custom animations */
