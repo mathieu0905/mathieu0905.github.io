@@ -21,6 +21,11 @@ import {
   type AiKnowledgeLang,
   type AiKnowledgeTopic,
 } from "@/data/aiKnowledgeCatalog";
+import {
+  getAiKnowledgeFreshnessNote,
+  getFreshnessStatusLabel,
+  type AiKnowledgeFreshnessStatus,
+} from "@/data/aiKnowledgeFreshness";
 import type { AiKnowledgeSourceMeta } from "@/lib/aiKnowledge";
 
 const categoryIcons: Record<AiKnowledgeCategoryId, typeof FaBrain> = {
@@ -43,6 +48,12 @@ const categoryAccent: Record<AiKnowledgeCategoryId, string> = {
   agents: "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900 dark:bg-violet-950/30 dark:text-violet-200",
 };
 
+const freshnessClass: Record<AiKnowledgeFreshnessStatus, string> = {
+  current: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-200",
+  watch: "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-200",
+  needsUpdate: "bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-200",
+};
+
 interface AiKnowledgeHubProps {
   topics: AiKnowledgeTopic[];
   sourceMeta: AiKnowledgeSourceMeta;
@@ -57,6 +68,7 @@ export function AiKnowledgeHub({ topics, sourceMeta }: AiKnowledgeHubProps) {
     const normalizedQuery = query.trim().toLowerCase();
 
     return topics.filter((topic) => {
+      const freshness = getAiKnowledgeFreshnessNote(topic.slug);
       const inCategory = activeCategory === "all" || topic.category === activeCategory;
       if (!inCategory) return false;
 
@@ -67,6 +79,10 @@ export function AiKnowledgeHub({ topics, sourceMeta }: AiKnowledgeHubProps) {
         topic.enTitle,
         topic.summary,
         topic.level,
+        freshness.status,
+        freshness.priority,
+        freshness.zhNote,
+        freshness.enNote,
         ...topic.keywords,
       ]
         .join(" ")
@@ -237,6 +253,7 @@ export function AiKnowledgeHub({ topics, sourceMeta }: AiKnowledgeHubProps) {
               {filteredTopics.map((topic) => {
                 const category = aiKnowledgeCategories.find((item) => item.id === topic.category);
                 const Icon = categoryIcons[topic.category];
+                const freshness = getAiKnowledgeFreshnessNote(topic.slug);
                 return (
                   <Link
                     key={topic.slug}
@@ -251,6 +268,16 @@ export function AiKnowledgeHub({ topics, sourceMeta }: AiKnowledgeHubProps) {
                       <span className="rounded-md bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
                         {topic.level}
                       </span>
+                    </div>
+                    <div className="mb-3 flex flex-wrap gap-2">
+                      <span className={`rounded-md px-2 py-1 text-xs font-semibold ${freshnessClass[freshness.status]}`}>
+                        {freshness.priority} · {getFreshnessStatusLabel(freshness.status, lang)}
+                      </span>
+                      {freshness.reviewedAt && (
+                        <span className="rounded-md bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                          reviewed {freshness.reviewedAt}
+                        </span>
+                      )}
                     </div>
                     <h2 className="text-lg font-bold leading-7 text-gray-950 dark:text-white">
                       {getTopicTitle(topic, lang)}

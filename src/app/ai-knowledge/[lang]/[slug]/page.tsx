@@ -7,6 +7,7 @@ import {
   FaBookOpen,
   FaCode,
   FaGithub,
+  FaTriangleExclamation,
   FaLanguage,
   FaUpRightFromSquare,
 } from "react-icons/fa6";
@@ -19,6 +20,11 @@ import {
   getAiKnowledgeTopics,
 } from "@/lib/aiKnowledge";
 import { getTopicTitle, type AiKnowledgeLang } from "@/data/aiKnowledgeCatalog";
+import {
+  getAiKnowledgeFreshnessText,
+  getFreshnessStatusLabel,
+  type AiKnowledgeFreshnessStatus,
+} from "@/data/aiKnowledgeFreshness";
 
 interface Props {
   params: Promise<{ lang: string; slug: string }>;
@@ -28,6 +34,12 @@ function normalizeLang(lang: string): AiKnowledgeLang | null {
   if (lang === "zh" || lang === "en") return lang;
   return null;
 }
+
+const freshnessClass: Record<AiKnowledgeFreshnessStatus, string> = {
+  current: "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100",
+  watch: "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100",
+  needsUpdate: "border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-100",
+};
 
 export function generateStaticParams() {
   return getAiKnowledgeStaticParams();
@@ -50,6 +62,7 @@ export default async function AiKnowledgeArticlePage({ params }: Props) {
   const categories = getAiKnowledgeCategories();
   const sameCategoryTopics = topics.filter((topic) => topic.category === article.topic.category);
   const oppositeLang = lang === "zh" ? "en" : "zh";
+  const freshnessText = getAiKnowledgeFreshnessText(article.freshness, lang);
 
   return (
     <div className="min-h-screen bg-[#f5f7fb] text-gray-950 dark:bg-gray-950 dark:text-white">
@@ -144,6 +157,9 @@ export default async function AiKnowledgeArticlePage({ params }: Props) {
                 <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
                   约 {article.readingTime} 分钟
                 </span>
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${freshnessClass[article.freshness.status]}`}>
+                  {article.freshness.priority} · {getFreshnessStatusLabel(article.freshness.status, lang)}
+                </span>
               </div>
 
               <h1 className="text-3xl font-bold tracking-normal text-gray-950 dark:text-white md:text-4xl">
@@ -190,6 +206,26 @@ export default async function AiKnowledgeArticlePage({ params }: Props) {
                     <FaCode />
                     Markdown
                   </a>
+                </div>
+              </div>
+
+              <div className={`mt-4 rounded-xl border p-4 text-sm leading-6 ${freshnessClass[article.freshness.status]}`}>
+                <div className="mb-2 flex items-center gap-2 font-semibold">
+                  <FaTriangleExclamation />
+                  {lang === "en" ? "Local freshness note" : "本地更新提示"}
+                  {article.freshness.reviewedAt && (
+                    <span className="text-xs font-medium opacity-75">
+                      {lang === "en" ? "Reviewed" : "复审"} {article.freshness.reviewedAt}
+                    </span>
+                  )}
+                </div>
+                <p>{freshnessText.note}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {freshnessText.actions.map((action) => (
+                    <span key={action} className="rounded-md bg-white/70 px-2.5 py-1 text-xs font-semibold dark:bg-gray-950/50">
+                      {action}
+                    </span>
+                  ))}
                 </div>
               </div>
             </header>

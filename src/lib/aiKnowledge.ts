@@ -8,6 +8,7 @@ import {
   type AiKnowledgeLang,
   type AiKnowledgeTopic,
 } from "@/data/aiKnowledgeCatalog";
+import { getAiKnowledgeFreshnessNote, type AiKnowledgeFreshnessNote } from "@/data/aiKnowledgeFreshness";
 
 const knowledgeDirectory = path.join(process.cwd(), "src/content/ai-knowledge");
 const tutorialsDirectory = path.join(knowledgeDirectory, "tutorials");
@@ -35,6 +36,7 @@ export interface AiKnowledgeArticle {
   sourceMarkdownUrl: string;
   sourceHtmlUrl: string;
   alternateHref: string;
+  freshness: AiKnowledgeFreshnessNote;
   previous?: AiKnowledgeTopic;
   next?: AiKnowledgeTopic;
 }
@@ -164,6 +166,7 @@ export function getAiKnowledgeArticle(slug: string, lang: AiKnowledgeLang): AiKn
     sourceMarkdownUrl: `${sourceMeta.repo}/blob/${sourceMeta.commit}/${sourceMarkdownPath(topic, lang)}`,
     sourceHtmlUrl: `${sourceMeta.site}/${sourceHtmlPath(topic, lang)}`,
     alternateHref: `/ai-knowledge/${lang === "zh" ? "en" : "zh"}/${slug}`,
+    freshness: getAiKnowledgeFreshnessNote(slug),
     previous,
     next,
   };
