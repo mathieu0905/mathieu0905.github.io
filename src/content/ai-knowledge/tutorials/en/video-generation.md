@@ -1,5 +1,12 @@
 ## §0 TL;DR Cheat Sheet
 
+### 2026-06-29 SOTA Snapshot
+
+- **Video generation SOTA can no longer be summarized as Sora / Veo 2 / Wan 2.1.** OpenAI's Sora 2 added synchronized audio, better physical consistency, and stronger steerability, while OpenAI developer docs also mark the Sora 2 video generation models / Videos API as deprecated with shutdown scheduled for 2026-09-24. Google Veo 3.1 is the current video model highlighted in Gemini API/DeepMind pages, with native audio, 720p/1080p/4K options, and cinematic control. Runway Gen-4.5 continues to push visual fidelity, motion quality, and creative control.
+- **The technical line has moved from “silent short clips” to “video + audio + controllable editing + reference consistency.”** Sora 2 and Veo 3.1 both emphasize synchronized/native audio; Runway Gen-4/4.5 emphasizes reference-driven consistency. When reading the DiT/3D VAE/MM-DiT pipeline below, include audio conditioning, reference images, and multi-shot/storyboard control as part of the modern pipeline.
+- **Separate evaluation from product availability.** A model being more physically accurate in a report does not mean the API/product will remain stable or available; Sora 2's API deprecation is the cautionary example. A 2026 SOTA list should mark API availability, open weights, duration/resolution, audio generation, I2V/editing support, and multi-shot consistency.
+- Sources: [OpenAI Sora video docs](https://developers.openai.com/api/docs/guides/video-generation), [Sora 2 model docs](https://developers.openai.com/api/docs/models/sora-2), [Veo 3.1 Gemini API](https://ai.google.dev/gemini-api/docs/video), [Veo 3.1 DeepMind](https://deepmind.google/models/veo/), [Runway Gen-4](https://runwayml.com/research/introducing-runway-gen-4), [Runway Gen-4.5](https://runwayml.com/research/introducing-runway-gen-4.5).
+
 > 💡 **Video Generation in 7 sentences** — the 2024-2025 video generation explosion. One page covering the most frequently-asked interview points (see §1–§11 below for derivations).
 
 1. **Paradigm**: mainstream video generation = **3D Causal VAE compression + Latent DiT diffusion / Flow Matching**. Sora (2024-02) was the first to push the Transformer to 60s + high resolution; Hunyuan-Video (Tencent 2024-12) / Wan 2.x (Alibaba 2024-2025) / Mochi-1 / CogVideoX / Movie Gen / Kling / Veo 2 are all variants of this architectural family.

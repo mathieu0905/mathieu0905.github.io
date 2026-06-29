@@ -1,5 +1,12 @@
 ## §0 TL;DR Cheat Sheet
 
+### 2026-06-29 SOTA Snapshot
+
+- **Embedding/RAG has expanded from pure text into unified multimodal spaces.** Gemini Embedding 2 maps text, images, video, audio, and documents into one embedding space; Cohere Embed 4 supports text/image/mixed documents with configurable dimensions and embedding types; Qwen3 Embedding/Reranker provides an open model family for multilingual retrieval and reranking. The bi-encoder/InfoNCE/hard-negative material below is still foundational, but production selection now needs multimodality, truncatable dimensions, reranking, and cost.
+- **The RAG mainline has shifted from “vector recall + stuff prompt” to “hybrid retrieval + rerank + graph/agentic retrieval + evaluation.”** Microsoft GraphRAG documents KG extraction, community summaries, and global/local search as a structured RAG path. Long-context models make “stuff the whole corpus” more feasible, but lost-in-the-middle, permissions, citations, and update cost still keep RAG relevant.
+- **2026 practical recommendation:** start with BM25/keyword + dense + reranker as the default hybrid pipeline; use multimodal embeddings when documents include images/PDFs/video; move to GraphRAG/DRIFT when the corpus has complex entity relationships, not as the default for every RAG task.
+- Sources: [OpenAI Embeddings](https://developers.openai.com/api/docs/guides/embeddings), [Gemini Embedding 2](https://ai.google.dev/gemini-api/docs/embeddings), [Cohere Embed 4](https://cohere.com/blog/embed-4), [Cohere model docs](https://docs.cohere.com/docs/models), [Qwen3 Embedding](https://qwen.ai/blog?id=qwen3-embedding), [Microsoft GraphRAG](https://microsoft.github.io/graphrag/).
+
 > 💡 **9 sentences to nail RAG + Embedding** — one page covering the interview essentials (see §2–§11 for derivations).
 
 1. **What RAG is**: Retrieval-Augmented Generation = first **retrieve** relevant passages from an external knowledge base with the query, then stitch them into the prompt and let the LLM **generate** the answer. It addresses three things: stale knowledge, hallucination, private data (Lewis et al. 2020).

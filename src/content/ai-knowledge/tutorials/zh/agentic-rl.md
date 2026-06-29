@@ -1,5 +1,12 @@
 ## §0 TL;DR Cheat Sheet
 
+### 2026-06-29 SOTA 快照
+
+- **Agentic RL 已经从研究论文题变成主流模型产品的核心能力，但训练细节多数仍不公开**。GPT-5.5、Claude Fable/Opus 4.x、Gemini 3.1 Pro Preview 的官方页面都把 coding、tool use、computer/workflow agents 或长程任务列为核心能力；因此本文的 `token mask / tool observation / environment reward / sandbox` 细节比单纯 PPO/GRPO 公式更重要。
+- **不要把产品 benchmark 直接反推成训练 recipe**。公开页面能证明的是：模型在 tool-heavy、coding、computer-use 或 agentic workflow 上被重点优化；不能证明它一定用了哪一种 RL 算法。正文里关于 ToolRL、WebRL、SWE-RL、GRPO 的内容应理解为可复现/公开路线，而不是闭源模型的确定实现。
+- **2026 的 agent 系统瓶颈是环境与验证器，不只是 policy**。DeepSeek-V3.2 把 reasoning-first 和 agentic AI 放在同一发布里；Google 的 Gemini 3.1 Pro Preview 有 `customtools` 端点；Anthropic 和 OpenAI 都把长程 coding/workflow 作为主场。实际落地时，任务环境、工具 schema、日志回放、失败归因和安全沙箱往往比再换一个 reward shaping 更决定效果。
+- 来源：[OpenAI model docs](https://developers.openai.com/api/docs/models)、[Claude models overview](https://platform.claude.com/docs/en/about-claude/models/overview)、[Gemini 3.1 Pro Preview](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview)、[DeepSeek-V3.2 Release](https://api-docs.deepseek.com/news/news251201)。
+
 > 💡 **9 句话搞定 Agentic RL** — RL for LLM agents 是 2024-2026 把 reasoning RL 推向真实工具使用、Web、代码与 GUI 的核心范式（详见 §1-§9 推导 + §10 25 高频题）。
 
 1. **Agentic RL 与 RLHF 的本质区别**：RLHF 是 single-turn 偏好对齐，reward 来自 RM 对整段 response 的打分；**Agentic RL 是 multi-turn 决策，state 是 (obs, history)，action 是 (thought, tool_call)，reward 来自外部环境（test-pass、task success、verifier）而非 RM**。整条轨迹长度从 RLHF 的几百 token 涨到 agent 的数千乃至数万 token，credit assignment 难度上一个台阶。

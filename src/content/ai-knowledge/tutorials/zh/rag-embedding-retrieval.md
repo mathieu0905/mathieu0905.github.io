@@ -1,5 +1,12 @@
 ## §0 TL;DR Cheat Sheet
 
+### 2026-06-29 SOTA 快照
+
+- **Embedding/RAG 已经从纯文本向多模态统一空间扩展**。Gemini Embedding 2 支持 text、image、video、audio、documents 映射到同一 embedding space；Cohere Embed 4 支持 text/image/mixed documents，并提供不同维度和 embedding 类型；Qwen3 Embedding/Reranker 则把 multilingual retrieval 与 rerank 做成开放模型系列。本文的 bi-encoder/InfoNCE/Hard negative 仍是基础，但生产选型要看多模态、维度可裁剪、rerank 和成本。
+- **RAG 的主线从“向量召回 + 拼 prompt”变成“hybrid retrieval + rerank + graph/agentic retrieval + evaluation”**。Microsoft GraphRAG 文档把 KG extraction、community summaries、global/local search 作为结构化 RAG 路线；长上下文模型让“直接塞全文”更可行，但 lost-in-the-middle、权限控制、引用溯源和更新成本仍让 RAG 有必要。
+- **2026 实战建议**：默认用 BM25/keyword + dense + reranker 的 hybrid pipeline；文档含图片/PDF/视频时优先考虑 multimodal embeddings；企业语料如果有复杂实体关系，再上 GraphRAG/DRIFT，而不是一开始就把所有 RAG 都图化。
+- 来源：[OpenAI Embeddings](https://developers.openai.com/api/docs/guides/embeddings)、[Gemini Embedding 2](https://ai.google.dev/gemini-api/docs/embeddings)、[Cohere Embed 4](https://cohere.com/blog/embed-4)、[Cohere model docs](https://docs.cohere.com/docs/models)、[Qwen3 Embedding](https://qwen.ai/blog?id=qwen3-embedding)、[Microsoft GraphRAG](https://microsoft.github.io/graphrag/)。
+
 > 💡 **9 句话搞定 RAG + 嵌入** — 一页拿下面试核心要点（详见后文 §2–§11 推导）。
 
 1. **RAG 是什么**：检索增强生成 = 先用 query 从外部知识库**检索**相关片段，再把片段拼进 prompt 让 LLM **生成**答案。应对三件事：知识过期、幻觉、私有数据（Lewis et al. 2020）。

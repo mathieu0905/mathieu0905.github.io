@@ -1,5 +1,12 @@
 ## §0 TL;DR Cheat Sheet
 
+### 2026-06-29 SOTA Snapshot
+
+- **The multimodal frontier has moved from “LLM with image input” to “text/image/video/audio/PDF unified input + tool use.”** Gemini 3.1 Pro Preview explicitly supports text, image, video, audio, and PDF inputs, plus thinking, code execution, function calling, and search grounding; Claude Fable/Opus families and GPT-5.5 also place vision, documents, and computer/workflow tasks near the center. Closed-model architectures remain undisclosed, so do not reduce them to a LLaVA-style projector.
+- **Read VLM material in two layers.** CLIP/SigLIP/LLaVA/Q-Former/M-RoPE below are the interpretable open-architecture foundation; the latest closed omni/multimodal models mostly appear as product/API capabilities. In interviews, explain the open mechanism first, then add: “frontier closed models likely use more integrated multimodal pretraining and tool scaffolding; exact fusion is undisclosed.”
+- **Retrieval is becoming multimodal too.** Gemini Embedding 2 and Cohere Embed 4 map text, image, documents, and in some cases audio/video into a shared space. This changes VLM-RAG design: images/PDFs/videos do not always need to be OCRed into pure text first; multimodal embedding + rerank is now a viable first stage.
+- Sources: [Gemini 3.1 Pro Preview](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview), [Claude models overview](https://platform.claude.com/docs/en/about-claude/models/overview), [Gemini Embedding 2](https://ai.google.dev/gemini-api/docs/embeddings), [Cohere Embed 4](https://cohere.com/blog/embed-4).
+
 > 💡 **VLM in 8 sentences** — one page covering the core interview points for vision-language models (see §1–§13 below for derivations and code).
 
 1. **Vision encoder = ViT-dominated**: Dosovitskiy et al. 2021 (ICLR) slice images into $P\times P$ patches (typically $P=14$ or $16$), apply a linear projection + learnable positional embedding + optional `[CLS]` token, and feed them into a Transformer encoder. **The vision side of CLIP / SigLIP / LLaVA is all a ViT variant.**

@@ -1,5 +1,12 @@
 ## §0 TL;DR Cheat Sheet
 
+### 2026-06-29 SOTA 快照
+
+- **稀疏/线性注意力已经进入公开大模型主线，而不只是论文替代品**。DeepSeek-V3.2-Exp/V3.2 把 DSA（DeepSeek Sparse Attention）作为长上下文效率核心；Qwen3-Next 用 Gated DeltaNet + Gated Attention 的 hybrid attention，并配合高稀疏 MoE 与 MTP 降低训练/推理成本。
+- **2026 的结论不是“线性注意力取代 softmax”，而是“hybrid 成为默认折中”**。Qwen3-Next 保留部分 full/gated attention 来守住 recall，同时用 Gated DeltaNet 提高长上下文吞吐；DeepSeek DSA 保留 softmax over selected tokens/blocks 的思路，降低全量注意力成本。面试里要主动说明：稀疏 attention 省 compute/KV 访问，但 selector miss 会变成新的 failure mode。
+- **工程栈已经跟上**。vLLM 对 Qwen3-Next 这类非标准 attention 的早期支持，说明“能不能高效跑”已经和“模型结构是否优秀”同样重要。读新架构时，要同时看 kernel、cache layout、prefill/decode 分离和量化兼容性。
+- 来源：[DeepSeek-V3.2-Exp](https://api-docs.deepseek.com/news/news250929)、[DeepSeek-V3.2 Release](https://api-docs.deepseek.com/news/news251201)、[DeepSeek-V3.2 GitHub](https://github.com/deepseek-ai/DeepSeek-V3.2-Exp)、[Qwen3-Next/vLLM](https://vllm.ai/blog/2025-09-11-qwen3-next)、[Qwen3-Next model card](https://huggingface.co/Qwen/Qwen3-Next-80B-A3B-Instruct)。
+
 > 💡 **9 句话搞定高效注意力 / SSM / 稀疏注意力** — 一页拿下面试核心要点（详见后文 §1–§11 推导）。
 
 1. **二次瓶颈**：softmax attention 训练 $O(L^2 d)$ 时间，decode 时 KV cache 随上下文线性增长（$O(L)$ 显存、每步 $O(L)$ 计算）。逃逸有三条路：**线性注意力**、**SSM / Mamba**、**稀疏注意力**。

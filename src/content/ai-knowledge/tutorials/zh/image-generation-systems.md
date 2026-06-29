@@ -1,5 +1,12 @@
 ## §0 TL;DR Cheat Sheet
 
+### 2026-06-29 SOTA 快照
+
+- **图像生成系统不再只有 SDXL/SD3/FLUX 这条开放栈主线**。OpenAI API 文档已把 `gpt-image-2` 列为 GPT Image 系列的最新图像生成/编辑模型，并支持更灵活的尺寸；Google 的 Gemini 3 Image / Nano Banana 系列把“推理型图像生成”和多轮编辑作为卖点。开放 diffusion/flow 栈仍适合研究和可控部署，但产品 SOTA 已明显走向原生多模态图像模型。
+- **新的能力重点是文字渲染、多轮编辑、参考一致性和世界知识，而不只是 FID/审美分数**。Nano Banana Pro/2 强调文本可读性、复杂编辑、现实知识与 SynthID；GPT Image 系列强调 text+image 输入、生成和编辑统一。读本文的 ControlNet/IP-Adapter/LoRA 时，要把它们看成开放生态的可控组件，而不是全部最新产品能力的上限。
+- **部署判断要加上 provenance 与安全层**。商业图像模型普遍引入 watermark/SynthID/C2PA、内容过滤、人物/版权限制；本地 FLUX/SD 系列虽然自由度更高，但也需要自己的安全与来源标注策略。
+- 来源：[OpenAI Image Generation](https://developers.openai.com/api/docs/guides/image-generation)、[GPT Image 2 model docs](https://developers.openai.com/api/docs/models/gpt-image-2)、[OpenAI image API reference](https://developers.openai.com/api/reference/resources/images/methods/generate/)、[Google Nano Banana Pro](https://blog.google/innovation-and-ai/products/nano-banana-pro/)、[Gemini image generation docs](https://ai.google.dev/gemini-api/docs/image-generation)、[Gemini 3 Pro Image](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/3-pro-image)。
+
 > 💡 **8 句话搞定 Image Generation 系统** — 一页拿下 production text-to-image 栈核心（详见 §1–§10 推导）。
 
 1. **LDM 关键**：VAE encode 把 $H\times W\times 3$ 压成 $h\times w\times c$（SD 1.x: $8\times$ 下采样、$c=4$），扩散在 latent 上做，**计算节省 $8^2=64\times$**，最后再 VAE decode 出像素（Rombach et al. 2022 CVPR）。

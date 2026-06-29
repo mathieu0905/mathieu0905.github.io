@@ -1,5 +1,12 @@
 ## §0 TL;DR Cheat Sheet
 
+### 2026-06-29 SOTA 快照
+
+- **视频生成 SOTA 不能再只写 Sora / Veo 2 / Wan 2.1**。OpenAI 的 Sora 2 引入同步音频、物理一致性和更强 steerability，但 OpenAI 开发者文档也标注 Sora 2 video generation models / Videos API 已 deprecated，并计划在 2026-09-24 shutdown；Google Veo 3.1 是当前 Gemini API/DeepMind 页面重点推广的视频模型，支持原生音频、720p/1080p/4K 规格与 cinematic control；Runway Gen-4.5 继续押注视觉保真、运动质量和创作控制。
+- **技术主线从“无声短视频”变成“视频 + 音频 + 可控编辑 + 参考一致性”**。Sora 2/Veo 3.1 都把同步声音或原生音频列为核心能力；Runway Gen-4/4.5 强调 reference-driven consistency。阅读本文的 DiT/3D VAE/MM-DiT 时，要把 audio conditioning、reference images、multi-shot/storyboard control 也纳入 pipeline。
+- **评测与产品可用性要分开**。某个模型在报告里物理更准，不代表 API/产品会长期稳定可用；Sora 2 的 API deprecation 就是例子。写 SOTA 列表时建议标注：模型是否开放 API、是否有权重、视频时长/分辨率、是否生成音频、是否支持 I2V/编辑/多镜头一致性。
+- 来源：[OpenAI Sora video docs](https://developers.openai.com/api/docs/guides/video-generation)、[Sora 2 model docs](https://developers.openai.com/api/docs/models/sora-2)、[Veo 3.1 Gemini API](https://ai.google.dev/gemini-api/docs/video)、[Veo 3.1 DeepMind](https://deepmind.google/models/veo/)、[Runway Gen-4](https://runwayml.com/research/introducing-runway-gen-4)、[Runway Gen-4.5](https://runwayml.com/research/introducing-runway-gen-4.5)。
+
 > 💡 **7 句话搞定 Video Generation** — 2024-2025 视频生成大爆发。一页吃下面试高频要点（详见后文 §1–§11 推导）。
 
 1. **范式**：主流视频生成 = **3D Causal VAE 压缩 + Latent DiT 扩散 / Flow Matching**。Sora（2024-02）首次把 Transformer 推到 60s + 高分辨率；Hunyuan-Video (Tencent 2024-12) / Wan 2.x (Alibaba 2024-2025) / Mochi-1 / CogVideoX / Movie Gen / Kling / Veo 2 都是这一架构家族的变体。

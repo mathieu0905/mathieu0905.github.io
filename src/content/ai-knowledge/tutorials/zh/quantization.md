@@ -1,5 +1,12 @@
 ## §0 TL;DR Cheat Sheet
 
+### 2026-06-29 SOTA 快照
+
+- **FP8 已经是训练/推理常规工具，FP4/NVFP4 正在成为 Blackwell 时代的核心推理格式**。NVIDIA Transformer Engine 文档明确支持 FP8、MXFP8 与 NVFP4；NVIDIA 的 NVFP4 介绍说明 Blackwell Tensor Core 原生处理 microscaled FP4。正文中 GPTQ/AWQ/SmoothQuant 仍是 PTQ 基础，但部署判断要补上 FP8/FP4 硬件路径。
+- **不要把 NF4、MXFP4、NVFP4 混为一谈**。NF4 主要来自 bitsandbytes/QLoRA 的权重量化语境；NVFP4 是 Blackwell Tensor Core 面向矩阵乘的原生低精度格式；MXFP8/MXFP4 属于 microscaling 格式家族。面试里最容易错的是把“4-bit storage”当成“硬件原生 FP4 compute”。
+- **工具链已从单点算法变成端到端导出**。NVIDIA Model Optimizer/TensorRT-LLM、vLLM/SGLang 集成把 PTQ/QAT、KV cache quantization、FP8/FP4 export、kernel backend 连成一条链。实战中要同时报告：权重位宽、activation 位宽、KV cache 位宽、校准集、目标 GPU、吞吐和质量回归。
+- 来源：[NVIDIA Transformer Engine](https://docs.nvidia.com/deeplearning/transformer-engine/user-guide/)、[NVFP4 blog](https://developer.nvidia.com/blog/introducing-nvfp4-for-efficient-and-accurate-low-precision-inference/)、[TensorRT-LLM Quantization](https://nvidia.github.io/TensorRT-LLM/latest/features/quantization.html)、[NVIDIA Model Optimizer](https://github.com/NVIDIA/Model-Optimizer)、[TensorRT quantized types](https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/work-quantized-types.html)。
+
 > 💡 **8 句话搞定 LLM Quantization** — 一页拿下面试核心要点（详见后文 §2–§11 推导）。
 
 1. **Affine quantization 公式**：$q = \mathrm{round}(x / s) + z$，反量化 $\hat{x} = s\,(q - z)$。对称量化 $z = 0$；非对称量化 $z$ 把 zero-point 对齐到一个整数。

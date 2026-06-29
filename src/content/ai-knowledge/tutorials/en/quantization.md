@@ -1,5 +1,12 @@
 ## §0 TL;DR Cheat Sheet
 
+### 2026-06-29 SOTA Snapshot
+
+- **FP8 is now a normal training/inference tool, while FP4/NVFP4 is becoming a core inference format in the Blackwell era.** NVIDIA Transformer Engine documents FP8, MXFP8, and NVFP4 support; NVIDIA's NVFP4 blog explains that Blackwell Tensor Cores natively handle microscaled FP4. GPTQ/AWQ/SmoothQuant below remain PTQ fundamentals, but deployment decisions now need the FP8/FP4 hardware path.
+- **Do not collapse NF4, MXFP4, and NVFP4 into one thing.** NF4 mostly comes from the bitsandbytes/QLoRA weight-storage context; NVFP4 is a Blackwell Tensor Core low-precision compute format; MXFP8/MXFP4 belong to the microscaling format family. The common interview mistake is treating “4-bit storage” as “native FP4 matrix-multiply compute.”
+- **The toolchain has moved from isolated algorithms to end-to-end export.** NVIDIA Model Optimizer/TensorRT-LLM plus vLLM/SGLang integrations connect PTQ/QAT, KV-cache quantization, FP8/FP4 export, and kernel backends. In practice, report weight bitwidth, activation bitwidth, KV-cache bitwidth, calibration set, target GPU, throughput, and quality regression together.
+- Sources: [NVIDIA Transformer Engine](https://docs.nvidia.com/deeplearning/transformer-engine/user-guide/), [NVFP4 blog](https://developer.nvidia.com/blog/introducing-nvfp4-for-efficient-and-accurate-low-precision-inference/), [TensorRT-LLM Quantization](https://nvidia.github.io/TensorRT-LLM/latest/features/quantization.html), [NVIDIA Model Optimizer](https://github.com/NVIDIA/Model-Optimizer), [TensorRT quantized types](https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/work-quantized-types.html).
+
 > 💡 **LLM Quantization in 8 sentences** — one page covering interview essentials (see §2–§11 for derivations).
 
 1. **Affine quantization formula**: $q = \mathrm{round}(x / s) + z$, dequantize $\hat{x} = s\,(q - z)$. Symmetric quantization $z = 0$; asymmetric quantization $z$ aligns the zero-point to an integer.

@@ -1,5 +1,12 @@
 ## §0 TL;DR Cheat Sheet
 
+### 2026-06-29 SOTA Snapshot
+
+- **Agentic RL has moved from a research-paper topic into the core product surface of frontier models, but most training details remain private.** Official pages for GPT-5.5, Claude Fable/Opus 4.x, and Gemini 3.1 Pro Preview all emphasize coding, tool use, computer/workflow agents, or long-horizon tasks. That makes the practical details in this article — `token mask`, tool observations, environment rewards, and sandboxing — more important than the PPO/GRPO equations alone.
+- **Do not reverse-engineer a training recipe from product benchmarks.** Public pages can establish that a model was optimized for tool-heavy, coding, computer-use, or agentic workflows; they cannot prove which exact RL algorithm was used. Treat ToolRL, WebRL, SWE-RL, and GRPO below as reproducible/open research lines, not as confirmed implementations inside closed models.
+- **In 2026, the agent bottleneck is the environment and verifier, not just the policy.** DeepSeek-V3.2 releases reasoning-first and agentic AI together; Gemini 3.1 Pro Preview includes a `customtools` endpoint; Anthropic and OpenAI both position long-running coding/workflow tasks as central. In practice, the task environment, tool schema, replay logs, failure attribution, and safety sandbox often matter more than another reward-shaping variant.
+- Sources: [OpenAI model docs](https://developers.openai.com/api/docs/models), [Claude models overview](https://platform.claude.com/docs/en/about-claude/models/overview), [Gemini 3.1 Pro Preview](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview), [DeepSeek-V3.2 Release](https://api-docs.deepseek.com/news/news251201).
+
 > 💡 **9 sentences to nail Agentic RL** — RL for LLM agents is the 2024-2026 paradigm pushing reasoning RL into real tool use, the web, code, and GUI (see §1-§9 for derivations + §10 for the 25 frequently-asked questions).
 
 1. **The fundamental difference between Agentic RL and RLHF**: RLHF is single-turn preference alignment with reward from an RM scoring an entire response; **Agentic RL is multi-turn decision-making, state is (obs, history), action is (thought, tool_call), and reward comes from the external environment (test-pass, task success, verifier) rather than an RM**. Trajectory length grows from RLHF's hundreds of tokens to an agent's thousands or even tens of thousands of tokens, taking credit assignment difficulty up a notch.

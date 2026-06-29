@@ -1,5 +1,12 @@
 ## §0 TL;DR Cheat Sheet
 
+### 2026-06-29 SOTA Snapshot
+
+- **The public frontier has moved beyond o1/R1 to GPT-5.5, Claude Fable 5 / Opus 4.x, Gemini 3.1 Pro Preview, DeepSeek-V3.2/Speciale, and related families.** OpenAI's API docs position GPT-5.5 as the flagship for complex reasoning/coding; Gemini 3.1 Pro Preview supports multimodal input, 1,048,576 input tokens, thinking, and tool use; Anthropic's Claude Fable/Opus docs emphasize long-horizon agentic work. The o1/R1/PRM/GRPO derivations below remain the right conceptual base, but the model list should not stop at early 2025.
+- **The engineering center of gravity has shifted from “longer CoT” to “controllable effort + tool loops + verifier/environment reward.”** GPT-5.5, Claude, and Gemini docs all put coding, tool use, and computer/workflow agents near the center; DeepSeek-V3.2 jointly optimizes reasoning and agentic tool use. Treat test-time compute as the total budget of `reasoning_tokens + search/tool calls + verifier/sandbox`, not just hidden chain-of-thought length.
+- **The open-weight line is no longer just DeepSeek-R1.** DeepSeek-V3.2 continues the reasoning-first and agentic AI line while adding DSA for long-context efficiency; Qwen3-Next uses hybrid attention, Sparse MoE, and MTP as the efficiency base. In 2026, reasoning SOTA is the product of **post-training + architecture + serving**, not a single RL algorithm.
+- Sources: [OpenAI model docs](https://developers.openai.com/api/docs/models), [Claude models overview](https://platform.claude.com/docs/en/about-claude/models/overview), [Gemini 3.1 Pro Preview](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview), [DeepSeek-V3.2 Release](https://api-docs.deepseek.com/news/news251201), [DeepSeek-V3.2-Exp](https://api-docs.deepseek.com/news/news250929), [vLLM Qwen3-Next](https://vllm.ai/blog/2025-09-11-qwen3-next).
+
 > 💡 **Reasoning models in 8 sentences** — The biggest paradigm shift in LLMs from 2024-2026; one page covering interview essentials.
 
 1. **Paradigm shift**: previously we scaled **training compute** (parameters + data); now we scale **inference compute** (reasoning tokens / search / verification). Snell et al. 2024 (arXiv 2408.03314) gave the **compute-optimal test-time scaling** recipe: under the same inference FLOPs, a hybrid strategy of best-of-N + PRM beam search + sequential revision is **>4×** more efficient than pure best-of-N; under FLOPs-matched settings, small model + optimized test-time compute can match or exceed a **14×** larger model on certain tasks.

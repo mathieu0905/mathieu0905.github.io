@@ -1,5 +1,12 @@
 ## §0 TL;DR Cheat Sheet
 
+### 2026-06-29 SOTA 快照
+
+- **1M context 已经是主流闭源 API 的公开规格之一**。OpenAI model docs 显示 GPT-5.5 为 1M context；Google Gemini 3.1 Pro Preview 文档列出 1,048,576 input tokens；Claude Fable/Opus 系列也在模型文档里强调长程 agentic work 和高输出上限。本文关于 RoPE/YaRN/MLA 的推导仍有用，但“长上下文 SOTA”不应只用 Qwen2.5-1M 或 Llama-3.1 来代表。
+- **长上下文前沿从“位置外推”扩展到“KV/attention 结构性降本”**。DeepSeek-V3.2/Exp 引入 DeepSeek Sparse Attention（DSA）以降低长上下文训练和推理成本；Qwen3-Next 用 Gated DeltaNet + Gated Attention 的 hybrid attention 支撑 256K 级超长文本。RoPE scaling 解决“位置知道多远”，DSA/hybrid/MLA 解决“算不算得起、存不存得下”。
+- **读长上下文模型报告时分三层判断**：上下文窗口标称值、needle/retrieval 质量、serving 成本。1M token 规格不等于 1M token 都能可靠召回；sparse/hybrid attention 会改变 recall failure mode；MLA/GQA/MQA 改 KV memory，但不自动解决长程推理。
+- 来源：[OpenAI model docs](https://developers.openai.com/api/docs/models)、[Gemini 3.1 Pro Preview](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview)、[Claude models overview](https://platform.claude.com/docs/en/about-claude/models/overview)、[DeepSeek-V3.2-Exp](https://api-docs.deepseek.com/news/news250929)、[DeepSeek-V3.2 Release](https://api-docs.deepseek.com/news/news251201)、[Qwen3-Next/vLLM](https://vllm.ai/blog/2025-09-11-qwen3-next)。
+
 > 💡 **8 句话搞定 Long Context** — 一页拿下面试核心要点（详见后文 §2–§9 推导）。
 
 1. **RoPE**：对每对维度 $(2i, 2i+1)$ 做位置 $m$ 相关的 2D 旋转，$\theta_i = 10000^{-2i/d}$。$q_m^\top k_n$ 仅依赖**相对位置** $m-n$（不依赖绝对 $m, n$ 各自），且无需训练参数。

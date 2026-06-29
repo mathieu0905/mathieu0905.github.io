@@ -1,5 +1,12 @@
 ## §0 TL;DR Cheat Sheet
 
+### 2026-06-29 SOTA Snapshot
+
+- **1M context is now a public spec for mainstream closed APIs.** OpenAI model docs list GPT-5.5 with a 1M context window; Gemini 3.1 Pro Preview lists 1,048,576 input tokens; Claude Fable/Opus documentation emphasizes long-horizon agentic work and high output limits. The RoPE/YaRN/MLA derivations below are still useful, but “long-context SOTA” should no longer be represented only by Qwen2.5-1M or Llama-3.1.
+- **The frontier has expanded from “position extrapolation” to “structural cost reduction for KV/attention.”** DeepSeek-V3.2/Exp introduces DeepSeek Sparse Attention (DSA) to lower long-context training and inference cost; Qwen3-Next uses Gated DeltaNet + Gated Attention hybrid attention for 256K-scale ultra-long text. RoPE scaling answers “does the model know how far away this is?”; DSA/hybrid/MLA answer “can we afford to compute and store it?”
+- **Read long-context reports in three layers:** advertised window, needle/retrieval quality, and serving cost. A 1M-token spec does not mean every token is reliably recalled; sparse/hybrid attention changes recall failure modes; MLA/GQA/MQA reduce KV memory but do not automatically solve long-horizon reasoning.
+- Sources: [OpenAI model docs](https://developers.openai.com/api/docs/models), [Gemini 3.1 Pro Preview](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview), [Claude models overview](https://platform.claude.com/docs/en/about-claude/models/overview), [DeepSeek-V3.2-Exp](https://api-docs.deepseek.com/news/news250929), [DeepSeek-V3.2 Release](https://api-docs.deepseek.com/news/news251201), [Qwen3-Next/vLLM](https://vllm.ai/blog/2025-09-11-qwen3-next).
+
 > 💡 **8 sentences to nail Long Context** — get the interview core points in one page (see §2-§9 for full derivations).
 
 1. **RoPE**: apply position-$m$-dependent 2D rotations on each pair of dimensions $(2i, 2i+1)$, with $\theta_i = 10000^{-2i/d}$. $q_m^\top k_n$ depends only on the **relative position** $m-n$ (not on absolute $m, n$ separately), and requires no trainable parameters.

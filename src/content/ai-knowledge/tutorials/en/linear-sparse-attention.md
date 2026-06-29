@@ -1,5 +1,12 @@
 ## §0 TL;DR Cheat Sheet
 
+### 2026-06-29 SOTA Snapshot
+
+- **Sparse/linear attention has entered public large-model lineages, not just paper prototypes.** DeepSeek-V3.2-Exp/V3.2 makes DSA (DeepSeek Sparse Attention) central to long-context efficiency; Qwen3-Next uses Gated DeltaNet + Gated Attention hybrid attention, combined with highly sparse MoE and MTP to lower training and inference cost.
+- **The 2026 takeaway is not “linear attention replaces softmax,” but “hybrid becomes the default compromise.”** Qwen3-Next keeps some full/gated attention to protect recall while using Gated DeltaNet for long-context throughput; DeepSeek DSA keeps a softmax-over-selected-tokens/blocks flavor while avoiding full attention cost. In interviews, say explicitly: sparse attention saves compute/KV access, but selector misses become a new failure mode.
+- **The serving stack has caught up.** vLLM's early support for Qwen3-Next-style nonstandard attention shows that “can this run efficiently?” matters as much as “is the architecture elegant?” When reading new architecture reports, inspect kernels, cache layout, prefill/decode separation, and quantization compatibility together.
+- Sources: [DeepSeek-V3.2-Exp](https://api-docs.deepseek.com/news/news250929), [DeepSeek-V3.2 Release](https://api-docs.deepseek.com/news/news251201), [DeepSeek-V3.2 GitHub](https://github.com/deepseek-ai/DeepSeek-V3.2-Exp), [Qwen3-Next/vLLM](https://vllm.ai/blog/2025-09-11-qwen3-next), [Qwen3-Next model card](https://huggingface.co/Qwen/Qwen3-Next-80B-A3B-Instruct).
+
 > 💡 **9 sentences to nail efficient attention / SSM / sparse attention** — one page covering the interview essentials (see §1–§11 for derivations).
 
 1. **The quadratic bottleneck**: softmax attention trains in $O(L^2 d)$ time, and at decode the KV cache grows linearly with context ($O(L)$ memory, $O(L)$ compute per step). There are three escape routes: **linear attention**, **SSM / Mamba**, **sparse attention**.

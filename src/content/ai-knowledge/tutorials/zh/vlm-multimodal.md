@@ -1,5 +1,12 @@
 ## §0 TL;DR Cheat Sheet
 
+### 2026-06-29 SOTA 快照
+
+- **多模态前沿已经从“图像输入的 LLM”升级成“文本/图像/视频/音频/PDF 统一输入 + 工具使用”**。Gemini 3.1 Pro Preview 明确支持 text、image、video、audio、PDF 输入，并带 thinking、code execution、function calling、search grounding；Claude Fable/Opus 系列和 GPT-5.5 也把视觉、文档、computer/workflow tasks 放在核心能力里。闭源模型架构仍未公开，不能把它们简单等同于 LLaVA-style projector。
+- **VLM 资料要分两层读**：本文的 CLIP/SigLIP/LLaVA/Q-Former/M-RoPE 是可解释的开放架构基础；最新闭源 omni/multimodal 模型更多体现为 product/API capability。面试里可以先讲开放机制，再补一句“frontier closed models likely use more integrated multimodal pretraining and tool scaffolding; exact fusion is undisclosed”。
+- **检索也在多模态化**。Gemini Embedding 2、Cohere Embed 4 这类模型把 text、image、document，甚至 audio/video 映射到统一空间；这会影响 VLM-RAG 的设计：图片/PDF/视频不一定先 OCR 成纯文本，也可以先走多模态 embedding + rerank。
+- 来源：[Gemini 3.1 Pro Preview](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview)、[Claude models overview](https://platform.claude.com/docs/en/about-claude/models/overview)、[Gemini Embedding 2](https://ai.google.dev/gemini-api/docs/embeddings)、[Cohere Embed 4](https://cohere.com/blog/embed-4)。
+
 > 💡 **8 句话搞定 VLM** — 一页拿下视觉-语言模型面试核心要点（详见后文 §1–§13 推导与代码）。
 
 1. **视觉 encoder = ViT 主导**：Dosovitskiy et al. 2021 (ICLR) 把图像切 $P\times P$ patch（一般 $P=14$ 或 $16$）做线性投影 + 可学习 positional embedding + 可选 `[CLS]` token，输入 Transformer encoder。**CLIP / SigLIP / LLaVA 的视觉端都是 ViT 变体**。

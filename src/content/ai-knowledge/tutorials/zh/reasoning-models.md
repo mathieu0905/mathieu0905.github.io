@@ -1,5 +1,12 @@
 ## §0 TL;DR Cheat Sheet
 
+### 2026-06-29 SOTA 快照
+
+- **公开可用前沿已经从 o1/R1 扩展到 GPT-5.5、Claude Fable 5/Opus 4.x、Gemini 3.1 Pro Preview、DeepSeek-V3.2/Speciale 等系列**。OpenAI API 文档把 GPT-5.5 定位为复杂 reasoning/coding 的旗舰模型，Google 的 Gemini 3.1 Pro Preview 支持多模态输入、1,048,576 input tokens、thinking 与 tool use；Anthropic 的 Claude Fable/Opus 页面也把长程 agentic work 放在核心场景。本文下面的 o1/R1/PRM/GRPO 推导仍是训练范式基础，但模型清单不要停在 2025 年初。
+- **推理模型的工程重点从“更长 CoT”转向“可控 effort + 工具闭环 + verifier/环境奖励”**。GPT-5.5、Claude、Gemini 文档都把 coding、tool use、computer/workflow agents 放在核心卖点；DeepSeek-V3.2 报告把 reasoning 与 agentic tool-use 联合优化。阅读本文时，应把 test-time compute 看成 `reasoning_tokens + search/tool calls + verifier/sandbox` 的总预算。
+- **开放权重路线不再只是 DeepSeek-R1**。DeepSeek-V3.2 在 R1 后继续强调 reasoning-first 和 agentic AI，并引入 DSA 降低长上下文成本；Qwen3-Next 把 hybrid attention、Sparse MoE、MTP 当成效率底座。也就是说，2026 的 reasoning SOTA 是 **post-training + architecture + serving** 共同作用，而不是单一 RL 算法的胜利。
+- 来源：[OpenAI model docs](https://developers.openai.com/api/docs/models)、[Claude models overview](https://platform.claude.com/docs/en/about-claude/models/overview)、[Gemini 3.1 Pro Preview](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview)、[DeepSeek-V3.2 Release](https://api-docs.deepseek.com/news/news251201)、[DeepSeek-V3.2-Exp](https://api-docs.deepseek.com/news/news250929)、[vLLM Qwen3-Next](https://vllm.ai/blog/2025-09-11-qwen3-next)。
+
 > 💡 **8 句话搞定 Reasoning Model** — 2024-2026 LLM 最大范式转移，一页拿下面试核心。
 
 1. **范式转移**：以前 scale **训练算力**（参数 + 数据），现在 scale **推理算力**（reasoning tokens / search / verification）。Snell et al. 2024 (arXiv 2408.03314) 给出 **compute-optimal test-time scaling** 配方：相同推理 FLOPs 下，best-of-N + PRM beam search + sequential revision 的混合策略比单一 best-of-N 高 **>4×** 效率；FLOPs-matched 设置下，小模型 + 优化 test-time compute 在某些任务上能匹配/超过 **14×** 更大的模型。

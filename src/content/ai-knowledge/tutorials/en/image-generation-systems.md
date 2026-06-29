@@ -1,5 +1,12 @@
 ## §0 TL;DR Cheat Sheet
 
+### 2026-06-29 SOTA Snapshot
+
+- **Image-generation systems are no longer only the SDXL/SD3/FLUX open-stack lineage.** OpenAI API docs list `gpt-image-2` as the latest GPT Image model for generation and editing, with more flexible sizing; Google's Gemini 3 Image / Nano Banana line emphasizes reasoning-driven image generation and multi-turn editing. Open diffusion/flow stacks remain best for research and controllable deployment, but product SOTA has clearly moved toward native multimodal image models.
+- **The new capability focus is text rendering, multi-turn editing, reference consistency, and world knowledge, not just FID/aesthetic scores.** Nano Banana Pro/2 emphasizes legible text, complex editing, real-world knowledge, and SynthID; GPT Image models unify text+image input with generation and editing. Treat ControlNet/IP-Adapter/LoRA below as controllable open-ecosystem components, not as the upper bound of current product capability.
+- **Deployment decisions now need provenance and safety layers.** Commercial image models increasingly include watermark/SynthID/C2PA-style provenance, content filtering, and restrictions around people/copyright. Local FLUX/SD-style stacks offer more control, but need their own safety and provenance policy.
+- Sources: [OpenAI Image Generation](https://developers.openai.com/api/docs/guides/image-generation), [GPT Image 2 model docs](https://developers.openai.com/api/docs/models/gpt-image-2), [OpenAI image API reference](https://developers.openai.com/api/reference/resources/images/methods/generate/), [Google Nano Banana Pro](https://blog.google/innovation-and-ai/products/nano-banana-pro/), [Gemini image generation docs](https://ai.google.dev/gemini-api/docs/image-generation), [Gemini 3 Pro Image](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/3-pro-image).
+
 > 💡 **8 sentences to nail Image Generation systems** — one page covering the core of a production text-to-image stack (see §1–§10 for derivations).
 
 1. **LDM essentials**: VAE encode compresses $H\times W\times 3$ to $h\times w\times c$ (SD 1.x: $8\times$ downsample, $c=4$); diffusion runs in latent space, **saving $8^2=64\times$ compute**, then VAE decode reconstructs pixels (Rombach et al. 2022 CVPR).
