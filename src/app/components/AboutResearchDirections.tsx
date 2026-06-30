@@ -20,68 +20,89 @@ export function AboutResearchDirections() {
   const directions = useMemo<Direction[]>(
     () => [
       {
-        id: "apr",
-        icon: "🔧",
-        title: "Automated Program Repair",
-        summary: "Exploring LLM-based code localization and repair, impact analysis using code knowledge graphs.",
+        id: "coding-agent-change",
+        icon: "⚙️",
+        title: "Coding Agents for Software Change",
+        summary: "Execution feedback, static anchors, impact relations, and change-history quality for repository-level agents.",
         cardClassName: "bg-blue-50 dark:bg-blue-900/30",
         detail:
-          "This direction targets practical, end-to-end debugging and repair workflows. We combine static analysis signals with LLM reasoning (often via agents) to localize faults, propose patches, and validate fixes efficiently.",
+          "This direction studies coding agents as software-change systems rather than only patch generators. I measure how execution, repository structure, impact relations, and commit organization affect reliability and maintainability.",
         focus: [
-          "Fault localization with hybrid signals (static + LLM/agents)",
-          "Patch generation with constraints (compilation/tests/semantics)",
-          "Change impact analysis using code knowledge graphs",
-          "Evaluation on real projects and reproducible pipelines",
+          "When execution feedback is worth its cost",
+          "How static structure stabilizes repository navigation",
+          "How agents reason about change impact and patch history",
+          "Process quality beyond final test passing",
         ],
-        methods: ["Static analysis (call/data flow, slicing)", "Agentic search and iterative refinement", "Knowledge graph construction + queries"],
-        outputs: ["Repair/localization artifacts", "Benchmarks + ablation studies", "Tooling that integrates with developer workflows"],
+        methods: ["Agent trace analysis", "Controlled ablations", "Repository mining", "Static-analysis signals"],
+        outputs: ["Design guidelines", "Process-quality metrics", "Benchmarks for agent behavior"],
+        related: [
+          { label: "CodeAnchor (ISSTA 2026)", href: "/papers/issta2026-codeanchor.pdf" },
+          { label: "To Run or Not to Run (ISSTA 2026)", href: "/papers/issta2026-to-run-or-not-to-run.pdf" },
+        ],
+      },
+      {
+        id: "repo-scale-envs",
+        icon: "🧪",
+        title: "Repo-Scale Benchmarks & SWE Environments",
+        summary: "Low-leakage, execution-backed tasks for repair, migration, compatibility rescue, and domain-specific SWE agents.",
+        cardClassName: "bg-purple-50 dark:bg-purple-900/30",
+        detail:
+          "This direction turns realistic software evolution into verifiable environments. The goal is to evaluate agents under source-only checks, runtime constraints, scenario validation, and domain-specific execution feedback.",
+        focus: [
+          "Whole-repository tasks beyond file-level benchmarks",
+          "Compatibility and ecosystem-drift repair",
+          "OpenHarmony-style domain SWE environments",
+          "Verifier and leakage-control protocol design",
+        ],
+        methods: ["Benchmark construction", "Execution harnesses", "Source-only validation", "Failure taxonomy"],
+        outputs: ["Repo-scale task suites", "Verifier protocols", "Evidence for agent training"],
         related: [
           { label: "To Run or Not to Run (ISSTA 2026)", href: "/papers/issta2026-to-run-or-not-to-run.pdf" },
-          { label: "CodeAnchor (ISSTA 2026)", href: "/papers/issta2026-codeanchor.pdf" },
           { label: "HapRepair (FSE Industry 2025)", href: "https://doi.org/10.1145/3696630.3728556" },
         ],
       },
       {
-        id: "llm-security",
-        icon: "🛡️",
-        title: "LLM Security & Optimization",
-        summary: "Jailbreaking defense mechanisms and prompt optimization techniques for safer AI systems.",
-        cardClassName: "bg-purple-50 dark:bg-purple-900/30",
-        detail:
-          "This direction studies how to evaluate and improve the robustness of LLM-based systems under adversarial or shifting conditions, including jailbreak attempts and prompt drift.",
-        focus: [
-          "Jailbreak evaluation (adaptive/iterative attacks)",
-          "Defense mechanisms and measurement (safety vs utility)",
-          "Prompt robustness under model updates and drift",
-          "Optimization strategies for stable, safer behavior",
-        ],
-        methods: ["Multi-agent evaluation", "Adversarial testing harnesses", "Regression testing for prompts"],
-        outputs: ["Robustness benchmarks", "Defense/mitigation insights", "Practical guidelines for safe deployment"],
-        related: [
-          { label: "MazeBreaker (ICSE 2026)", href: "/papers/ICSE_2026.pdf" },
-          { label: "Exploring Code Analysis (TOSEM 2026)", href: "https://dl.acm.org/doi/10.1145/3818607" },
-        ],
-      },
-      {
-        id: "domain-se",
+        id: "openharmony-toolchains",
         icon: "📱",
-        title: "Domain-Specific SE",
-        summary: "OpenHarmony ecosystem app repair, low-resource language LLM applications (e.g., Cangjie).",
+        title: "OpenHarmony & Emerging-Language Toolchains",
+        summary: "Ecosystem-aware repair, migration, performance analysis, and program-analysis infrastructure for ArkTS and Cangjie.",
         cardClassName: "bg-green-50 dark:bg-green-900/30",
         detail:
-          "This direction focuses on domain constraints and ecosystem-specific semantics. We build analysis and repair techniques tailored to OpenHarmony apps, and explore LLM applications in low-resource language settings.",
+          "This direction builds tools for ecosystems where general-purpose SE techniques are not enough. OpenHarmony, ArkTS, and Cangjie require domain rules, executable feedback, and platform-aware evaluation.",
         focus: [
-          "OpenHarmony app quality: defects, patterns, and repair",
-          "Ecosystem-aware static rules (ArkTS/HarmonyOS APIs)",
-          "Low-resource language scenarios (e.g., Cangjie) as applied settings",
-          "Human-in-the-loop feedback with practitioners",
+          "OpenHarmony app repair and quality assurance",
+          "Android-to-OpenHarmony migration",
+          "ArkUI performance and rendered-state evaluation",
+          "LLM-assisted analysis for emerging languages",
         ],
-        methods: ["Domain rule mining", "Ecosystem-aware static analysis", "Tool evaluation with industry feedback"],
-        outputs: ["Ecosystem-specific tooling", "Actionable rules and repair hints", "Reusable datasets (when possible)"],
+        methods: ["Domain rule mining", "ArkTS static analysis", "LLM adaptation", "Rendered UI evaluation"],
+        outputs: ["OpenHarmony tools", "Migration workflows", "Domain datasets and cases"],
         related: [
           { label: "Phantom Rendering Detection (FSE 2026)", href: "/papers/hapray_fse.pdf" },
           { label: "HapRepair (FSE Industry 2025)", href: "https://doi.org/10.1145/3696630.3728556" },
           { label: "Cangjie Fine-tuning (EMSE 2026)", href: "https://link.springer.com/article/10.1007/s10664-026-10878-4" },
+        ],
+      },
+      {
+        id: "measurement",
+        icon: "📊",
+        title: "Code Understanding & AI4SE Measurement",
+        summary: "Capability probes and evaluation protocols for LLM code understanding, AI4SE tools, and LLM-in-the-loop systems.",
+        cardClassName: "bg-cyan-50 dark:bg-cyan-900/30",
+        detail:
+          "This direction provides the measurement layer for the rest of my research: what LLMs understand about code, how AI4SE tools fail, and what evidence is needed before we trust a result.",
+        focus: [
+          "Syntax, static-behavior, and dynamic-behavior evaluation",
+          "Tool-ecosystem surveys and failure-mode analysis",
+          "Human-audited and leakage-aware evaluation",
+          "Robustness measurement from completed safety work",
+        ],
+        methods: ["Capability probing", "Empirical surveys", "Human-audited evaluation", "Benchmark critique"],
+        outputs: ["Capability maps", "Evaluation protocols", "AI4SE tool guidelines"],
+        related: [
+          { label: "Exploring Code Analysis (TOSEM 2026)", href: "https://dl.acm.org/doi/10.1145/3818607" },
+          { label: "Open-Source AI-based SE Tools (TOSEM 2024)", href: "/papers/fse_2030.pdf" },
+          { label: "MazeBreaker (ICSE 2026)", href: "/papers/ICSE_2026.pdf" },
         ],
       },
     ],
@@ -92,7 +113,7 @@ export function AboutResearchDirections() {
 
   return (
     <>
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid md:grid-cols-2 gap-4">
         {directions.map((d) => (
           <button
             key={d.id}
@@ -152,7 +173,7 @@ export function AboutResearchDirections() {
 
               {selected.related && selected.related.length > 0 && (
                 <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Links</h4>
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Representative Works</h4>
                   <div className="flex flex-wrap gap-3">
                     {selected.related.map((link) => (
                       <Link

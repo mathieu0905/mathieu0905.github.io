@@ -33,8 +33,8 @@ const collaborationGroups: {
     org: "BTH",
     initial: "B",
     name: "Blekinge Institute of Technology (BTH)",
-    subtitle: "LLM 代码理解 / 安全评测",
-    topics: ["LLM 代码理解与语义评估", "LLM 越狱与安全评测", "AI4SE 开源生态与实证研究"],
+    subtitle: "LLM 代码理解 / AI4SE 评估",
+    topics: ["LLM 代码理解与语义评估", "MazeBreaker 自适应评测", "AI4SE 开源生态与实证研究"],
     badgeClassName: "bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400",
   },
   {
@@ -241,24 +241,25 @@ export default function Home() {
 
               {/* 研究概述 */}
               <p>
-                研究聚焦于<strong className="text-blue-600 dark:text-blue-400">AI for Software Engineering (AI4SE)</strong>，将大语言模型（LLM）与程序分析技术结合，构建更可靠、更安全的软件工程智能工具。
-                我的工作横跨多个子方向——从自动化程序修复到 LLM 安全评估，从领域特定的生态质量保障到低资源编程语言支持——始终围绕同一个核心：<em>让 AI 真正可靠地服务于软件工程实践</em>。
+                研究聚焦于<strong className="text-blue-600 dark:text-blue-400">AI for Software Engineering (AI4SE)</strong>，将大语言模型（LLM）、程序分析和可验证软件工程环境结合，构建更可靠的代码智能体与生态工具链。
+                我的工作横跨多个子方向——从执行反馈与静态锚点，到仓库级基准、变更影响分析、OpenHarmony 生态质量保障和低资源编程语言支持——始终围绕同一个核心：<em>让 AI 真正可靠地服务于软件工程实践</em>。
               </p>
 
               {/* 研究动机与愿景 */}
               <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">研究动机与愿景</h3>
                 <p>
-                  大语言模型展现了令人瞩目的代码生成能力，但其输出往往缺乏真实部署所需的可靠性与安全性保障。
-                  我的研究围绕一个核心问题展开：<em>如何将 LLM 的生成能力与程序分析的严谨性结合，打造真正可信赖的软件工程工具？</em>
+                  大语言模型已经展现出很强的代码生成能力，但真实软件工程并不只需要“写出补丁”：
+                  agent 还要理解仓库、选择证据、控制执行成本、维护变更历史，并在特定生态中经得起验证。
+                  我的研究围绕一个核心问题展开：<em>如何把 LLM 的生成能力、程序分析的确定性和真实软件工程环境结合起来，构建可靠的代码智能体与生态工具链？</em>
                 </p>
                 <p className="mt-2">
-                  具体来说，这意味着：在<strong className="text-gray-900 dark:text-white">程序修复</strong>场景中，让 LLM 不仅能生成补丁，还能通过静态分析验证其正确性（如 <a href="https://doi.org/10.1145/3696630.3728556" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">HapRepair</a>）；
-                  在<strong className="text-gray-900 dark:text-white">安全</strong>场景中，系统性地评估和加固 LLM 的防御能力（如 <a href="/papers/ICSE_2026.pdf" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">MazeBreaker</a>）；
-                  在<strong className="text-gray-900 dark:text-white">智能体</strong>场景中，分析执行反馈到底何时值得使用（如 <a href="/papers/issta2026-to-run-or-not-to-run.pdf" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">To Run or Not to Run</a>），并用轻量静态结构提升代码定位稳定性（如 <a href="/papers/issta2026-codeanchor.pdf" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">CodeAnchor</a>）。
+                  具体来说，这意味着：在<strong className="text-gray-900 dark:text-white">代码智能体</strong>场景中，分析执行反馈到底何时值得使用（如 <a href="/papers/issta2026-to-run-or-not-to-run.pdf" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">To Run or Not to Run</a>），并用轻量静态结构提升仓库导航稳定性（如 <a href="/papers/issta2026-codeanchor.pdf" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">CodeAnchor</a>）；
+                  在<strong className="text-gray-900 dark:text-white">OpenHarmony 生态</strong>中，把领域规则、静态分析、LLM 和真实反馈结合起来做修复、迁移和性能分析（如 <a href="https://doi.org/10.1145/3696630.3728556" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">HapRepair</a> 与 <a href="/papers/hapray_fse.pdf" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">Phantom Rendering Detection</a>）；
+                  在<strong className="text-gray-900 dark:text-white">评估与度量</strong>层面，系统分析 LLM 到底理解了什么代码知识，以及 AI4SE 工具应该如何被可靠衡量。
                 </p>
                 <p className="mt-2">
-                  长远愿景是<strong className="text-blue-600 dark:text-blue-400">构建高效可靠的智能体（Agent）</strong>——它不仅能生成代码，更能自主地理解代码库结构、定位缺陷、评估变更影响、生成可验证的修复方案，最终实现从「AI 辅助编码」到「AI 自主工程」的跨越。
+                  长远愿景是<strong className="text-blue-600 dark:text-blue-400">构建高效可靠的代码智能体与可验证 SWE 环境</strong>：让 agent 不仅能生成代码，更能自主理解代码库结构、定位缺陷、评估变更影响、维护原子化修改过程，并在真实生态中生成可验证的工程方案。
                 </p>
               </div>
 
@@ -333,19 +334,19 @@ export default function Home() {
                   <div className="relative">
                     <div className="absolute -left-[25px] w-3 h-3 rounded-full bg-red-500" />
                     <div className="text-sm font-mono text-blue-600 dark:text-blue-400">2025.06</div>
-                    <div><strong className="text-gray-900 dark:text-white">MazeBreaker</strong> 被 ICSE 2026 接收 — 多智能体强化学习越狱框架，向 LLM 安全方向发力</div>
+                    <div><strong className="text-gray-900 dark:text-white">MazeBreaker</strong> 被 ICSE 2026 接收 — 用多智能体强化学习做自适应安全评估，也强化了我后续做评测方法论的经验</div>
                   </div>
                   <div className="relative">
                     <div className="absolute -left-[25px] w-3 h-3 rounded-full bg-cyan-500" />
                     <div className="text-sm font-mono text-blue-600 dark:text-blue-400">2025–2026</div>
-                    <div>研究全面铺开：Phantom Rendering（FSE 2026）、Cangjie 微调（EMSE 2026），以及多个在投稿件涵盖代码理解、Agent 推理、变更影响分析等方向</div>
+                    <div>研究全面铺开：Phantom Rendering（FSE 2026）、Cangjie 微调（EMSE 2026），以及多个在投工作围绕仓库级兼容性维护、变更影响分析、原子提交重构和 OpenHarmony 迁移环境展开</div>
                   </div>
                 </div>
               </div>
 
               {/* 合作与发表 */}
               <p className="mt-4">
-                我与<strong className="text-gray-900 dark:text-white">华为</strong>（OpenHarmony 生态质量、UI 性能分析）、<strong className="text-gray-900 dark:text-white">BTH 的 Wei Ma</strong>（LLM 代码理解与安全评测）以及 <strong className="text-gray-900 dark:text-white">SMU 的 Zhensu Sun</strong>（LLM 编程智能体与执行效率）保持紧密合作。
+                我与<strong className="text-gray-900 dark:text-white">华为</strong>（OpenHarmony 生态质量、UI 性能分析）、<strong className="text-gray-900 dark:text-white">BTH 的 Wei Ma</strong>（LLM 代码理解与 AI4SE 评估）以及 <strong className="text-gray-900 dark:text-white">SMU 的 Zhensu Sun</strong>（LLM 编程智能体与执行效率）保持紧密合作。
                 迄今已在 <strong className="text-gray-900 dark:text-white">ICSE</strong>、<strong className="text-gray-900 dark:text-white">FSE</strong>、<strong className="text-gray-900 dark:text-white">TOSEM</strong>、<strong className="text-gray-900 dark:text-white">EMSE</strong> 等软件工程顶级会议和期刊发表论文，另有多篇工作在投。
               </p>
 
@@ -371,7 +372,7 @@ export default function Home() {
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">研究兴趣</h2>
             <div className="flex flex-wrap gap-2">
-              {["程序修复", "LLM 安全", "静态分析", "代码生成", "OpenHarmony", "越狱防御", "知识图谱", "提示工程", "低资源语言"].map(tag => (
+              {["代码智能体", "程序修复", "执行反馈", "仓库级基准", "变更影响分析", "原子提交", "OpenHarmony", "静态分析", "代码理解", "低资源语言"].map(tag => (
                 <span key={tag} className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium">
                   {tag}
                 </span>
@@ -425,7 +426,7 @@ export default function Home() {
               </div>
             </a>
             <a
-              href="https://gitcode.com/ArkAnalyzer/HomeTrans"
+              href="https://gitcode.com/SMAT/HomeTrans"
               target="_blank"
               rel="noopener noreferrer"
               className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] group"

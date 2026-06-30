@@ -20,53 +20,89 @@ export function AboutResearchDirectionsZh() {
   const directions = useMemo<Direction[]>(
     () => [
       {
-        id: "apr",
-        icon: "🔧",
-        title: "自动化程序修复",
-        summary: "探索基于 LLM 的故障定位与修复，以及基于代码知识图谱的影响分析。",
+        id: "coding-agent-change",
+        icon: "⚙️",
+        title: "代码智能体与软件变更过程",
+        summary: "研究执行反馈、静态锚点、影响关系和变更历史质量如何影响仓库级代码智能体。",
         cardClassName: "bg-blue-50 dark:bg-blue-900/30",
         detail:
-          "该方向关注可落地的端到端调试与修复流程：结合静态分析信号与 LLM（常以 Agent 形式）推理，实现定位—补丁生成—验证闭环。",
-        focus: ["混合信号的缺陷定位（静态分析 + LLM/Agent）", "带约束的补丁生成（可编译/测试/语义）", "基于代码知识图谱的变更影响分析", "在真实项目上系统评估与复现"],
-        methods: ["静态分析（调用/数据流、切片等）", "Agent 式搜索与迭代改进", "知识图谱构建与查询"],
-        outputs: ["定位/修复流程与工具原型", "基准数据与消融实验", "可集成到开发流程的工程化产物"],
+          "这条主线把代码智能体看作真实的软件变更系统，而不只是补丁生成器。我关注执行、仓库结构、影响关系和提交组织方式如何影响 agent 的可靠性与可维护性。",
+        focus: [
+          "执行反馈什么时候值得使用",
+          "静态结构如何稳定仓库导航",
+          "agent 如何理解变更影响与补丁历史",
+          "最终测试通过之外的过程质量",
+        ],
+        methods: ["Agent 轨迹分析", "受控消融实验", "软件仓库挖掘", "静态分析信号"],
+        outputs: ["代码智能体设计原则", "过程质量度量", "agent 行为基准"],
+        related: [
+          { label: "CodeAnchor (ISSTA 2026)", href: "/papers/issta2026-codeanchor.pdf" },
+          { label: "To Run or Not to Run (ISSTA 2026)", href: "/papers/issta2026-to-run-or-not-to-run.pdf" },
+        ],
+      },
+      {
+        id: "repo-scale-envs",
+        icon: "🧪",
+        title: "仓库级基准与可验证 SWE 环境",
+        summary: "构建低泄漏、可执行的真实软件工程任务，覆盖修复、迁移、兼容性维护和领域化 SWE agent。",
+        cardClassName: "bg-purple-50 dark:bg-purple-900/30",
+        detail:
+          "这条主线把真实软件演化问题转化成可验证环境，让 agent 在 source-only 检查、运行时约束、场景验证和领域执行反馈下接受评估。",
+        focus: [
+          "超越文件级 benchmark 的仓库级任务",
+          "兼容性维护与生态漂移修复",
+          "OpenHarmony 风格的领域 SWE 环境",
+          "verifier 与泄漏控制协议设计",
+        ],
+        methods: ["基准构建", "执行环境设计", "source-only 验证", "失败模式分类"],
+        outputs: ["仓库级任务集", "验证协议", "agent 训练与评估证据"],
         related: [
           { label: "To Run or Not to Run (ISSTA 2026)", href: "/papers/issta2026-to-run-or-not-to-run.pdf" },
-          { label: "CodeAnchor (ISSTA 2026)", href: "/papers/issta2026-codeanchor.pdf" },
           { label: "HapRepair (FSE Industry 2025)", href: "https://doi.org/10.1145/3696630.3728556" },
         ],
       },
       {
-        id: "llm-security",
-        icon: "🛡️",
-        title: "LLM 安全与优化",
-        summary: "研究越狱攻击/防御、提示词优化与鲁棒性评估，提升系统安全性与稳定性。",
-        cardClassName: "bg-purple-50 dark:bg-purple-900/30",
-        detail:
-          "该方向研究如何在对抗场景与模型更新/漂移下，系统性评估并提升 LLM 应用的安全性、鲁棒性与可用性。",
-        focus: ["越狱评估（自适应/迭代攻击）", "防御机制与度量（安全 vs 可用）", "提示词鲁棒性（模型更新导致的退化）", "稳定行为的优化策略"],
-        methods: ["多智能体评测", "对抗测试框架", "提示词回归测试与自动修复"],
-        outputs: ["鲁棒性/安全基准", "防御与缓解经验", "可落地的安全部署建议"],
-        related: [
-          { label: "MazeBreaker (ICSE 2026)", href: "/papers/ICSE_2026.pdf" },
-          { label: "Exploring Code Analysis (TOSEM 2026)", href: "https://dl.acm.org/doi/10.1145/3818607" },
-        ],
-      },
-      {
-        id: "domain-se",
+        id: "openharmony-toolchains",
         icon: "📱",
-        title: "领域软件工程",
-        summary: "面向 OpenHarmony 生态的应用修复与质量保障；低资源语言场景（如 Cangjie）的 LLM 应用探索。",
+        title: "OpenHarmony 与新生语言工具链",
+        summary: "面向 ArkTS 和 Cangjie 构建生态感知的修复、迁移、性能分析和程序分析基础设施。",
         cardClassName: "bg-green-50 dark:bg-green-900/30",
         detail:
-          "该方向强调领域约束与生态特性：面向 OpenHarmony 应用构建生态感知的分析/修复技术，并在低资源语言场景中探索 LLM 的可用性与工程化实践。",
-        focus: ["OpenHarmony 应用缺陷与修复", "生态感知规则（ArkTS/HarmonyOS API）", "低资源语言（如 Cangjie）应用场景探索", "与工程实践结合的反馈闭环"],
-        methods: ["领域规则挖掘", "生态感知静态分析", "与产业伙伴的评测与迭代"],
-        outputs: ["面向生态的工具与规则", "可操作的修复建议", "可复用的数据与案例（在条件允许时）"],
+          "这条主线服务于通用软件工程技术不够用的新生生态。OpenHarmony、ArkTS 和 Cangjie 需要领域规则、可执行反馈和平台感知的评估方式。",
+        focus: [
+          "OpenHarmony 应用修复与质量保障",
+          "Android 到 OpenHarmony 迁移",
+          "ArkUI 性能与渲染状态评估",
+          "面向新生语言的 LLM 辅助分析",
+        ],
+        methods: ["领域规则挖掘", "ArkTS 静态分析", "LLM 适配", "渲染/UI 评估"],
+        outputs: ["OpenHarmony 工具链", "迁移流程", "领域数据与案例"],
         related: [
           { label: "Phantom Rendering Detection (FSE 2026)", href: "/papers/hapray_fse.pdf" },
           { label: "HapRepair (FSE Industry 2025)", href: "https://doi.org/10.1145/3696630.3728556" },
           { label: "Cangjie Fine-tuning (EMSE 2026)", href: "https://link.springer.com/article/10.1007/s10664-026-10878-4" },
+        ],
+      },
+      {
+        id: "measurement",
+        icon: "📊",
+        title: "代码理解与 AI4SE 度量",
+        summary: "为 LLM 代码理解、AI4SE 工具和 LLM-in-the-loop 系统设计能力探针与评测协议。",
+        cardClassName: "bg-cyan-50 dark:bg-cyan-900/30",
+        detail:
+          "这条主线为其他工作提供测量层：LLM 到底理解了什么代码知识，AI4SE 工具会怎样失败，以及什么证据才足以支撑一个可靠结论。",
+        focus: [
+          "语法、静态行为与动态行为评估",
+          "工具生态调研与失败模式分析",
+          "人工审计和泄漏感知评估",
+          "来自已完成安全工作的鲁棒性度量经验",
+        ],
+        methods: ["能力探针", "工具生态实证研究", "人工审计评估", "基准批判"],
+        outputs: ["能力图谱", "评估协议", "AI4SE 工具设计建议"],
+        related: [
+          { label: "Exploring Code Analysis (TOSEM 2026)", href: "https://dl.acm.org/doi/10.1145/3818607" },
+          { label: "Open-Source AI-based SE Tools (TOSEM 2024)", href: "/papers/fse_2030.pdf" },
+          { label: "MazeBreaker (ICSE 2026)", href: "/papers/ICSE_2026.pdf" },
         ],
       },
     ],
@@ -77,7 +113,7 @@ export function AboutResearchDirectionsZh() {
 
   return (
     <>
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid md:grid-cols-2 gap-4">
         {directions.map((d) => (
           <button
             key={d.id}
@@ -137,7 +173,7 @@ export function AboutResearchDirectionsZh() {
 
               {selected.related && selected.related.length > 0 && (
                 <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">相关链接</h4>
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">代表性工作</h4>
                   <div className="flex flex-wrap gap-3">
                     {selected.related.map((link) => (
                       <Link

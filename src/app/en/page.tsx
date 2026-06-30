@@ -33,8 +33,8 @@ const collaborationGroups: {
     org: "BTH",
     initial: "B",
     name: "Blekinge Institute of Technology (BTH)",
-    subtitle: "LLM code understanding / security evaluation",
-    topics: ["LLM code understanding and semantic evaluation", "LLM jailbreak and security evaluation", "AI4SE open-source ecosystem studies"],
+    subtitle: "LLM code understanding / AI4SE evaluation",
+    topics: ["LLM code understanding and semantic evaluation", "MazeBreaker adaptive evaluation", "AI4SE open-source ecosystem studies"],
     badgeClassName: "bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400",
   },
   {
@@ -157,7 +157,7 @@ export default function HomeEn() {
               </p>
               <p>
                 My research focuses on <strong className="text-blue-600 dark:text-blue-400">AI for Software Engineering (AI4SE)</strong>,
-                combining Large Language Models (LLMs) with static analysis techniques to solve complex problems in software engineering.
+                combining Large Language Models (LLMs), static analysis, and verifiable software-engineering environments to study reliable coding agents and ecosystem-specific toolchains.
               </p>
 
               <div className="mt-6 space-y-4">
@@ -167,7 +167,7 @@ export default function HomeEn() {
 
               <p className="mt-4">
                 I collaborate closely with <strong className="text-gray-900 dark:text-white">Huawei</strong> on OpenHarmony quality and UI performance,{" "}
-                <strong className="text-gray-900 dark:text-white">Wei Ma at BTH</strong> on LLM code understanding and security evaluation, and{" "}
+                <strong className="text-gray-900 dark:text-white">Wei Ma at BTH</strong> on LLM code understanding and AI4SE evaluation, and{" "}
                 <strong className="text-gray-900 dark:text-white">Zhensu Sun at SMU</strong> on LLM coding agents and execution efficiency.
                 My work has been published at top SE venues including <strong className="text-gray-900 dark:text-white">ICSE</strong>,
                 <strong className="text-gray-900 dark:text-white"> FSE</strong>, <strong className="text-gray-900 dark:text-white">TOSEM</strong>, and <strong className="text-gray-900 dark:text-white">EMSE</strong>.
@@ -181,7 +181,7 @@ export default function HomeEn() {
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Research Interests</h2>
             <div className="flex flex-wrap gap-2">
-              {["Program Repair", "LLM Security", "Static Analysis", "Code Generation", "OpenHarmony", "Jailbreak Defense", "Knowledge Graph", "Prompt Engineering", "Low-resource Languages"].map(tag => (
+              {["Coding Agents", "Program Repair", "Execution Feedback", "Repo-Scale Benchmarks", "Change Impact Analysis", "Atomic Commits", "OpenHarmony", "Static Analysis", "Code Understanding", "Low-resource Languages"].map(tag => (
                 <span key={tag} className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium">
                   {tag}
                 </span>
@@ -235,7 +235,7 @@ export default function HomeEn() {
               </div>
             </a>
             <a
-              href="https://gitcode.com/ArkAnalyzer/HomeTrans"
+              href="https://gitcode.com/SMAT/HomeTrans"
               target="_blank"
               rel="noopener noreferrer"
               className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] group"
