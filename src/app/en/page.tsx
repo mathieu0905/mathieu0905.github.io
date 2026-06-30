@@ -203,7 +203,7 @@ export default function HomeEn() {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Open-Source Tools</h2>
           <div className="grid md:grid-cols-3 gap-4">
             <a
-              href="https://github.com/ArkAnalyzer-HapRay"
+              href="https://gitcode.com/SMAT/ArkAnalyzer-HapRay"
               target="_blank"
               rel="noopener noreferrer"
               className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] group"
@@ -215,7 +215,7 @@ export default function HomeEn() {
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Performance analysis tool for OpenHarmony apps, detecting Phantom Rendering issues in UI.</p>
               <div className="flex flex-wrap gap-2">
                 <span className="px-2 py-0.5 bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 rounded text-xs font-medium">FSE 2026</span>
-                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">GitHub</span>
+                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">GitCode</span>
               </div>
             </a>
             <a

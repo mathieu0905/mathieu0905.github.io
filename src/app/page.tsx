@@ -155,56 +155,6 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="mb-8">
-          <div className="grid gap-4 lg:grid-cols-[1fr_0.55fr]">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-              <div className="flex flex-wrap items-center gap-2 mb-3">
-                <span className="px-2.5 py-1 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs font-semibold">NEW</span>
-                <span className="px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-semibold">基模组备战</span>
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">ML 地基与 Agentic Code Model 学习台</h2>
-              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                面向代码基模与 SWE Agent 训练方向整理的交互式复习资料：覆盖 loss、Transformer、分布式训练、SFT/RL、verifier、execution feedback 和前沿模型报告。
-              </p>
-              <div className="mt-5 flex flex-wrap gap-3">
-                <Link href="/prep" className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors">
-                  打开学习台
-                </Link>
-                <Link href="/blog/agentic-code-model-training-2026" className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-                  阅读前沿综述
-                </Link>
-              </div>
-            </div>
-            <div className="bg-gray-950 rounded-2xl p-6 shadow-lg text-white">
-              <div className="text-sm font-semibold text-blue-200 mb-3">复习主线</div>
-              <div className="space-y-3 text-sm text-gray-200">
-                <div className="flex gap-2"><span className="text-blue-300">01</span><span>先把训练曲线、loss、optimizer、显存讲稳。</span></div>
-                <div className="flex gap-2"><span className="text-blue-300">02</span><span>再读 GLM-5.2、DeepSeek-V4、IQuest-Coder 等技术报告。</span></div>
-                <div className="flex gap-2"><span className="text-blue-300">03</span><span>最后把 CodeAnchor / To Run 接到 agentic training 语言里。</span></div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <div className="mb-2 inline-flex rounded-full bg-cyan-100 px-2.5 py-1 text-xs font-semibold text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-200">
-                  ARIS-in-AI-Offer 整合
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">AI 知识库</h2>
-                <p className="mt-2 max-w-3xl text-gray-600 dark:text-gray-300 leading-relaxed">
-                  28 个 AI / LLM / 多模态 / Diffusion / Agent 面试知识点，支持分类浏览、关键词搜索和中英文切换。
-                </p>
-              </div>
-              <Link href="/ai-knowledge" className="self-start rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700">
-                打开知识库
-              </Link>
-            </div>
-          </div>
-        </section>
-
         {/* 关于我 */}
         <section id="about" className="mb-8">
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
@@ -394,7 +344,7 @@ export default function Home() {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">开源工具</h2>
           <div className="grid md:grid-cols-3 gap-4">
             <a
-              href="https://github.com/ArkAnalyzer-HapRay"
+              href="https://gitcode.com/SMAT/ArkAnalyzer-HapRay"
               target="_blank"
               rel="noopener noreferrer"
               className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] group"
@@ -406,7 +356,7 @@ export default function Home() {
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">OpenHarmony 应用性能分析工具，用于检测 UI 中的 Phantom Rendering（幽灵渲染）问题。</p>
               <div className="flex flex-wrap gap-2">
                 <span className="px-2 py-0.5 bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 rounded text-xs font-medium">FSE 2026</span>
-                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">GitHub</span>
+                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">GitCode</span>
               </div>
             </a>
             <a
@@ -568,6 +518,25 @@ export default function Home() {
                 </div>
               </div>
             ))}
+          </div>
+        </section>
+
+        <section className="mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <div className="mb-2 inline-flex rounded-full bg-cyan-100 px-2.5 py-1 text-xs font-semibold text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-200">
+                  ARIS-in-AI-Offer 整合
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">AI 知识库</h2>
+                <p className="mt-2 max-w-3xl text-gray-600 dark:text-gray-300 leading-relaxed">
+                  28 个 AI / LLM / 多模态 / Diffusion / Agent 面试知识点，支持分类浏览、关键词搜索和中英文切换。
+                </p>
+              </div>
+              <Link href="/ai-knowledge" className="self-start rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700">
+                打开知识库
+              </Link>
+            </div>
           </div>
         </section>
 

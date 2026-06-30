@@ -8,6 +8,8 @@ coverColor: "from-slate-900 to-blue-600"
 
 这篇文章不是模型新闻列表，也不是为了证明我"懂很多新模型"。我真正想整理的是另一件事：代码基模正在从单函数 code generation，走到 repo-level、tool-use、long-horizon 的 agentic engineering。这个变化对软件工程研究者很实在，因为很多训练问题的源头不在模型结构，而在任务、数据、环境、verifier 和反馈预算。
 
+配套的复习学习台我放在这里：[代码基模训练备战](/prep)。
+
 我这次主要用 alphaXiv 的 paper/overview 页面复习论文，再对照 arXiv HTML 里的原图和官方技术报告页面。这样读起来比只看 PDF 更顺，图也更接近论文现场。下面每一节我都会尽量按同一个顺序写：
 
 1. 这篇材料到底在解决什么问题。
