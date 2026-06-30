@@ -1,17 +1,9 @@
 ## §0 TL;DR Cheat Sheet
-
-### 2026-06-29 SOTA Snapshot
-
-- **Image-generation systems are no longer only the SDXL/SD3/FLUX open-stack lineage.** OpenAI API docs list `gpt-image-2` as the latest GPT Image model for generation and editing, with more flexible sizing; Google's Gemini 3 Image / Nano Banana line emphasizes reasoning-driven image generation and multi-turn editing. Open diffusion/flow stacks remain best for research and controllable deployment, but product SOTA has clearly moved toward native multimodal image models.
-- **The new capability focus is text rendering, multi-turn editing, reference consistency, and world knowledge, not just FID/aesthetic scores.** Nano Banana Pro/2 emphasizes legible text, complex editing, real-world knowledge, and SynthID; GPT Image models unify text+image input with generation and editing. Treat ControlNet/IP-Adapter/LoRA below as controllable open-ecosystem components, not as the upper bound of current product capability.
-- **Deployment decisions now need provenance and safety layers.** Commercial image models increasingly include watermark/SynthID/C2PA-style provenance, content filtering, and restrictions around people/copyright. Local FLUX/SD-style stacks offer more control, but need their own safety and provenance policy.
-- Sources: [OpenAI Image Generation](https://developers.openai.com/api/docs/guides/image-generation), [GPT Image 2 model docs](https://developers.openai.com/api/docs/models/gpt-image-2), [OpenAI image API reference](https://developers.openai.com/api/reference/resources/images/methods/generate/), [Google Nano Banana Pro](https://blog.google/innovation-and-ai/products/nano-banana-pro/), [Gemini image generation docs](https://ai.google.dev/gemini-api/docs/image-generation), [Gemini 3 Pro Image](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/3-pro-image).
-
-> 💡 **8 sentences to nail Image Generation systems** — one page covering the core of a production text-to-image stack (see §1–§10 for derivations).
+> 💡 **9 sentences to nail Image Generation systems** — one page covering the core of a production text-to-image stack (see §1–§10 for derivations).
 
 1. **LDM essentials**: VAE encode compresses $H\times W\times 3$ to $h\times w\times c$ (SD 1.x: $8\times$ downsample, $c=4$); diffusion runs in latent space, **saving $8^2=64\times$ compute**, then VAE decode reconstructs pixels (Rombach et al. 2022 CVPR).
 
-2. **SD 1.x → SDXL → SD3 → FLUX lineage**: 1.x uses CLIP-L text encoder + U-Net; SDXL has dual encoders (OpenCLIP-G + CLIP-L) + 2.6B U-Net + size/crop conditioning + Refiner (Podell et al. 2024 ICLR); SD3 switches to **MM-DiT** + Rectified Flow (Esser et al. 2024 ICML); FLUX.1 is a 12B MM-DiT with parallel attention (Black Forest Labs 2024).
+2. **SD 1.x → SDXL → SD3 → FLUX lineage**: 1.x uses CLIP-L text encoder + U-Net; SDXL has dual encoders (OpenCLIP-G + CLIP-L) + 2.6B U-Net + size/crop conditioning + Refiner (Podell et al. 2024 ICLR); SD3 switches to **MM-DiT** + Rectified Flow (Esser et al. 2024 ICML); FLUX.1 is a 12B MM-DiT with parallel attention (Black Forest Labs 2024). On the 2026 product side, treat **GPT Image 2, Gemini / Nano Banana Pro**-style native multimodal image models separately: they package generation, editing, image-text understanding, and safety/provenance into one API.
 
 3. **CFG (must-know)**: at training, with probability $p_\text{drop}\approx 0.1$ replace condition $c$ with $\emptyset$; at inference, output $\hat\epsilon_\text{cfg} = \hat\epsilon_\emptyset + s\,(\hat\epsilon_c - \hat\epsilon_\emptyset)$, $s \in [1.5, 12]$ (Ho & Salimans 2022).
 
@@ -24,6 +16,8 @@
 7. **DreamBooth** (Ruiz et al. 2023 CVPR): rare-token (e.g., `sks dog`) + **prior preservation loss** $L = \|\epsilon - \hat\epsilon(x_t, t, \text{"a sks dog"})\|^2 + \lambda \|\epsilon' - \hat\epsilon(x_t', t, \text{"a dog"})\|^2$; the second term prevents language drift / overfitting.
 
 8. **DiT vs MM-DiT**: DiT uses **AdaLN-Zero** (condition $\to$ MLP $\to$ scale/shift/gate, last layer's $W_\text{gate}=0$ for identity warm start, Peebles & Xie 2023 ICCV); MM-DiT **concatenates text and image tokens into a single sequence for joint self-attention** (each modality has independent QKV projections, but attention is global), enabling bidirectional information flow (Esser et al. 2024).
+
+9. **Production concerns**: image generation is no longer judged only by FID/aesthetics. Compare **edit consistency, text rendering, character/product consistency, local mask editing, multi-image references, C2PA/provenance, safety filtering, and API stability**. Open FLUX/SD ecosystems are strong for controlled deployment and LoRA tooling; closed GPT Image/Gemini/Midjourney/Runway-style systems are strong for high-quality product workflows.
 
 ## §1 Intuition and Big Picture
 
@@ -164,6 +158,14 @@ Compared to SD 1.x/SDXL **cross-attention**: image queries unidirectionally read
 - **U-ViT** (Bao et al. 2023): U-Net-style backbone but pure transformer blocks + long skip connections, an early transformer-based diffusion exploration.
 
 - **Imagen** (Saharia et al. 2022 NeurIPS): Google's **pixel-space** (not latent) cascade — $64\times 64$ base + $256\times 256$ super-res + $1024\times 1024$ super-res; text uses a large T5-XXL, and results show **text encoder scale > U-Net scale** matters more for text alignment.
+
+### 3.6　Native multimodal image models (GPT Image / Gemini / Nano Banana)
+
+The 2025-2026 closed-source product line is no longer just "a T2I diffusion model + an editing script". It wraps **image understanding, generation, editing, text rendering, and safety systems** into one multimodal model/API:
+
+- **GPT Image 2 / OpenAI image generation API**: emphasizes a unified generation + editing interface, useful for connecting multi-turn natural-language edits, local editing, reference images, and product safety policy in one workflow. In engineering, check supported inputs/outputs, mask/edit semantics, text rendering, provenance, and content safety rather than only asking "is it a DiT?"
+- **Gemini image generation / Nano Banana Pro / Gemini 3 Pro Image**: Google's route connects Gemini multimodal understanding with image generation/editing, useful for documents, charts, product images, and instruction-heavy editing. Compared with the Imagen paper era, the product behaves more like VLM + image generator + safety/provenance as one system.
+- **Open FLUX/SD ecosystem vs closed native models**: open models are strong for LoRA, ControlNet/IP-Adapter, private deployment, reproducibility, and cost control; closed models are strong for default aesthetics, text rendering, complex editing, compliance, and multimodal context. Production selection should be based on controllability, data privacy, cost, quality, and auditability, not only leaderboard rank.
 
 ## §4 DiT Architecture and AdaLN-Zero (Must-Know)
 
@@ -1428,11 +1430,15 @@ Common pitfall: just listing tool names; can't estimate memory; doesn't know the
 
 - FLUX.1 — Black Forest Labs 2024 (technical report)
 
+- GPT Image 2 / OpenAI image generation API — OpenAI developer docs, 2026
+
 - PixArt-α / Σ — Chen, Yu et al. 2024 ICLR / ECCV
 
 - Hunyuan-DiT — Zhimin Li, Jianwei Zhang et al. 2024 (arXiv 2405.08748)
 
 - Imagen — Saharia, Chan et al. 2022 NeurIPS
+
+- Gemini image generation / Nano Banana Pro / Gemini 3 Pro Image — Google / Gemini docs and product notes, 2025-2026
 
 - ADD / SDXL-Turbo — Sauer, Lorenz et al. 2024 ECCV (arXiv 2311.17042)
 
@@ -1452,7 +1458,7 @@ Common pitfall: just listing tool names; can't estimate memory; doesn't know the
 
 ### One-sentence summary
 
-This cheat sheet covers latent diffusion mathematics (VAE + DDPM/RF + CFG) through mainstream architecture evolution (SD 1.x → SDXL → SD3 → FLUX), conditioning systems (ControlNet / T2I-Adapter / IP-Adapter / InstantID), personalization (DreamBooth / Textual Inversion / LoRA / Custom Diffusion), editing (SDEdit / InstructPix2Pix / Prompt-to-Prompt), distillation (LCM / ADD / DMD), and evaluation (FID / CLIP-Score / ImageReward / HPSv2). 25 questions are split L1/L2/L3; L3 emphasizes the production-lab viewpoint (zero-conv chain-rule derivation, size conditioning training effect, MM-DiT information flow, LoRA Q/K/V choice, SDXL + LCM-LoRA + ControlNet + IP-Adapter co-deployment trade-offs).
+This cheat sheet covers latent diffusion mathematics (VAE + DDPM/RF + CFG) through mainstream architecture evolution (SD 1.x → SDXL → SD3 → FLUX → GPT Image / Gemini native image models), conditioning systems (ControlNet / T2I-Adapter / IP-Adapter / InstantID), personalization (DreamBooth / Textual Inversion / LoRA / Custom Diffusion), editing (SDEdit / InstructPix2Pix / Prompt-to-Prompt), distillation (LCM / ADD / DMD), and evaluation/production governance (FID / CLIP-Score / ImageReward / HPSv2 / provenance / safety). 25 questions are split L1/L2/L3; L3 emphasizes the production-lab viewpoint (zero-conv chain-rule derivation, size conditioning training effect, MM-DiT information flow, LoRA Q/K/V choice, SDXL + LCM-LoRA + ControlNet + IP-Adapter co-deployment trade-offs).
 
 ---
 

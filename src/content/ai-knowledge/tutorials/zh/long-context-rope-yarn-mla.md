@@ -1,12 +1,4 @@
 ## §0 TL;DR Cheat Sheet
-
-### 2026-06-29 SOTA 快照
-
-- **1M context 已经是主流闭源 API 的公开规格之一**。OpenAI model docs 显示 GPT-5.5 为 1M context；Google Gemini 3.1 Pro Preview 文档列出 1,048,576 input tokens；Claude Fable/Opus 系列也在模型文档里强调长程 agentic work 和高输出上限。本文关于 RoPE/YaRN/MLA 的推导仍有用，但“长上下文 SOTA”不应只用 Qwen2.5-1M 或 Llama-3.1 来代表。
-- **长上下文前沿从“位置外推”扩展到“KV/attention 结构性降本”**。DeepSeek-V3.2/Exp 引入 DeepSeek Sparse Attention（DSA）以降低长上下文训练和推理成本；Qwen3-Next 用 Gated DeltaNet + Gated Attention 的 hybrid attention 支撑 256K 级超长文本。RoPE scaling 解决“位置知道多远”，DSA/hybrid/MLA 解决“算不算得起、存不存得下”。
-- **读长上下文模型报告时分三层判断**：上下文窗口标称值、needle/retrieval 质量、serving 成本。1M token 规格不等于 1M token 都能可靠召回；sparse/hybrid attention 会改变 recall failure mode；MLA/GQA/MQA 改 KV memory，但不自动解决长程推理。
-- 来源：[OpenAI model docs](https://developers.openai.com/api/docs/models)、[Gemini 3.1 Pro Preview](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview)、[Claude models overview](https://platform.claude.com/docs/en/about-claude/models/overview)、[DeepSeek-V3.2-Exp](https://api-docs.deepseek.com/news/news250929)、[DeepSeek-V3.2 Release](https://api-docs.deepseek.com/news/news251201)、[Qwen3-Next/vLLM](https://vllm.ai/blog/2025-09-11-qwen3-next)。
-
 > 💡 **8 句话搞定 Long Context** — 一页拿下面试核心要点（详见后文 §2–§9 推导）。
 
 1. **RoPE**：对每对维度 $(2i, 2i+1)$ 做位置 $m$ 相关的 2D 旋转，$\theta_i = 10000^{-2i/d}$。$q_m^\top k_n$ 仅依赖**相对位置** $m-n$（不依赖绝对 $m, n$ 各自），且无需训练参数。
@@ -23,7 +15,7 @@
 
 7. **Streaming + Sink (Xiao 2024 ICLR)**：保留前 4 个 token（attention sink，softmax 的"垃圾桶"）+ 滑动窗口；window 外的 token 直接丢，但 sink 不能丢，否则 PPL 爆炸。
 
-8. **System**：Ring Attention / Context Parallel 跨设备 chunk K/V；FlashAttention 2/3 块化 + online softmax；Mistral SWA 把每层感受野从 $L$ 降到 $W$（多层叠加仍可看远）。
+8. **2026 长上下文读法**：1M 窗口已经进入主流 API（如 GPT-5.5、Gemini 3.1 Pro Preview 的百万级 input tokens），开源/开放模型也在走 **MLA / DSA / hybrid attention** 路线：DeepSeek-V3.2 用稀疏注意力降低长上下文成本，Qwen3-Next 用 Gated DeltaNet + gated attention 混合架构支持 262K 原生、可扩到约 1M。面试时必须区分 **advertised context window、needle recall 质量、prefill/decode 成本、KV cache 显存** 四件事。
 
 ## §1 Long Context 为什么难 — 一段直觉
 
@@ -35,7 +27,7 @@
 
 - **注意力本身的 $O(L^2)$**：$L=100\text{K}$ 时 $L^2 = 10^{10}$，分数矩阵装不下。两条路：**算法变稀疏/线性**（sliding window, sparse attention, linear attention）或 **系统切分**（Ring Attention, Context Parallelism, FlashAttention 块化）。
 
-> ⚠️ **一句话区分扩展方法** — RoPE 系（PI / NTK / YaRN / LongRoPE）解决"位置编码外推"；MLA / MQA / GQA 解决"KV cache 显存"；FlashAttention / Ring / SWA / Sink 解决"算注意力的时间和显存"。**三者正交**，工业级长上下文模型（如 DeepSeek-V2、Qwen2.5-1M、Llama-3.1-405B）通常同时用三类。
+> ⚠️ **一句话区分扩展方法** — RoPE 系（PI / NTK / YaRN / LongRoPE）解决"位置编码外推"；MLA / MQA / GQA 解决"KV cache 显存"；FlashAttention / Ring / SWA / Sink / DSA 解决"算注意力的时间和显存"。**三者正交**，工业级长上下文模型（如 DeepSeek-V2/V3/V3.2、Qwen2.5-1M、Qwen3-Next、Llama-3.1-405B）通常同时用三类。API 标称 1M context 只说明入口能接 1M token，不自动保证中间位置 recall、长链推理和 serving 成本都可接受。
 
 ## §2 RoPE — 旋转位置编码
 
@@ -816,7 +808,7 @@ Q: 我要把上下文从 4K 推到 N tokens, N=?
 │    └── YaRN (NTK-by-parts + temperature)
 │
 ├── N > 128K (256K-2M)
-│    └── LongRoPE (每维独立搜索 + short-context rescue)
+│    └── LongRoPE / YaRN-family + 真实长上下文继续训练；服务端常叠 MLA/GQA/DSA/hybrid attention
 │
 └── 流式生成 (无限长度, 不需要远端检索)
      └── StreamingLLM (sink + sliding window)
@@ -827,7 +819,7 @@ Q: KV cache 显存压不住?
 │    └── GQA (LLaMA-2/3, Mistral)
 │
 ├── 想极致压, 接受重训练
-│    └── MLA (DeepSeek-V2/V3): cache 砍 50×, RoPE 必须解耦
+│    └── MLA (DeepSeek-V2/V3/V3.2): cache 砍 50×, RoPE 必须解耦
 │
 └── 推理 server 端
      └── 配合 PagedAttention (vLLM) 做 cache 分页管理
@@ -841,7 +833,7 @@ Q: Attention 算不动 (L^2 太大)?
 │    └── Ring Attention / Context Parallelism (chunk K/V 环传)
 │
 └── 不要远距精确检索, 只要本地依赖
-     └── Sliding Window Attention (Mistral 风格)
+     └── Sliding Window / StreamingLLM / hybrid linear-attention（如 Qwen3-Next）
 ```
 
 ## §14 25 高频面试题
@@ -1164,15 +1156,16 @@ Q: Attention 算不动 (L^2 太大)?
 
 <summary>Q25. 设计一个 1M context、可流式生成、单卡推理的方案。</summary>
 
-参考 Qwen2.5-1M / DeepSeek-V3 思路：
+参考 Qwen2.5-1M / DeepSeek-V3/V3.2、Qwen3-Next、Gemini 3.1 Pro Preview 这类路线：
 
-- **位置编码**：YaRN / LongRoPE 把 RoPE 推到 1M（per-dim 缩放搜索）
-- **KV cache 压缩**：MLA (cache 砍 50×) 让单卡能装下 1M cache 的"latent"
-- **Attention 算法**：FlashAttention 3 + Ring Attention（如果跨多卡）或 Sliding Window 配合 sink（如果要流式）
+- **位置编码**：YaRN / LongRoPE 把 RoPE 推到 1M（per-dim 缩放搜索），但必须用长文档、代码仓、合成 needle/multi-hop 数据继续训练
+- **KV cache 压缩**：MLA / GQA / KV quant / paged KV 组合；如果走 DeepSeek 系路线，MLA 让 cache 变成 latent 而不是完整 K/V
+- **Attention 算法**：FlashAttention 3 + Ring Attention / Context Parallel（跨多卡）；单卡流式可用 Sliding Window + sink；需要远距 recall 时可叠 DSA/块稀疏或少量 full-attention 层
+- **Hybrid 架构**：Qwen3-Next 这类 Gated DeltaNet + gated attention 把大多数层做成低 KV/常数状态，少数 attention 层保 recall；适合高吞吐长上下文，但要实测 in-context copy 和 needle recall
 - **Inference 优化**：vLLM PagedAttention 做 cache 分页；Speculative decoding 加速 decode；Chunked prefill 分批喂 prompt（避免一次性 OOM）
-- **训练**：必须真的在长上下文数据上 fine-tune（≥ 1000 步），仅靠 zero-shot RoPE 改造不够
+- **训练与评测**：必须真的在长上下文数据上 fine-tune（≥ 1000 步），仅靠 zero-shot RoPE 改造不够；评测要同时看 needle、multi-needle、long QA、代码仓定位、lost-in-the-middle 和真实 TTFT/吞吐
 
-完整 stack：MLA + YaRN/LongRoPE + FlashAttn3 + (Ring/CP if 多卡) + StreamingLLM(if 流式) + vLLM 推理。
+完整 stack：MLA/GQA/KV quant + YaRN/LongRoPE + FlashAttn3 + DSA/块稀疏或少量 full-attn + (Ring/CP if 多卡) + StreamingLLM(if 流式) + vLLM/TensorRT-LLM 推理。
 
 - 只说一种方法（如只说 YaRN）— 不够完整
 - 没区分"扩上下文"和"压 cache"两个独立维度
@@ -1212,7 +1205,7 @@ Q: Attention 算不动 (L^2 太大)?
 | 4K-16K | RoPE + ABF / NTK-aware (zero-shot) | GQA |
 | 16K-32K | PI / YaRN + fine-tune | GQA |
 | 32K-128K | YaRN + fine-tune | GQA / MLA |
-| 128K-2M | LongRoPE + fine-tune | MLA + Ring/CP |
-| 流式生成 | StreamingLLM (sink + window) | 任何，cache 常数大小 |
+| 128K-2M | LongRoPE/YaRN + fine-tune；必要时 hybrid attention | MLA / DSA / Ring/CP |
+| 流式生成 | StreamingLLM (sink + window) 或 hybrid linear-attention | 常数状态或窗口 cache |
 
-**Long Context Quick Reference** · 主要参考：Su et al. 2021/2024 (RoPE/RoFormer, Neurocomputing), Chen et al. 2023 (PI, arXiv:2306.15595, Meta), bloc97 / jquesnelle 2023 (NTK-aware, LocalLLaMA community), Peng et al. 2023 (YaRN, arXiv:2309.00071), Ding et al. 2024 (LongRoPE, ICML 2024, Microsoft), DeepSeek-AI 2024 (DeepSeek-V2, arXiv:2405.04434), Jiang et al. 2023 (Mistral 7B, arXiv:2310.06825), Xiao et al. 2024 (StreamingLLM, ICLR 2024), Nelson F. Liu et al. (Lost in the Middle, arXiv:2307.03172, arXiv 2023 / TACL 2024), Hao Liu et al. 2023 (Ring Attention, arXiv:2310.01889), Dao et al. 2022-2024 (FlashAttention 1/2/3)
+**Long Context Quick Reference** · 主要参考：Su et al. 2021/2024 (RoPE/RoFormer, Neurocomputing), Chen et al. 2023 (PI, arXiv:2306.15595, Meta), bloc97 / jquesnelle 2023 (NTK-aware, LocalLLaMA community), Peng et al. 2023 (YaRN, arXiv:2309.00071), Ding et al. 2024 (LongRoPE, ICML 2024, Microsoft), DeepSeek-AI 2024-2025 (DeepSeek-V2 / V3.2 / DSA), Qwen Team 2025 (Qwen3-Next hybrid attention), Jiang et al. 2023 (Mistral 7B, arXiv:2310.06825), Xiao et al. 2024 (StreamingLLM, ICLR 2024), Nelson F. Liu et al. (Lost in the Middle, arXiv:2307.03172, arXiv 2023 / TACL 2024), Hao Liu et al. 2023 (Ring Attention, arXiv:2310.01889), Dao et al. 2022-2024 (FlashAttention 1/2/3), OpenAI / Google / Anthropic 2026 model docs（百万级上下文产品窗口）

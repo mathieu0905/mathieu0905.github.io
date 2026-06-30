@@ -1,12 +1,4 @@
 ## §0 TL;DR Cheat Sheet
-
-### 2026-06-29 SOTA Snapshot
-
-- **Agentic RL has moved from a research-paper topic into the core product surface of frontier models, but most training details remain private.** Official pages for GPT-5.5, Claude Fable/Opus 4.x, and Gemini 3.1 Pro Preview all emphasize coding, tool use, computer/workflow agents, or long-horizon tasks. That makes the practical details in this article — `token mask`, tool observations, environment rewards, and sandboxing — more important than the PPO/GRPO equations alone.
-- **Do not reverse-engineer a training recipe from product benchmarks.** Public pages can establish that a model was optimized for tool-heavy, coding, computer-use, or agentic workflows; they cannot prove which exact RL algorithm was used. Treat ToolRL, WebRL, SWE-RL, and GRPO below as reproducible/open research lines, not as confirmed implementations inside closed models.
-- **In 2026, the agent bottleneck is the environment and verifier, not just the policy.** DeepSeek-V3.2 releases reasoning-first and agentic AI together; Gemini 3.1 Pro Preview includes a `customtools` endpoint; Anthropic and OpenAI both position long-running coding/workflow tasks as central. In practice, the task environment, tool schema, replay logs, failure attribution, and safety sandbox often matter more than another reward-shaping variant.
-- Sources: [OpenAI model docs](https://developers.openai.com/api/docs/models), [Claude models overview](https://platform.claude.com/docs/en/about-claude/models/overview), [Gemini 3.1 Pro Preview](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview), [DeepSeek-V3.2 Release](https://api-docs.deepseek.com/news/news251201).
-
 > 💡 **9 sentences to nail Agentic RL** — RL for LLM agents is the 2024-2026 paradigm pushing reasoning RL into real tool use, the web, code, and GUI (see §1-§9 for derivations + §10 for the 25 frequently-asked questions).
 
 1. **The fundamental difference between Agentic RL and RLHF**: RLHF is single-turn preference alignment with reward from an RM scoring an entire response; **Agentic RL is multi-turn decision-making, state is (obs, history), action is (thought, tool_call), and reward comes from the external environment (test-pass, task success, verifier) rather than an RM**. Trajectory length grows from RLHF's hundreds of tokens to an agent's thousands or even tens of thousands of tokens, taking credit assignment difficulty up a notch.
@@ -19,13 +11,13 @@
 
 5. **Tool-augmented reasoning RL**: **ToolRL** (Qian et al. 2025 arXiv 2504.13958) — embeds tool calls into GRPO with reward = correctness + format + tool-use efficiency; **ReSearch** (Chen et al. 2025 arXiv 2503.19470) — treats search calls as first-class actions and learns multi-hop search with rule-based reward; **RAGEN / StarPO** (Wang et al. 2025 arXiv 2504.20073) — a multi-turn RL training framework with state-action token-level loss + critic-free GRPO variant. Common thread: **outcome-only reward + format shaping + token-mask loss + GRPO**.
 
-6. **Web / GUI agent RL**: **WebRL** (Qi et al. 2024 ICLR-25 arXiv 2411.02337) — self-evolving curriculum + ORM + retrospective rollout, pushing 8B Llama to 43% on WebArena; **AgentQ** (Putta et al. 2024 arXiv 2408.07199) — MCTS search + AI critique + DPO offline training; **Computer-Use** (Anthropic Claude 3.5/3.7/4 Sonnet, since 2024-10-22) — RLHF + RL on screenshot + mouse/keyboard action space for GUI control (public knowledge: training details undisclosed, but system card mentions extensive human + AI feedback).
+6. **Web / GUI agent RL**: **WebRL** (Qi et al. 2024 ICLR-25 arXiv 2411.02337) — self-evolving curriculum + ORM + retrospective rollout, pushing 8B Llama to 43% on WebArena; **AgentQ** (Putta et al. 2024 arXiv 2408.07199) — MCTS search + AI critique + DPO offline training; **Computer-use / browser / IDE agents** (Claude 3.5→Fable/Opus, GPT-5.5, Gemini 3.1, DeepSeek-V3.2 generation) have productized screenshots, DOM, filesystem, shell, search/tool calls. But closed-model capability improvements **do not reveal the training recipe**: official docs usually disclose capabilities and safety systems, not PPO/GRPO/RM/verifier internals.
 
 7. **Code agent RL**: **CodeRL** (Le et al. 2022 NeurIPS arXiv 2207.01780) was the first to use unit tests as reward signal + actor-critic; **PPOCoder** (Shojaee et al. 2023 arXiv 2301.13816) adds a composite reward of compilable + functional correctness; **SWE-RL** (Wei et al. 2025 Meta FAIR arXiv 2502.18449) does RL with rule-based reward (patch similarity + test-pass) on GitHub PR data, with Llama-3.3-70B pushing SWE-bench Verified to 41%.
 
 8. **Self-rewarding & exploration**: **Self-Rewarding LM** (Yuan et al. 2024 Meta arXiv 2401.10020) has the policy serve as judge for iterative DPO with LLM-as-judge; but self-rewarding is more dangerous in agents than in single-turn alignment — the judge is also the agent itself, and **reward drift / model collapse easily occur**. In production the common trio is LLM-as-judge ensemble + rule-based grounding (test-pass, math checker) + human spot check.
 
-9. **Three weapons for long-horizon credit assignment**: (a) **GAE + γ < 1** propagates credit along the trajectory but degenerates to MC return under sparse outcome reward; (b) **Hindsight relabeling** (the agent-side counterpart to HER) — failed trajectories are relabeled with "intermediate state as goal"; (c) **subgoal decomposition + process reward** — slice a 50-step trajectory into 5 subgoals × 10 steps and have a PRM score each subgoal. The L3 interview question "why is GRPO more sample efficient than PPO on long-horizon agents" — the answer is **trace-level reward directly matches trace-level credit**, bypassing the pain that a value model can hardly learn anything on long CoT.
+9. **Three weapons for long-horizon credit assignment**: (a) **GAE + γ < 1** propagates credit along the trajectory but degenerates to MC return under sparse outcome reward; (b) **Hindsight relabeling** (the agent-side counterpart to HER) — failed trajectories are relabeled with "intermediate state as goal"; (c) **subgoal decomposition + process reward** — slice a 50-step trajectory into 5 subgoals × 10 steps and have a PRM score each subgoal. The L3 interview question "why is GRPO more sample efficient than PPO on long-horizon agents" — the answer is **trace-level reward directly matches trace-level credit**, bypassing the pain that a value model can hardly learn anything on long CoT. By 2026 the bottleneck is often not the optimizer, but **environment replication, verifier reliability, sandbox cost, and tool-observation contamination**.
 
 ## §1 Intuition: from RLHF to Agentic RL
 
@@ -947,29 +939,28 @@ Industry-benchmark SOTA trends (public numbers in 2025-2026):
 
 | Benchmark | Task | 2024 SOTA | 2025-2026 SOTA | Key approach |
 |---|---|---|---|---|
-| **TAU-bench (retail)** | customer service multi-turn | ~50% (GPT-4) | 70-80% (Claude 4.x, GPT-5) | RLHF + agent SFT |
-| **SWE-bench Verified** | GitHub PR fix | ~25% (Claude 3.5) | **70-80%+** (Claude 4.x, o3) | Agent scaffold + RL |
-| **OSWorld** | OS GUI task | ~12% (GPT-4V) | ~50-60% (Claude 4.x, Operator) | Computer-Use RL |
+| **TAU-bench (retail)** | customer service multi-turn | ~50% (GPT-4) | Claude Fable/Opus, GPT-5.5, Gemini 3.1 generation is much stronger; exact numbers depend on private holdouts | Agent SFT + tool reward + policy/search scaffold |
+| **SWE-bench Verified / Multilingual / private holdout** | GitHub PR fix | ~25% (Claude 3.5) | frontier coding agents are far beyond 2024; public leaderboards require contamination caution | Agent scaffold + test verifier + retrieval/planning |
+| **OSWorld** | OS GUI task | ~12% (GPT-4V) | computer-use models keep improving, but permissions, safety filters, and task definitions heavily affect scores | GUI grounding + sandbox + safety filter |
 | **WebArena** | web nav | 14.4% (GPT-4) | 43% (WebRL Llama-8B) | curriculum + RL |
-| **GAIA** | general assistant | 15% (GPT-4) | 60-70% (Claude 4.x, o3) | Agent + tool RL |
+| **GAIA / BrowseComp-style assistants** | general assistant | 15% (GPT-4) | closed-source agent capabilities keep moving; public numbers often mix scaffold differences | Tool use + search + verifier + long context |
 
-Note: benchmark contamination risk is high; **as of 2026Q1, OpenAI has retired SWE-bench Verified** (reasons: contamination + test flaws); more credible benchmarks now are SWE-Lancer, SWE-bench Multilingual, private holdouts.
+Note: benchmark contamination risk is high. Public suites such as SWE-bench Verified are useful regression tests, but not enough to claim general coding-agent SOTA. More credible comparisons use SWE-Lancer, SWE-bench Multilingual, company private holdouts, and matched scaffold, context window, tool permissions, and retry budget.
 
-### 8.5　Anthropic Computer-Use (Claude 3.5 → 4.5 → Opus 4.x)
+### 8.5　Closed-source computer-use / tool-use agents (Claude 3.5 → Fable/Opus, GPT-5.5, Gemini 3.1, DeepSeek-V3.2)
 
 **Public knowledge**:
 
 - 2024-10-22 Claude 3.5 Sonnet (new) first shipped Computer-Use beta
-- 2025: Claude 3.7 / 4.0 / 4.5 continued iterating with speed + accuracy improvements
-- Training involves many human demonstrations + AI-generated rollouts + RLHF + safety red-teaming
-- Action space = screenshots + mouse + keyboard + filesystem access
-- Public system cards mention Constitutional AI + Computer-Use specific safety filter
+- 2025-2026: Claude 3.7 / 4.x / Fable 5 / Opus 4.8, OpenAI GPT-5.5, Gemini 3.1 Pro Preview, and DeepSeek-V3.2 all put tool use, coding, long-horizon workflows, or thinking-in-tool-use at the center
+- Action space has expanded from text tool calls to screenshots, mouse/keyboard, browser/DOM, filesystem, shell, search, code execution, and API calls
+- Public system cards / docs usually describe safety filters, tool permissions, and capability boundaries, but **do not disclose** training data scale, RL algorithm, reward weights, or verifier details
 
 **Algorithm-level inferred information** (academic speculation, not officially confirmed):
 
-- Training likely involves RLHF on screenshot trajectories
-- Reward likely includes a task-completion grader (LLM-as-judge) + safety classifier
-- Possibly GRPO / RLOO style critic-free RL (multiple public papers mention critic-free)
+- May combine human demonstrations, synthetic rollouts, preference learning, rule/verifier reward, LLM-as-judge, safety classifiers, and curriculum
+- May use PPO/GRPO/RLOO or internal RL variants; **without official confirmation, do not state any of these as fact**
+- Product gains may also come from stronger base models, context windows, tool protocols, retrieval/planning scaffolds, sandboxing, and eval data, not only from RL algorithms
 
 ### 8.6　2025-2026 papers panorama
 
@@ -985,7 +976,7 @@ Note: benchmark contamination risk is high; **as of 2026Q1, OpenAI has retired S
 | **Light-R1** / **Sky-T1** | Reasoning + tool RL | Open-source reproduction of R1 + agent extension |
 | **OpenAgent** / **Llama-Agent** | Data + framework | Large-scale agent SFT + RL pipeline |
 
-> 💡 **2026Q1-Q2 trend** — agent RL on real environments (OS, browser, IDE) is becoming the open-source mainline. **simulator → real environment → deployment RL** sim-to-real pipelines are the next frontier. Anthropic / OpenAI / DeepSeek / Meta are all working on this but the details are not public.
+> 💡 **2026Q1-Q2 trend** — agent RL on real environments (OS, browser, IDE) is becoming the open-source mainline. **simulator → real environment → deployment RL** sim-to-real pipelines are the next frontier. DeepSeek-V3.2 publicly emphasizes large-scale agent environment synthesis and thinking in tool-use; Anthropic / OpenAI / Google / Meta continue pushing product capabilities, but most training details remain private.
 
 ## §9 Failure modes & engineering experience
 
@@ -1414,7 +1405,7 @@ Listing only PPO without considering agent rollout infra; or not knowing the cur
 **Officially public (system card / blog)**:
 
 - Action space = screenshot (vision observation) + mouse + keyboard events
-- Capability iterates: Claude 3.5 (new) 2024-10-22 → 3.7 / 4.0 / 4.5 / Opus 4.x
+- Capability iterates: Claude 3.5 (new) 2024-10-22 → 3.7 / 4.x / Fable 5 / Opus 4.8
 - Safety: constitutional-AI-style guardrails + red-teaming + prompt-injection defense
 - Training involves human demonstrations + synthetic data (general statement in system card)
 
@@ -1428,7 +1419,7 @@ Listing only PPO without considering agent rollout infra; or not knowing the cur
 **Reasonable community speculation** (**speculation only, do not state as fact in interviews**):
 
 - May be RLHF on screenshot trajectories (pair-wise preference + task-success outcome mixture)
-- Possibly critic-free (echoing open-source trends like DeepSeek-R1 GRPO)
+- Possibly critic-free (echoing DeepSeek-R1 / V3.2 and open-source GRPO/RLOO trends)
 - May use VLM-as-judge for screenshot understanding
 - Curriculum may be simple → complex
 

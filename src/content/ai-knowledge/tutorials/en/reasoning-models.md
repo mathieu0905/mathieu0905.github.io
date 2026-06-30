@@ -1,21 +1,13 @@
 ## §0 TL;DR Cheat Sheet
-
-### 2026-06-29 SOTA Snapshot
-
-- **The public frontier has moved beyond o1/R1 to GPT-5.5, Claude Fable 5 / Opus 4.x, Gemini 3.1 Pro Preview, DeepSeek-V3.2/Speciale, and related families.** OpenAI's API docs position GPT-5.5 as the flagship for complex reasoning/coding; Gemini 3.1 Pro Preview supports multimodal input, 1,048,576 input tokens, thinking, and tool use; Anthropic's Claude Fable/Opus docs emphasize long-horizon agentic work. The o1/R1/PRM/GRPO derivations below remain the right conceptual base, but the model list should not stop at early 2025.
-- **The engineering center of gravity has shifted from “longer CoT” to “controllable effort + tool loops + verifier/environment reward.”** GPT-5.5, Claude, and Gemini docs all put coding, tool use, and computer/workflow agents near the center; DeepSeek-V3.2 jointly optimizes reasoning and agentic tool use. Treat test-time compute as the total budget of `reasoning_tokens + search/tool calls + verifier/sandbox`, not just hidden chain-of-thought length.
-- **The open-weight line is no longer just DeepSeek-R1.** DeepSeek-V3.2 continues the reasoning-first and agentic AI line while adding DSA for long-context efficiency; Qwen3-Next uses hybrid attention, Sparse MoE, and MTP as the efficiency base. In 2026, reasoning SOTA is the product of **post-training + architecture + serving**, not a single RL algorithm.
-- Sources: [OpenAI model docs](https://developers.openai.com/api/docs/models), [Claude models overview](https://platform.claude.com/docs/en/about-claude/models/overview), [Gemini 3.1 Pro Preview](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview), [DeepSeek-V3.2 Release](https://api-docs.deepseek.com/news/news251201), [DeepSeek-V3.2-Exp](https://api-docs.deepseek.com/news/news250929), [vLLM Qwen3-Next](https://vllm.ai/blog/2025-09-11-qwen3-next).
-
 > 💡 **Reasoning models in 8 sentences** — The biggest paradigm shift in LLMs from 2024-2026; one page covering interview essentials.
 
 1. **Paradigm shift**: previously we scaled **training compute** (parameters + data); now we scale **inference compute** (reasoning tokens / search / verification). Snell et al. 2024 (arXiv 2408.03314) gave the **compute-optimal test-time scaling** recipe: under the same inference FLOPs, a hybrid strategy of best-of-N + PRM beam search + sequential revision is **>4×** more efficient than pure best-of-N; under FLOPs-matched settings, small model + optimized test-time compute can match or exceed a **14×** larger model on certain tasks.
 
-2. **o1 (OpenAI Sep 2024)**: uses RL to train hidden chain-of-thought; the API only returns a `reasoning_tokens` count, not content. **o3 (Dec 2024)** scored 75.7% (low compute) / 87.5% (high compute, 172× budget) on ARC-AGI—the first time abstract reasoning benchmarks approached human-level performance.
+2. **Closed-source frontier (OpenAI / Anthropic / Google)**: after o1/o3, public APIs have moved into the **GPT-5.5, Claude Fable 5 / Opus 4.8, Gemini 3.1 Pro Preview** generation. Their shared pattern is not public CoT; it is productized reasoning effort, long context, multimodal input, tool/function calling, coding, and agent workflows. Training recipes remain closed, so capability alone should not be reverse-engineered into "they all used GRPO".
 
 3. **DeepSeek-R1-Zero (arXiv 2501.12948, Jan 2025)**: **pure RL from a base model**, no SFT cold start, rule-based reward (answer correct/wrong + format), using **GRPO** (no critic); the "aha moment" emerged—the model learned to reflect, backtrack, and verify on its own.
 
-4. **DeepSeek-R1**: four-stage pipeline = SFT cold start (thousands of high-quality CoT) → reasoning-oriented RL → rejection sampling + general SFT → all-scenario RL. Matched o1 on math/code benchmarks like MATH-500 and AIME.
+4. **DeepSeek-R1 → V3.2**: R1's four-stage pipeline = SFT cold start → reasoning-oriented RL → rejection sampling + general SFT → all-scenario RL; by **DeepSeek-V3.2 / V3.2-Speciale**, the official positioning has become "reasoning-first models built for agents", with emphasis on thinking + tool-use, agent environment synthesis, and lower long-context cost.
 
 5. **GRPO (DeepSeekMath, arXiv 2402.03300)**: removes the critic value network; for each prompt, sample $G$ responses $\{o_i\}$ and replace GAE with **group-relative advantage** $A_i = (r_i - \text{mean}(\mathbf{r})) / \text{std}(\mathbf{r})$. Halves memory and stabilizes training.
 
@@ -23,7 +15,7 @@
 
 7. **s1 (Muennighoff Feb 2025, arXiv 2501.19393)**: "Wait" budget forcing—forcibly append "Wait" at `</think>` to make the model continue thinking; 1K-sample SFT + inference control surpasses o1-preview by 27% (AIME24).
 
-8. **Common pitfalls**: CoT ≠ reasoning (the model may post-hoc fabricate stories); self-consistency breaks on distribution-shifted problems; PRM training easily overfits step patterns; on long-CoT, GRPO's critic-free design is actually an advantage (critic is hard to learn).
+8. **Common pitfalls**: CoT ≠ reasoning (the model may post-hoc fabricate stories); self-consistency breaks on distribution-shifted problems; PRM training easily overfits step patterns; on long-CoT, GRPO's critic-free design is actually an advantage (critic is hard to learn). After 2026, test-time compute should be counted as `reasoning tokens + tool/search calls + verifier/sandbox + rerank/rollback`, not just CoT length.
 
 ## §1 Why This Is the Biggest Paradigm Shift of 2024-2026
 
@@ -710,8 +702,12 @@ def prm_beam_search(
 | --- | --- | --- | --- | --- | --- |
 | **o1-preview / o1** | OpenAI | 2024-09 | RL on hidden CoT (details closed) | reasoning_effort: low/med/high | closed |
 | **o3** | OpenAI | 2024-12 / 2025 | o1 successor; ARC-AGI 75.7%/87.5% | reasoning budget tunable; high-compute 172× | closed |
+| **GPT-5.5** | OpenAI | 2026 | Complex reasoning / coding / agent workflows (training details closed) | High reasoning effort + tool/search/workflow integration | closed API |
+| **Claude Fable 5 / Opus 4.8** | Anthropic | 2026 | Long-horizon agentic work / coding / extended thinking (training details closed) | Thinking + computer/tool workflows; product-side controls | closed API |
+| **Gemini 3.1 Pro Preview** | Google DeepMind | 2026 | Multimodal input + thinking + tool/function calling | 1,048,576 input tokens; text/image/video/audio/PDF input | closed API |
 | **DeepSeek-R1-Zero** | DeepSeek | 2025-01 | Pure RL (GRPO + rule reward) | natural termination | fully open (weights + paper) |
 | **DeepSeek-R1** | DeepSeek | 2025-01 | 4 stages: SFT cold-start + RL + rejection SFT + RL | natural termination | fully open |
+| **DeepSeek-V3.2 / Speciale** | DeepSeek | 2025-12 | reasoning-first + agent tool-use; inherits the R1/RLVR line and adds large-scale agent data | thinking in tool-use; Speciale favors high-token reasoning | open weights + API (Speciale was time-limited API) |
 | **R1-Distill (1.5B-70B)** | DeepSeek | 2025-01 | SFT only on R1 reasoning data | natural termination | fully open |
 | **Claude 3.7 Sonnet** | Anthropic | 2025-02 | hybrid: standard + extended thinking | budget tokens user-configurable (up to 128K) | closed, but thinking content visible |
 | **Gemini 2.0 Flash Thinking** | Google DeepMind | 2024-12 | Inference-optimized (method undisclosed) | thinking explicitly shown | closed |
@@ -724,15 +720,15 @@ def prm_beam_search(
 ```
 
 Task domain?
-├── Math/competition (AIME / IMO) ─→ R1 / R1-Distill-32B / o1 / s1-32B
+├── Math/competition (AIME / IMO) ─→ DeepSeek-V3.2-Speciale / R1 / o3 / GPT-5.5 / s1-32B
 ├── Formal theorem proving (Lean / Coq) ─→ DeepSeek-Prover-V2
-├── Code (Codeforces / SWE-bench) ─→ o1-pro / R1 / Claude 3.7 + thinking
-├── General reasoning (agent / chain task) ─→ Claude 3.7 / Gemini 2 Thinking / R1
+├── Code (Codeforces / SWE-bench) ─→ GPT-5.5 / Claude Fable or Opus / Gemini 3.1 / DeepSeek-V3.2
+├── General reasoning (agent / chain task) ─→ Claude Fable / GPT-5.5 / Gemini 3.1 / DeepSeek-V3.2
 ├── Small-model deployment (edge / mobile) ─→ R1-Distill-1.5B-7B
 └── ARC-AGI / abstract reasoning ─→ o3 (high-compute tier)
 
 Deployment budget?
-├── High (thousands of CoT tokens / problem) ─→ o1, o3, R1, Claude 3.7-extended
+├── High (thousands of CoT tokens + tools/verifier) ─→ GPT-5.5, Claude Fable/Opus, Gemini 3.1, o3, DeepSeek-V3.2
 ├── Medium (1-2K CoT tokens) ─→ s1-32B, R1-Distill-32B
 └── Low (greedy or BoN=8) ─→ R1-Distill-1.5B + best-of-N with verifier
 ```
@@ -1233,12 +1229,14 @@ Credible response framework (no need to cover everything; pick 2-3 to dive into)
 - **Direction 2 - Test-time compute scaling**:
   - Adaptive budget: dynamically allocate reasoning tokens by problem difficulty (Snell 2024 is the start)
   - Sequential + parallel hybrid: embed sub-tree exploration within long CoT
+  - Tool-augmented compute: count web/search/code execution/verifier/sandbox as part of the inference budget, not as external add-ons
   - Multi-agent debate: multiple LLMs verifying each other, adversarial
 
 - **Direction 3 - Verifier**:
   - Generative PRM replacing scalar PRM (LLM evaluating step quality is more accurate than scalar head)
   - Self-verifier: let model verify itself (DeepSeek-Prover-V2 on Lean is an embryonic version)
   - Cross-domain transfer: can math PRM transfer to code PRM?
+  - Environment verifier: in agent tasks, the verifier is often a unit test, browser state, database state, or sandbox trace; designing it can be a bigger bottleneck than the RL algorithm
 
 - **Direction 4 - Evaluation**:
   - Current reasoning benchmarks (AIME, MATH) near saturation—next-generation evaluation standard?
@@ -1262,6 +1260,8 @@ Reverse chronological:
 
 | Date | Paper | arXiv | One-line contribution |
 | --- | --- | --- | --- |
+| 2026 | GPT-5.5 / Claude Fable 5 / Gemini 3.1 Pro Preview | (no arXiv) | Closed reasoning products combine long context, tool/function calling, multimodal input, and agent workflows; training recipes remain closed |
+| 2025-12 | DeepSeek-V3.2 / V3.2-Speciale | technical report | reasoning-first models built for agents; thinking in tool-use, large-scale agent environment synthesis |
 | 2025-04 | DeepSeek-Prover-V2 | 2504.21801 | subgoal decomposition + Lean 4 RL, MiniF2F 88.9% |
 | 2025-02 | Claude 3.7 Sonnet | (no arXiv) | hybrid model, extended thinking budget user-controllable |
 | 2025-02 | s1: Simple Test-Time Scaling | 2501.19393 | 1K SFT + "Wait" budget forcing surpasses o1-preview |
@@ -1286,7 +1286,8 @@ Reverse chronological:
 2. DeepSeekMath (2402.03300) —— original GRPO algorithm paper
 3. Let's Verify Step by Step (2305.20050) —— PRM foundations
 4. Snell et al. (2408.03314) —— test-time compute scaling paradigm
+5. DeepSeek-V3.2 technical report + OpenAI / Anthropic / Gemini model docs —— understand how 2026 products merge reasoning, tool use, long context, and agent workflows
 
-After reading these 4 + this cheat sheet, reasoning model interview questions should cover 80%+.
+After reading these papers + this cheat sheet, reasoning model interview questions should cover 80%+.
 
 > ⚠️ **Open-ended question prep** — top-lab interviews often ask open-ended questions (like Q25); the key is showing **research taste**: list 3-5 concrete directions (not "I'll work on reasoning models" empty talk); each direction with a concrete proposal + one expected failure mode. Don't memorize when prepping; instead read recent 6 months of arXiv reasoning papers and build your own taxonomy.

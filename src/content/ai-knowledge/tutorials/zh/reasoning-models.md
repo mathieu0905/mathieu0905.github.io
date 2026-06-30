@@ -1,21 +1,13 @@
 ## §0 TL;DR Cheat Sheet
-
-### 2026-06-29 SOTA 快照
-
-- **公开可用前沿已经从 o1/R1 扩展到 GPT-5.5、Claude Fable 5/Opus 4.x、Gemini 3.1 Pro Preview、DeepSeek-V3.2/Speciale 等系列**。OpenAI API 文档把 GPT-5.5 定位为复杂 reasoning/coding 的旗舰模型，Google 的 Gemini 3.1 Pro Preview 支持多模态输入、1,048,576 input tokens、thinking 与 tool use；Anthropic 的 Claude Fable/Opus 页面也把长程 agentic work 放在核心场景。本文下面的 o1/R1/PRM/GRPO 推导仍是训练范式基础，但模型清单不要停在 2025 年初。
-- **推理模型的工程重点从“更长 CoT”转向“可控 effort + 工具闭环 + verifier/环境奖励”**。GPT-5.5、Claude、Gemini 文档都把 coding、tool use、computer/workflow agents 放在核心卖点；DeepSeek-V3.2 报告把 reasoning 与 agentic tool-use 联合优化。阅读本文时，应把 test-time compute 看成 `reasoning_tokens + search/tool calls + verifier/sandbox` 的总预算。
-- **开放权重路线不再只是 DeepSeek-R1**。DeepSeek-V3.2 在 R1 后继续强调 reasoning-first 和 agentic AI，并引入 DSA 降低长上下文成本；Qwen3-Next 把 hybrid attention、Sparse MoE、MTP 当成效率底座。也就是说，2026 的 reasoning SOTA 是 **post-training + architecture + serving** 共同作用，而不是单一 RL 算法的胜利。
-- 来源：[OpenAI model docs](https://developers.openai.com/api/docs/models)、[Claude models overview](https://platform.claude.com/docs/en/about-claude/models/overview)、[Gemini 3.1 Pro Preview](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview)、[DeepSeek-V3.2 Release](https://api-docs.deepseek.com/news/news251201)、[DeepSeek-V3.2-Exp](https://api-docs.deepseek.com/news/news250929)、[vLLM Qwen3-Next](https://vllm.ai/blog/2025-09-11-qwen3-next)。
-
 > 💡 **8 句话搞定 Reasoning Model** — 2024-2026 LLM 最大范式转移，一页拿下面试核心。
 
 1. **范式转移**：以前 scale **训练算力**（参数 + 数据），现在 scale **推理算力**（reasoning tokens / search / verification）。Snell et al. 2024 (arXiv 2408.03314) 给出 **compute-optimal test-time scaling** 配方：相同推理 FLOPs 下，best-of-N + PRM beam search + sequential revision 的混合策略比单一 best-of-N 高 **>4×** 效率；FLOPs-matched 设置下，小模型 + 优化 test-time compute 在某些任务上能匹配/超过 **14×** 更大的模型。
 
-2. **o1 (OpenAI Sep 2024)**：用 RL 训练 hidden chain-of-thought，API 只返回 `reasoning_tokens` 计数而非内容。**o3 (Dec 2024)** 在 ARC-AGI 上 75.7% (低算力) / 87.5% (高算力 172× 预算)——首次在抽象推理 benchmark 上接近人类。
+2. **闭源前沿（OpenAI / Anthropic / Google）**：o1/o3 之后，公开 API 已进入 **GPT-5.5、Claude Fable 5 / Opus 4.8、Gemini 3.1 Pro Preview** 一代。它们共同特征不是“公开 CoT”，而是把 reasoning effort、长上下文、多模态输入、tool/function calling、coding/agent workflow 变成产品接口；训练 recipe 仍闭源，不能从能力反推成“都用了 GRPO”。
 
 3. **DeepSeek-R1-Zero (arXiv 2501.12948, Jan 2025)**：**纯 RL 从 base model 直接训**，无 SFT cold-start，rule-based reward（答案对/错 + 格式），用 **GRPO**（无 critic），涌现出 "aha moment"——模型自己学会反思、回溯、验证。
 
-4. **DeepSeek-R1**：四阶段 pipeline = SFT 冷启动（数千高质 CoT）→ reasoning-oriented RL → rejection sampling + 通用 SFT → 全场景 RL。在 MATH-500、AIME 等数学/代码 benchmark 上对齐 o1。
+4. **DeepSeek-R1 → V3.2**：R1 的四阶段 pipeline = SFT 冷启动 → reasoning-oriented RL → rejection sampling + 通用 SFT → 全场景 RL；到 **DeepSeek-V3.2 / V3.2-Speciale**，官方定位已经变成 “reasoning-first models built for agents”，重点转向 thinking + tool-use、agent 环境合成与更低长上下文成本。
 
 5. **GRPO（DeepSeekMath, arXiv 2402.03300）**：去掉 critic value network；对每个 prompt sample $G$ 个回答 $\{o_i\}$，用 **group-relative advantage** $A_i = (r_i - \text{mean}(\mathbf{r})) / \text{std}(\mathbf{r})$ 替代 GAE。显存降一半 + 训练更稳。
 
@@ -23,7 +15,7 @@
 
 7. **s1 (Muennighoff Feb 2025, arXiv 2501.19393)**："Wait" budget forcing——在 `</think>` 处强行追加 "Wait" 让模型继续思考，1K 样本 SFT + 推理控制超 o1-preview 27% (AIME24)。
 
-8. **易踩坑**：CoT ≠ 推理（模型可能 post-hoc 编故事）；self-consistency 在 distribution-shifted 题上崩；PRM 训练易过拟合 step pattern；GRPO 在 long-CoT 上 critic-free 反而是优势（critic 难学）。
+8. **易踩坑**：CoT ≠ 推理（模型可能 post-hoc 编故事）；self-consistency 在 distribution-shifted 题上崩；PRM 训练易过拟合 step pattern；GRPO 在 long-CoT 上 critic-free 反而是优势（critic 难学）。2026 之后谈 test-time compute 要算总账：`reasoning tokens + tool/search calls + verifier/sandbox + rerank/rollback`，不是只看 CoT token 数。
 
 ## §1 为什么这是 2024-2026 最大范式转移
 
@@ -710,8 +702,12 @@ def prm_beam_search(
 | --- | --- | --- | --- | --- | --- |
 | **o1-preview / o1** | OpenAI | 2024-09 | RL on hidden CoT (细节闭源) | reasoning_effort: low/med/high | 闭源 |
 | **o3** | OpenAI | 2024-12 / 2025 | o1 后继；ARC-AGI 75.7%/87.5% | 推理 budget 可调；high-compute 172× | 闭源 |
+| **GPT-5.5** | OpenAI | 2026 | 复杂 reasoning / coding / agent workflow（训练细节闭源） | 高 reasoning effort + tool/search/workflow 集成 | 闭源 API |
+| **Claude Fable 5 / Opus 4.8** | Anthropic | 2026 | 长程 agentic work / coding / extended thinking（训练细节闭源） | thinking + computer/tool workflow；产品侧可控 | 闭源 API |
+| **Gemini 3.1 Pro Preview** | Google DeepMind | 2026 | 多模态输入 + thinking + tool/function calling | 1,048,576 input tokens；文本/图像/视频/音频/PDF 输入 | 闭源 API |
 | **DeepSeek-R1-Zero** | DeepSeek | 2025-01 | 纯 RL (GRPO + 规则 reward) | 自然停止 | 完全开源（权重 + 论文） |
 | **DeepSeek-R1** | DeepSeek | 2025-01 | 4 阶段：SFT cold-start + RL + rejection SFT + RL | 自然停止 | 完全开源 |
+| **DeepSeek-V3.2 / Speciale** | DeepSeek | 2025-12 | reasoning-first + agent tool-use；继承 R1/RLVR 路线并加入大规模 agent 数据 | thinking in tool-use；Speciale 更偏高 token 推理 | 开源权重 + API（Speciale 曾限时 API） |
 | **R1-Distill (1.5B-70B)** | DeepSeek | 2025-01 | SFT only on R1 reasoning data | 自然停止 | 完全开源 |
 | **Claude 3.7 Sonnet** | Anthropic | 2025-02 | hybrid: standard + extended thinking | budget tokens 用户可设（up to 128K） | 闭源，但 thinking 内容可见 |
 | **Gemini 2.0 Flash Thinking** | Google DeepMind | 2024-12 | 推理优化 (具体方法未公布) | 显式展示 thinking | 闭源 |
@@ -724,15 +720,15 @@ def prm_beam_search(
 ```
 
 任务领域？
-├── 数学/竞赛（AIME / IMO） ─→ R1 / R1-Distill-32B / o1 / s1-32B
+├── 数学/竞赛（AIME / IMO） ─→ DeepSeek-V3.2-Speciale / R1 / o3 / GPT-5.5 / s1-32B
 ├── 形式化定理证明（Lean / Coq） ─→ DeepSeek-Prover-V2
-├── 代码（Codeforces / SWE-bench） ─→ o1-pro / R1 / Claude 3.7 + thinking
-├── 通用 reasoning（agent / chain task） ─→ Claude 3.7 / Gemini 2 Thinking / R1
+├── 代码（Codeforces / SWE-bench） ─→ GPT-5.5 / Claude Fable 或 Opus / Gemini 3.1 / DeepSeek-V3.2
+├── 通用 reasoning（agent / chain task） ─→ Claude Fable / GPT-5.5 / Gemini 3.1 / DeepSeek-V3.2
 ├── 小模型部署（边缘 / 移动） ─→ R1-Distill-1.5B-7B
 └── ARC-AGI / 抽象推理 ─→ o3（高算力档）
 
 部署预算？
-├── 高（CoT 几千 token / 题）─→ o1, o3, R1, Claude 3.7-extended
+├── 高（CoT 几千 token + tool/verifier）─→ GPT-5.5, Claude Fable/Opus, Gemini 3.1, o3, DeepSeek-V3.2
 ├── 中（CoT 1-2K token）─→ s1-32B, R1-Distill-32B
 └── 低（greedy 或 BoN=8）─→ R1-Distill-1.5B + best-of-N with verifier
 ```
@@ -1233,12 +1229,14 @@ def prm_beam_search(
 - **方向 2 - Test-time compute scaling**：
   - Adaptive budget：根据题目难度动态分配 reasoning tokens（Snell 2024 起点）
   - Sequential + parallel 混合：long CoT 中嵌入 sub-tree exploration
+  - Tool-augmented compute：把 web/search/code execution/verifier/sandbox 当成推理预算的一部分，而不是外部插件
   - Multi-agent debate：多个 LLM 互查、对抗
 
 - **方向 3 - Verifier**：
   - Generative PRM 替代 scalar PRM（用 LLM 评 step quality 比 scalar head 更准）
   - Self-verifier：让模型自己 verify 自己（DeepSeek-Prover-V2 在 Lean 上是雏形）
   - Cross-domain transfer：math PRM 能否 transfer 到 code PRM？
+  - Environment verifier：agent 任务里 verifier 往往是 unit test、browser state、database state 或 sandbox trace，设计成本比 RL 算法本身更卡脖子
 
 - **方向 4 - 评测**：
   - 现有 reasoning benchmark (AIME, MATH) 接近饱和——下一代 evalution 标准？
@@ -1262,6 +1260,8 @@ def prm_beam_search(
 
 | 日期 | Paper | arXiv | 一句话贡献 |
 | --- | --- | --- | --- |
+| 2026 | GPT-5.5 / Claude Fable 5 / Gemini 3.1 Pro Preview | (no arXiv) | 闭源 reasoning 产品进入长上下文 + tool/function calling + agent workflow 阶段；训练 recipe 不公开 |
+| 2025-12 | DeepSeek-V3.2 / V3.2-Speciale | technical report | reasoning-first models built for agents；thinking in tool-use，大规模 agent 环境合成 |
 | 2025-04 | DeepSeek-Prover-V2 | 2504.21801 | subgoal decomposition + Lean 4 RL，MiniF2F 88.9% |
 | 2025-02 | Claude 3.7 Sonnet | (no arXiv) | hybrid 模型，extended thinking budget 用户可控 |
 | 2025-02 | s1: Simple Test-Time Scaling | 2501.19393 | 1K SFT + "Wait" budget forcing 超 o1-preview |
@@ -1286,6 +1286,7 @@ def prm_beam_search(
 2. DeepSeekMath (2402.03300) —— GRPO 算法原始论文
 3. Let's Verify Step by Step (2305.20050) —— PRM 基础
 4. Snell et al. (2408.03314) —— test-time compute scaling 范式
+5. DeepSeek-V3.2 technical report + OpenAI / Anthropic / Gemini 模型文档 —— 了解 2026 产品侧如何把 reasoning、tool use、长上下文和 agent workflow 合并
 
 读完这 4 篇 + 本 cheat sheet，reasoning model 面试题目应能 80%+ 覆盖。
 

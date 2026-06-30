@@ -1,12 +1,4 @@
 ## §0 TL;DR Cheat Sheet
-
-### 2026-06-29 SOTA Snapshot
-
-- **1M context is now a public spec for mainstream closed APIs.** OpenAI model docs list GPT-5.5 with a 1M context window; Gemini 3.1 Pro Preview lists 1,048,576 input tokens; Claude Fable/Opus documentation emphasizes long-horizon agentic work and high output limits. The RoPE/YaRN/MLA derivations below are still useful, but “long-context SOTA” should no longer be represented only by Qwen2.5-1M or Llama-3.1.
-- **The frontier has expanded from “position extrapolation” to “structural cost reduction for KV/attention.”** DeepSeek-V3.2/Exp introduces DeepSeek Sparse Attention (DSA) to lower long-context training and inference cost; Qwen3-Next uses Gated DeltaNet + Gated Attention hybrid attention for 256K-scale ultra-long text. RoPE scaling answers “does the model know how far away this is?”; DSA/hybrid/MLA answer “can we afford to compute and store it?”
-- **Read long-context reports in three layers:** advertised window, needle/retrieval quality, and serving cost. A 1M-token spec does not mean every token is reliably recalled; sparse/hybrid attention changes recall failure modes; MLA/GQA/MQA reduce KV memory but do not automatically solve long-horizon reasoning.
-- Sources: [OpenAI model docs](https://developers.openai.com/api/docs/models), [Gemini 3.1 Pro Preview](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview), [Claude models overview](https://platform.claude.com/docs/en/about-claude/models/overview), [DeepSeek-V3.2-Exp](https://api-docs.deepseek.com/news/news250929), [DeepSeek-V3.2 Release](https://api-docs.deepseek.com/news/news251201), [Qwen3-Next/vLLM](https://vllm.ai/blog/2025-09-11-qwen3-next).
-
 > 💡 **8 sentences to nail Long Context** — get the interview core points in one page (see §2-§9 for full derivations).
 
 1. **RoPE**: apply position-$m$-dependent 2D rotations on each pair of dimensions $(2i, 2i+1)$, with $\theta_i = 10000^{-2i/d}$. $q_m^\top k_n$ depends only on the **relative position** $m-n$ (not on absolute $m, n$ separately), and requires no trainable parameters.
@@ -23,7 +15,7 @@
 
 7. **Streaming + Sink (Xiao 2024 ICLR)**: keep the first 4 tokens (attention sink, the softmax "trash bin") + a sliding window; tokens outside the window are dropped, but the sink cannot be dropped, otherwise PPL blows up.
 
-8. **System**: Ring Attention / Context Parallel chunk K/V across devices; FlashAttention 2/3 blocks + online softmax; Mistral SWA reduces each layer's receptive field from $L$ to $W$ (multi-layer stacking still sees far).
+8. **How to read 2026 long context**: 1M windows have entered mainstream APIs (e.g., GPT-5.5 and Gemini 3.1 Pro Preview with million-token input). Open/open-weight models are also moving along **MLA / DSA / hybrid attention** routes: DeepSeek-V3.2 uses sparse attention to lower long-context cost, and Qwen3-Next uses a Gated DeltaNet + gated-attention hybrid with 262K native context and extension toward ~1M. In interviews, separate **advertised context window, needle-recall quality, prefill/decode cost, and KV-cache memory**.
 
 ## §1 Why Long Context Is Hard — One-Paragraph Intuition
 
@@ -35,7 +27,7 @@ Pushing a Transformer to 100K-2M token context is hard because **three things ha
 
 - **Attention's intrinsic $O(L^2)$**: at $L=100\text{K}$, $L^2 = 10^{10}$, and the score matrix doesn't fit. Two routes: **algorithmic sparsification/linearization** (sliding window, sparse attention, linear attention) or **system-level partitioning** (Ring Attention, Context Parallelism, FlashAttention blocking).
 
-> ⚠️ **One-sentence way to tell extension methods apart** — RoPE family (PI / NTK / YaRN / LongRoPE) solves "position encoding extrapolation"; MLA / MQA / GQA solves "KV cache memory"; FlashAttention / Ring / SWA / Sink solves "attention time and memory". **The three are orthogonal**, and production-grade long-context models (e.g., DeepSeek-V2, Qwen2.5-1M, Llama-3.1-405B) typically use all three classes simultaneously.
+> ⚠️ **One-sentence way to tell extension methods apart** — RoPE family (PI / NTK / YaRN / LongRoPE) solves "position encoding extrapolation"; MLA / MQA / GQA solves "KV cache memory"; FlashAttention / Ring / SWA / Sink / DSA solves "attention time and memory". **The three are orthogonal**, and production-grade long-context models (e.g., DeepSeek-V2/V3/V3.2, Qwen2.5-1M, Qwen3-Next, Llama-3.1-405B) typically use all three classes simultaneously. An API-advertised 1M context only says the input path accepts 1M tokens; it does not automatically guarantee middle-position recall, long-chain reasoning, or affordable serving cost.
 
 ## §2 RoPE — Rotary Position Embedding
 
@@ -817,7 +809,7 @@ Q: I want to push context from 4K to N tokens, N=?
 │    └── YaRN (NTK-by-parts + temperature)
 │
 ├── N > 128K (256K-2M)
-│    └── LongRoPE (per-dim independent search + short-context rescue)
+│    └── LongRoPE / YaRN-family + real long-context continued training; serving often stacks MLA/GQA/DSA/hybrid attention
 │
 └── Streaming generation (unlimited length, no long-range retrieval needed)
      └── StreamingLLM (sink + sliding window)
@@ -828,7 +820,7 @@ Q: KV cache memory unmanageable?
 │    └── GQA (LLaMA-2/3, Mistral)
 │
 ├── Want extreme compression, accept retraining
-│    └── MLA (DeepSeek-V2/V3): cache cut 50×, RoPE must be decoupled
+│    └── MLA (DeepSeek-V2/V3/V3.2): cache cut 50×, RoPE must be decoupled
 │
 └── Inference server side
      └── Combine with PagedAttention (vLLM) for cache pagination
@@ -842,7 +834,7 @@ Q: Attention infeasible (L^2 too large)?
 │    └── Ring Attention / Context Parallelism (chunk K/V ring pass)
 │
 └── Don't need long-range exact retrieval, only local dependency
-     └── Sliding Window Attention (Mistral style)
+     └── Sliding Window / StreamingLLM / hybrid linear attention (e.g., Qwen3-Next)
 ```
 
 ## §14 25 Frequently-Asked Interview Questions
@@ -1165,15 +1157,16 @@ Pitfall: saying "the two are the same thing" — mathematically equivalent but e
 
 <summary>Q25. Design a 1M-context, streaming-generation, single-card-inference scheme.</summary>
 
-Reference Qwen2.5-1M / DeepSeek-V3 ideas:
+Reference Qwen2.5-1M / DeepSeek-V3/V3.2, Qwen3-Next, Gemini 3.1 Pro Preview-style routes:
 
-- **Position encoding**: YaRN / LongRoPE to push RoPE to 1M (per-dim scaling search)
-- **KV cache compression**: MLA (cut cache 50×) to fit the 1M cache "latent" on a single card
-- **Attention algorithm**: FlashAttention 3 + Ring Attention (if multi-card) or Sliding Window combined with sink (if streaming)
+- **Position encoding**: YaRN / LongRoPE to push RoPE to 1M (per-dim scaling search), but continue training on long documents, code repos, and synthetic needle/multi-hop data
+- **KV cache compression**: combine MLA / GQA / KV quant / paged KV; on the DeepSeek route, MLA stores latent K/V rather than full K/V
+- **Attention algorithm**: FlashAttention 3 + Ring Attention / Context Parallel for multi-card; Sliding Window + sink for single-card streaming; add DSA/block-sparse or a few full-attention layers when long-range recall matters
+- **Hybrid architecture**: Qwen3-Next-style Gated DeltaNet + gated attention uses mostly low-KV/constant-state layers and a few attention layers to preserve recall; good for high-throughput long context, but always measure in-context copy and needle recall
 - **Inference optimization**: vLLM PagedAttention for cache pagination; speculative decoding to speed up decode; chunked prefill (feed prompt in batches to avoid OOM)
-- **Training**: must actually fine-tune on long-context data (≥ 1000 steps); zero-shot RoPE modification alone is not enough
+- **Training and evaluation**: must actually fine-tune on long-context data (≥ 1000 steps); zero-shot RoPE modification alone is not enough. Evaluate needle, multi-needle, long QA, code-repo localization, lost-in-the-middle, and real TTFT/throughput
 
-Full stack: MLA + YaRN/LongRoPE + FlashAttn3 + (Ring/CP if multi-card) + StreamingLLM(if streaming) + vLLM inference.
+Full stack: MLA/GQA/KV quant + YaRN/LongRoPE + FlashAttn3 + DSA/block-sparse or a few full-attention layers + (Ring/CP if multi-card) + StreamingLLM(if streaming) + vLLM/TensorRT-LLM inference.
 
 Pitfalls:
 - Only mentioning one method (e.g., just YaRN) — not complete
@@ -1214,7 +1207,7 @@ Pitfalls:
 | 4K-16K | RoPE + ABF / NTK-aware (zero-shot) | GQA |
 | 16K-32K | PI / YaRN + fine-tune | GQA |
 | 32K-128K | YaRN + fine-tune | GQA / MLA |
-| 128K-2M | LongRoPE + fine-tune | MLA + Ring/CP |
-| Streaming generation | StreamingLLM (sink + window) | Any; cache is constant size |
+| 128K-2M | LongRoPE/YaRN + fine-tune; hybrid attention when needed | MLA / DSA / Ring/CP |
+| Streaming generation | StreamingLLM (sink + window) or hybrid linear attention | Constant state or window cache |
 
-**Long Context Quick Reference** · Main references: Su et al. 2021/2024 (RoPE/RoFormer, Neurocomputing), Chen et al. 2023 (PI, arXiv:2306.15595, Meta), bloc97 / jquesnelle 2023 (NTK-aware, LocalLLaMA community), Peng et al. 2023 (YaRN, arXiv:2309.00071), Ding et al. 2024 (LongRoPE, ICML 2024, Microsoft), DeepSeek-AI 2024 (DeepSeek-V2, arXiv:2405.04434), Jiang et al. 2023 (Mistral 7B, arXiv:2310.06825), Xiao et al. 2024 (StreamingLLM, ICLR 2024), Nelson F. Liu et al. (Lost in the Middle, arXiv:2307.03172, arXiv 2023 / TACL 2024), Hao Liu et al. 2023 (Ring Attention, arXiv:2310.01889), Dao et al. 2022-2024 (FlashAttention 1/2/3)
+**Long Context Quick Reference** · Main references: Su et al. 2021/2024 (RoPE/RoFormer, Neurocomputing), Chen et al. 2023 (PI, arXiv:2306.15595, Meta), bloc97 / jquesnelle 2023 (NTK-aware, LocalLLaMA community), Peng et al. 2023 (YaRN, arXiv:2309.00071), Ding et al. 2024 (LongRoPE, ICML 2024, Microsoft), DeepSeek-AI 2024-2025 (DeepSeek-V2 / V3.2 / DSA), Qwen Team 2025 (Qwen3-Next hybrid attention), Jiang et al. 2023 (Mistral 7B, arXiv:2310.06825), Xiao et al. 2024 (StreamingLLM, ICLR 2024), Nelson F. Liu et al. (Lost in the Middle, arXiv:2307.03172, arXiv 2023 / TACL 2024), Hao Liu et al. 2023 (Ring Attention, arXiv:2310.01889), Dao et al. 2022-2024 (FlashAttention 1/2/3), OpenAI / Google / Anthropic 2026 model docs (million-token product windows)

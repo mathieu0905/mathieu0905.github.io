@@ -1,17 +1,9 @@
 ## §0 TL;DR Cheat Sheet
-
-### 2026-06-29 SOTA 快照
-
-- **Embedding/RAG 已经从纯文本向多模态统一空间扩展**。Gemini Embedding 2 支持 text、image、video、audio、documents 映射到同一 embedding space；Cohere Embed 4 支持 text/image/mixed documents，并提供不同维度和 embedding 类型；Qwen3 Embedding/Reranker 则把 multilingual retrieval 与 rerank 做成开放模型系列。本文的 bi-encoder/InfoNCE/Hard negative 仍是基础，但生产选型要看多模态、维度可裁剪、rerank 和成本。
-- **RAG 的主线从“向量召回 + 拼 prompt”变成“hybrid retrieval + rerank + graph/agentic retrieval + evaluation”**。Microsoft GraphRAG 文档把 KG extraction、community summaries、global/local search 作为结构化 RAG 路线；长上下文模型让“直接塞全文”更可行，但 lost-in-the-middle、权限控制、引用溯源和更新成本仍让 RAG 有必要。
-- **2026 实战建议**：默认用 BM25/keyword + dense + reranker 的 hybrid pipeline；文档含图片/PDF/视频时优先考虑 multimodal embeddings；企业语料如果有复杂实体关系，再上 GraphRAG/DRIFT，而不是一开始就把所有 RAG 都图化。
-- 来源：[OpenAI Embeddings](https://developers.openai.com/api/docs/guides/embeddings)、[Gemini Embedding 2](https://ai.google.dev/gemini-api/docs/embeddings)、[Cohere Embed 4](https://cohere.com/blog/embed-4)、[Cohere model docs](https://docs.cohere.com/docs/models)、[Qwen3 Embedding](https://qwen.ai/blog?id=qwen3-embedding)、[Microsoft GraphRAG](https://microsoft.github.io/graphrag/)。
-
 > 💡 **9 句话搞定 RAG + 嵌入** — 一页拿下面试核心要点（详见后文 §2–§11 推导）。
 
 1. **RAG 是什么**：检索增强生成 = 先用 query 从外部知识库**检索**相关片段，再把片段拼进 prompt 让 LLM **生成**答案。应对三件事：知识过期、幻觉、私有数据（Lewis et al. 2020）。
 
-2. **两半互补**：左半「**训嵌入**」是对比学习（双塔 + InfoNCE + 难负例），数学密；右半「**用嵌入**」是 RAG 管线（chunk → 检索 → 重排 → 拼 prompt），系统密。
+2. **两半互补**：左半「**训嵌入**」是对比学习（双塔 + InfoNCE + 难负例），数学密；右半「**用嵌入**」是 RAG 管线（chunk → 检索 → 重排 → 拼 prompt），系统密。2026 工程里还要把 **multimodal embedding**（图像/PDF/表格/截图）和专用 reranker 放进同一条检索链路。
 
 3. **嵌入主公式 InfoNCE**：$\mathcal{L} = -\log \frac{\exp(\text{sim}(q,d^+)/\tau)}{\sum_i \exp(\text{sim}(q,d_i)/\tau)}$ —— 本质是「正样本 vs 一堆负样本」的 softmax 交叉熵，温度 $\tau$ 调锐度。
 
@@ -19,13 +11,13 @@
 
 5. **难负例（hard negative）**：从检索 top-k 里挑「像但不相关」的当负例，比随机负例信息量大；但有 **false negative 陷阱**——挑到的「难负例」可能其实相关，反成噪声。
 
-6. **稀疏 vs 稠密 vs 混合**：BM25（词项精确匹配，强在罕见词/实体）+ 稠密向量（语义匹配）互补，用 **RRF**（Reciprocal Rank Fusion）按排名融合：$\text{RRF}(d)=\sum_r \frac{1}{k+\text{rank}_r(d)}$，$k\approx60$。
+6. **稀疏 vs 稠密 vs 混合**：BM25（词项精确匹配，强在罕见词/实体）+ 稠密向量（语义匹配）互补，用 **RRF**（Reciprocal Rank Fusion）按排名融合：$\text{RRF}(d)=\sum_r \frac{1}{k+\text{rank}_r(d)}$，$k\approx60$。现代生产 RAG 默认是 **hybrid recall + rerank + context packing**，纯向量召回只适合低风险原型。
 
 7. **Matryoshka 表征**：一次训练让嵌入的**前 $m$ 维**也是好嵌入，部署时按需截断维度（省存储/加速召回），靠多粒度损失 $\sum_m \mathcal{L}(\text{emb}[:m])$。
 
 8. **RAG vs 长上下文 vs 微调**：RAG 注入**可更新的外部事实**、可溯源；长上下文塞全文但贵且有「lost in the middle」；微调改**能力/风格**不擅长注入海量新事实。三者常组合。
 
-9. **评测**：别只看生成，要分层评 **检索质量**（recall@k / nDCG）+ **生成忠实度**（faithfulness / context relevance / answer relevance，如 RAGAS）。
+9. **评测**：别只看生成，要分层评 **检索质量**（recall@k / nDCG）+ **生成忠实度**（faithfulness / context relevance / answer relevance，如 RAGAS）。多模态 RAG 还要单独评 OCR/表格/图像定位、跨页引用和引用出处可追踪性。
 
 ## §1 直觉：为什么需要 RAG
 
@@ -207,6 +199,8 @@ LLM 生成 + 引用   ⑤ 可选自检: Self-RAG(生成反思) · CRAG(检索质
 
 朴素 RAG 按片段独立召回，回答「跨多文档的全局性问题」（如「整个报告的主题脉络」）很弱。**GraphRAG**（微软，Edge 2024）先用 LLM 把语料抽成**实体-关系知识图 + 社区摘要**，全局问题走「社区摘要」而非散片段。强在 query-focused summarization，代价是建图贵。
 
+2025-2026 的落地经验是：GraphRAG 不应该替代普通向量检索，而是成为**全局问题的一条额外检索路**。局部事实（某条合同 clause、某个函数定义）仍走 BM25/向量/late-interaction；全局问题（一个项目的风险主题、一个公司所有会议纪要的模式）再走社区摘要、实体图和 map-reduce summarization。线上通常用 router 先判断 query 类型，再决定走 local RAG、global GraphRAG 或二者融合。
+
 ### 8.2　RAG vs 长上下文 vs 微调
 
 | | RAG | 长上下文 | 微调 |
@@ -294,7 +288,9 @@ def mini_rag(query, corpus, encoder, top_recall=10, top_final=3):
 - **chunk 大小是头号旋钮**：太大检索粗、太小断上下文；先试 256/512 token + 10–20% overlap，按评测调。
 - **比调 chunk size 更高价值的改进**：**Contextual Retrieval**（Anthropic 2024，嵌入前给每个 chunk 补一段 LLM 生成的全文上下文）与 **late chunking**（Jina 2024，先整文过长上下文 encoder、再切块池化）都针对「普通切块丢失文档级上下文」这一根因，往往比单纯调块大小收益更大。
 - **嵌入模型要对域**：通用嵌入在专业领域（医疗/法律/代码）可能弱，考虑领域微调或选对口模型（BGE-M3 / E5 / 领域模型）。
+- **新一代 embedding 选型要看输入形态**：Gemini Embedding、Cohere Embed 4、Qwen3 Embedding/Reranker 等更强调长文本、多语言、代码或多模态/企业文档场景。选型时同时看 context length、维度/可截断、是否有 reranker、是否支持图片/PDF/表格、价格和延迟；不要只看 MTEB 平均分。
 - **别纯稠密**：实体/罕见词/精确匹配场景务必加 BM25 混合，否则「检索不到明明有的那条」。
+- **多模态文档不要先粗暴 OCR 成一坨文本**：PDF、截图、图表、表格可走 layout-aware chunking + image/table embedding；文本块、表格块、图像块分别建索引，再在 rerank/context packing 阶段合并引用。
 - **难负例 false negative**（§2.3）：挖负例要去重、过滤，否则训歪。
 - **lost in the middle**（§7）：关键片段放 context 头尾，别堆中间。
 - **重排别省**：召回 recall 够但精度不足时，cross-encoder 重排 top-k 往往是高 ROI 的一步（是否最高取决于召回质量 / 延迟预算 / 候选规模）。
@@ -690,5 +686,8 @@ all RAG / embedding sanity checks passed ✓
 - **PLAID** — Santhanam et al., *PLAID: An Efficient Engine for Late Interaction Retrieval*, arXiv 2205.09707 (2022), CIKM 2022.
 - **Contextual Retrieval** — Anthropic, *Introducing Contextual Retrieval* (engineering blog, 2024).
 - **Late Chunking** — Günther et al., *Late Chunking: Contextual Chunk Embeddings Using Long-Context Embedding Models*, arXiv 2409.04701 (2024).
+- **Gemini Embedding** — Google Gemini API docs, embedding models and task types (2025-2026).
+- **Cohere Embed 4** — Cohere, *Embed 4* model docs / release notes (2025).
+- **Qwen3 Embedding / Reranker** — Qwen Team, *Qwen3 Embedding* release notes (2025).
 - **BEIR** — Thakur et al., *BEIR: A Heterogeneous Benchmark for Zero-shot Evaluation of Information Retrieval Models*, arXiv 2104.08663 (2021), NeurIPS 2021 D&B.
 - **MTEB** — Muennighoff et al., *MTEB: Massive Text Embedding Benchmark*, arXiv 2210.07316 (2022), EACL 2023.

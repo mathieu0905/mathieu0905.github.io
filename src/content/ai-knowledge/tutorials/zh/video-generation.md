@@ -1,15 +1,7 @@
 ## §0 TL;DR Cheat Sheet
+> 💡 **7 句话搞定 Video Generation** — 2024-2026 视频生成大爆发。一页吃下面试高频要点（详见后文 §1–§11 推导）。
 
-### 2026-06-29 SOTA 快照
-
-- **视频生成 SOTA 不能再只写 Sora / Veo 2 / Wan 2.1**。OpenAI 的 Sora 2 引入同步音频、物理一致性和更强 steerability，但 OpenAI 开发者文档也标注 Sora 2 video generation models / Videos API 已 deprecated，并计划在 2026-09-24 shutdown；Google Veo 3.1 是当前 Gemini API/DeepMind 页面重点推广的视频模型，支持原生音频、720p/1080p/4K 规格与 cinematic control；Runway Gen-4.5 继续押注视觉保真、运动质量和创作控制。
-- **技术主线从“无声短视频”变成“视频 + 音频 + 可控编辑 + 参考一致性”**。Sora 2/Veo 3.1 都把同步声音或原生音频列为核心能力；Runway Gen-4/4.5 强调 reference-driven consistency。阅读本文的 DiT/3D VAE/MM-DiT 时，要把 audio conditioning、reference images、multi-shot/storyboard control 也纳入 pipeline。
-- **评测与产品可用性要分开**。某个模型在报告里物理更准，不代表 API/产品会长期稳定可用；Sora 2 的 API deprecation 就是例子。写 SOTA 列表时建议标注：模型是否开放 API、是否有权重、视频时长/分辨率、是否生成音频、是否支持 I2V/编辑/多镜头一致性。
-- 来源：[OpenAI Sora video docs](https://developers.openai.com/api/docs/guides/video-generation)、[Sora 2 model docs](https://developers.openai.com/api/docs/models/sora-2)、[Veo 3.1 Gemini API](https://ai.google.dev/gemini-api/docs/video)、[Veo 3.1 DeepMind](https://deepmind.google/models/veo/)、[Runway Gen-4](https://runwayml.com/research/introducing-runway-gen-4)、[Runway Gen-4.5](https://runwayml.com/research/introducing-runway-gen-4.5)。
-
-> 💡 **7 句话搞定 Video Generation** — 2024-2025 视频生成大爆发。一页吃下面试高频要点（详见后文 §1–§11 推导）。
-
-1. **范式**：主流视频生成 = **3D Causal VAE 压缩 + Latent DiT 扩散 / Flow Matching**。Sora（2024-02）首次把 Transformer 推到 60s + 高分辨率；Hunyuan-Video (Tencent 2024-12) / Wan 2.x (Alibaba 2024-2025) / Mochi-1 / CogVideoX / Movie Gen / Kling / Veo 2 都是这一架构家族的变体。
+1. **范式**：主流视频生成 = **3D Causal VAE 压缩 + Latent DiT 扩散 / Flow Matching**。Sora（2024-02）首次把 Transformer 推到 60s + 高分辨率；Hunyuan-Video / Wan 2.x / Mochi-1 / CogVideoX / Movie Gen / Kling / Veo 2-3.1 / Runway Gen-4/4.5 / Sora 2 都是这一架构家族或产品路线的变体。
 
 2. **3D Causal VAE**：把 $H \times W \times T$ 视频压成 $h \times w \times t$ latent（典型空间下采样 $8\times$、时间下采样 $4\times$）。**因果 (causal)** 关键：当前帧 latent **不能看未来帧**——使训练好的 VAE 同时支持图像（$t{=}1$）与视频（$t{>}1$）、并允许后续帧流式 / 自回归生成。
 
@@ -21,7 +13,7 @@
 
 6. **Image-to-Video (I2V)**：主流三招——(i) **First-frame concat**：把 ref image 编码后沿 channel 拼到 latent；(ii) **Cross-attention 注入**：ref image token 作 K/V；(iii) **AnimateDiff** 风格：冻结 T2I 主干，只插入 temporal module。SVD / DynamiCrafter / I2VGen-XL / Wan-I2V 是代表。
 
-7. **长视频** = keyframe + interpolation / hierarchical / autoregressive chunks。**评测**：VBench (Huang CVPR 2024) 16 维细粒度评分，是当下事实标准；FVD（Unterthiner 2018）仍作辅助；CLIPSim-V 评估 text-video 对齐。
+7. **长视频 + 音频 + 可控编辑** 是 2026 产品主线：keyframe + interpolation / hierarchical / autoregressive chunks 仍是长视频基础；Sora 2 / Veo 3.1 / Movie Gen 把同步音频或原生音频纳入能力；Runway Gen-4/4.5 强调 reference consistency 和创作控制。**评测**：VBench 仍常用，但产品可用性还要看 API 是否开放、是否有音频、是否支持 I2V/编辑、多镜头一致性和商用限制。
 
 > ⚠️ **Caveat** — 本文中 model-specific 数字（参数量、压缩比、attention 类型）均依据各模型公开 paper / tech report；具体训练 hyperparam 与最终架构以原文为准。
 
@@ -35,7 +27,7 @@
 - **架构**：在 latent 上跑 attention（spatiotemporal patterns 是设计点）
 - **生成范式**：DDPM / Rectified Flow / FM（v-prediction 主流；SD3-style）
 
-### 1.2 2024-2025 时间线（按发布顺序）
+### 1.2 2024-2026 时间线（按发布顺序）
 
 | 时间 | 模型 | 出品 | 关键贡献 |
 | --- | --- | --- | --- |
@@ -53,6 +45,10 @@
 | 2024-12 | **Veo 2** | Google | 4K / 2 分钟 |
 | 2025-02 | **Wan 2.1** | Alibaba (Team Wan) | 14B 开源；T2V + I2V 双模 |
 | 2025-07 | **Wan 2.2** | Alibaba | 升级版；MoE expert + 更长时序 |
+| 2025 | **Runway Gen-4** | Runway | reference-driven consistency，角色/场景一致性和创作控制 |
+| 2025-2026 | **Sora 2** | OpenAI | 同步音频、物理一致性和 steerability；开发者文档标注 Videos API / Sora 2 video generation models deprecated，计划 2026-09-24 shutdown |
+| 2025-2026 | **Veo 3.1** | Google DeepMind | Gemini API 主推视频模型，原生音频、720p/1080p/4K 规格和 cinematic control |
+| 2026 | **Runway Gen-4.5** | Runway | 继续强化视觉保真、运动质量、reference control 与 production workflow |
 | 2024-2025 | **OpenSora / OpenSora-Plan** | HPC-AI / PKU | 全开源训练栈复刻 Sora pipeline |
 
 > ⚠️ **闭源 vs 开源** — Sora / Veo / Kling / Movie Gen 没放 weights，所有架构细节基于官方 technical report；面试时不要把内部 ablation 当真硬数字，要主动说 "according to their report"。
@@ -1186,11 +1182,11 @@ def video_gen_sample(model, text, t_lat=12, h_lat=90, w_lat=160, steps=50,
 | --- | --- | --- |
 | 开源最强 T2V | Hunyuan-Video 13B | 2024-12，质量逼近闭源 |
 | 开源 I2V | Wan 2.2 I2V / Hunyuan-Video I2V | 中文 prompt 友好 |
-| 闭源最强 | Veo 2 / Sora / Kling | 4K / 长时长 |
+| 闭源最强 | Veo 3.1 / Runway Gen-4.5 / Sora 2 | Sora 2 API 已标注 deprecated，选型要看长期可用性 |
 | 实时 | LTX-Video 2B | RTX 4090 实时 |
-| 视频 + 音频 | Movie Gen (闭源) | 30B 联合生成 |
-| 控制类 | AnimateAnyone / MotionCtrl | 人物 / 相机控制 |
+| 视频 + 音频 | Veo 3.1 / Sora 2 / Movie Gen | 原生或同步音频成为产品级核心能力 |
+| 控制类 | Runway Gen-4/4.5 / MotionCtrl / AnimateAnyone | reference consistency、人物 / 相机控制、多镜头一致性 |
 
 ---
 
-**Video Generation Quick Reference** · 主要参考：Sora technical report (OpenAI 2024), Hunyuan-Video tech report (Tencent 2024), Mochi-1 blog (Genmo 2024), CogVideoX (Yang et al. arXiv 2024-08 → ICLR 2025), Wan tech report (Team Wan / Ang Wang et al. arXiv 2025), Movie Gen tech report (Meta 2024), VBench (Huang et al. CVPR 2024), AnimateDiff (Guo et al. arXiv 2023-07 → ICLR 2024), SVD (Blattmann et al. arXiv 2023-11), Latte (Ma et al. arXiv 2024-01 → TMLR 2025), MotionCtrl (Wang et al. 2023 → SIGGRAPH 2024), AnimateAnyone (Hu et al. CVPR 2024), SD3 (Esser et al. ICML 2024)
+**Video Generation Quick Reference** · 主要参考：Sora technical report (OpenAI 2024), OpenAI Sora 2 / video generation API docs (2026 deprecation note), Google Veo 3.1 Gemini API / DeepMind docs, Runway Gen-4 / Gen-4.5 research pages, Hunyuan-Video tech report (Tencent 2024), Mochi-1 blog (Genmo 2024), CogVideoX (Yang et al. arXiv 2024-08 → ICLR 2025), Wan tech report (Team Wan / Ang Wang et al. arXiv 2025), Movie Gen tech report (Meta 2024), VBench (Huang et al. CVPR 2024), AnimateDiff (Guo et al. arXiv 2023-07 → ICLR 2024), SVD (Blattmann et al. arXiv 2023-11), Latte (Ma et al. arXiv 2024-01 → TMLR 2025), MotionCtrl (Wang et al. 2023 → SIGGRAPH 2024), AnimateAnyone (Hu et al. CVPR 2024), SD3 (Esser et al. ICML 2024)

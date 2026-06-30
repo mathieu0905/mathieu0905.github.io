@@ -1,13 +1,5 @@
 ## §0 TL;DR Cheat Sheet
-
-### 2026-06-29 SOTA Snapshot
-
-- **The multimodal frontier has moved from “LLM with image input” to “text/image/video/audio/PDF unified input + tool use.”** Gemini 3.1 Pro Preview explicitly supports text, image, video, audio, and PDF inputs, plus thinking, code execution, function calling, and search grounding; Claude Fable/Opus families and GPT-5.5 also place vision, documents, and computer/workflow tasks near the center. Closed-model architectures remain undisclosed, so do not reduce them to a LLaVA-style projector.
-- **Read VLM material in two layers.** CLIP/SigLIP/LLaVA/Q-Former/M-RoPE below are the interpretable open-architecture foundation; the latest closed omni/multimodal models mostly appear as product/API capabilities. In interviews, explain the open mechanism first, then add: “frontier closed models likely use more integrated multimodal pretraining and tool scaffolding; exact fusion is undisclosed.”
-- **Retrieval is becoming multimodal too.** Gemini Embedding 2 and Cohere Embed 4 map text, image, documents, and in some cases audio/video into a shared space. This changes VLM-RAG design: images/PDFs/videos do not always need to be OCRed into pure text first; multimodal embedding + rerank is now a viable first stage.
-- Sources: [Gemini 3.1 Pro Preview](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview), [Claude models overview](https://platform.claude.com/docs/en/about-claude/models/overview), [Gemini Embedding 2](https://ai.google.dev/gemini-api/docs/embeddings), [Cohere Embed 4](https://cohere.com/blog/embed-4).
-
-> 💡 **VLM in 8 sentences** — one page covering the core interview points for vision-language models (see §1–§13 below for derivations and code).
+> 💡 **VLM in 9 sentences** — one page covering the core interview points for vision-language models (see §1–§13 below for derivations and code).
 
 1. **Vision encoder = ViT-dominated**: Dosovitskiy et al. 2021 (ICLR) slice images into $P\times P$ patches (typically $P=14$ or $16$), apply a linear projection + learnable positional embedding + optional `[CLS]` token, and feed them into a Transformer encoder. **The vision side of CLIP / SigLIP / LLaVA is all a ViT variant.**
 
@@ -24,6 +16,8 @@
 7. **Qwen2-VL's M-RoPE — must-know**: Wang et al. 2024 split RoPE along head_dim into 6 chunks, assigning (t / h / w, three groups of position ids) following the axis sequence $(t, h, w, t, h, w)$; the typical config `mrope_section=[16,24,24]` (units are pairs of half head_dim, so $\sum \times 2 = $ head_dim=128, **all 128 dims rotate**). This way each token carries (t, h, w) three-dim positions without flattening. **Pairs with native dynamic resolution** (no longer padded to a fixed 224×224).
 
 8. **Three-stage training + preference optimization**: (1) **alignment** trains the projector / Q-Former; (2) **visual instruction tune** unfreezes part of the LLM; (3) **preference** (LLaVA-RLHF, RLAIF-V, VLM-R1, DPO/PPO) addresses hallucinations and long-tail alignment. **VLM-R1 (2025)** uses GRPO + verifiable reward to transfer reasoning ability into vision-language tasks.
+
+9. **Closed-source VLMs are now unified multimodal agents**: GPT-5.5, Claude Fable/Opus, and Gemini 3.1 Pro Preview-style APIs are no longer just "image QA"; they combine text/image/video/audio/PDF, tool/function calling, long context, and agent workflows. The architecture is still undisclosed, so the CLIP/LLaVA/Qwen-VL mechanisms below are for understanding visible design patterns, not for claiming what closed models use internally.
 
 ## §1 Intuition: what is a VLM doing?
 
@@ -716,12 +710,13 @@ Meta released Llama-3.2-V (11B / 90B) in September 2024:
 
 - Designed as a "robust base for long-tail visual tasks"; the visual ceiling is slightly below GPT-4V, but **text-only benchmarks are nearly identical to the text-only Llama-3**
 
-### 9.3　Claude 3.5/3.7 Sonnet Vision and GPT-4V/4o
+### 9.3　Closed-source unified multimodal: GPT-4V/4o → GPT-5.5, Claude Fable/Opus, Gemini 3.1
 
 The closed-source architectures of Anthropic / OpenAI are undisclosed, but inferences from API behavior:
-- **GPT-4V (2023.09) / GPT-4o (2024.05)**: 4o is natively multimodal, jointly trained from the ground up over (image + text + audio), **not a LLaVA-style post-hoc projector**
-- **Claude 3.5/3.7 Sonnet (2024-2025)**: supports high-resolution images (up to 8000×8000 pixels, tiled on demand), with document understanding (PDF/screenshot) being a selling point
-- **Common feature**: handles multi-page documents / screenshots / OCR of math formulas — far beyond the LLaVA family. This hints at significant optimization in training-data scale (document corpus) + tiling strategy.
+- **GPT-4V (2023.09) / GPT-4o (2024.05) → GPT-5.5 (2026)**: 4o put image + text + audio into a native multimodal product line; GPT-5.5-style APIs emphasize complex reasoning, coding, tool/workflow integration, and multimodal inputs rather than single-image VQA.
+- **Claude 3.5/3.7 Sonnet → Claude Fable 5 / Opus 4.8**: Claude's public positioning keeps emphasizing high-resolution images, PDF/screenshot document understanding, long-horizon agentic work, and computer/tool use; the internal vision tower, tiling, and fusion design remain undisclosed.
+- **Gemini 3.1 Pro Preview**: public docs list text, image, video, audio, and PDF input, million-token input, thinking, function calling, and tool use. It represents a 2026 product shape: multimodal understanding + long context + tool loop.
+- **Common feature**: they handle multi-page documents, screenshots, OCR, math formulas, video/audio context, and connect visual understanding to tool calls. They likely contain major engineering around document corpora, tiling/token budgets, multimodal alignment, and safety filters, but the training recipe and architecture are still black boxes.
 
 ## §10 Qwen2-VL / DeepSeek-VL: dynamic resolution + M-RoPE
 
@@ -915,6 +910,7 @@ CLIP is trained for "image ↔ short caption" alignment, but performs poorly on 
 - **BGE-VL (2024)**: the BGE team's multimodal version; uses SigLIP-So400M + a small LLM for instruction-aware retrieval
 - **VLM2Vec (Jiang et al. 2024)**: instruction-conditioned mean pool of the last hidden state of a VLM (LLaVA / Qwen-VL); **trains only a contrastive head**, significantly beating CLIP on the MMEB benchmark
 - **mmE5 (2024)**: multimodal version of E5, supporting 12 types of retrieval tasks
+- **Gemini Embedding / Cohere Embed 4 (2025-2026)**: product APIs are starting to fold text, images, PDFs/documents, and more complex enterprise data into unified embedding/RAG workflows. In engineering, check input modalities, dimensions, context length, Matryoshka/truncation support, reranker availability, and pricing/latency; do not look only at the MTEB average.
 
 ### 13.3　Core tricks
 
@@ -1445,6 +1441,8 @@ Design trade-offs:
 **VLM preference alignment**: Sun et al. arXiv 2023 (LLaVA-RLHF); Yu et al. arXiv 2024 (RLAIF-V); Zhou et al. arXiv 2024 (POVID); Shen et al. arXiv 2025 (VLM-R1)
 
 **Multimodal embeddings**: Koukounas et al. arXiv 2024 (Jina-CLIP); Jiang et al. arXiv 2024 (VLM2Vec); Zhang et al. arXiv 2024 (mmE5)
+
+**Closed-source/product docs**: OpenAI model docs (GPT-5.5 / multimodal APIs); Anthropic Claude models overview (Fable / Opus / computer-use capabilities); Google Gemini 3.1 Pro Preview docs (multimodal input, 1M context, tool use); Gemini Embedding docs; Cohere Embed 4 docs
 
 **Evaluation**: Li et al. EMNLP 2023 (POPE); Thrush et al. CVPR 2022 (Winoground); Liu et al. ECCV 2024 (MMBench); Yue et al. CVPR 2024 (MMMU); Fu et al. CVPR 2025 (Video-MME); Yu et al. ICML 2024 (MM-Vet); Mangalam et al. NeurIPS 2023 (EgoSchema)
 

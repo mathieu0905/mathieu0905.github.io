@@ -1,17 +1,9 @@
 ## §0 TL;DR Cheat Sheet
-
-### 2026-06-29 SOTA Snapshot
-
-- **Embedding/RAG has expanded from pure text into unified multimodal spaces.** Gemini Embedding 2 maps text, images, video, audio, and documents into one embedding space; Cohere Embed 4 supports text/image/mixed documents with configurable dimensions and embedding types; Qwen3 Embedding/Reranker provides an open model family for multilingual retrieval and reranking. The bi-encoder/InfoNCE/hard-negative material below is still foundational, but production selection now needs multimodality, truncatable dimensions, reranking, and cost.
-- **The RAG mainline has shifted from “vector recall + stuff prompt” to “hybrid retrieval + rerank + graph/agentic retrieval + evaluation.”** Microsoft GraphRAG documents KG extraction, community summaries, and global/local search as a structured RAG path. Long-context models make “stuff the whole corpus” more feasible, but lost-in-the-middle, permissions, citations, and update cost still keep RAG relevant.
-- **2026 practical recommendation:** start with BM25/keyword + dense + reranker as the default hybrid pipeline; use multimodal embeddings when documents include images/PDFs/video; move to GraphRAG/DRIFT when the corpus has complex entity relationships, not as the default for every RAG task.
-- Sources: [OpenAI Embeddings](https://developers.openai.com/api/docs/guides/embeddings), [Gemini Embedding 2](https://ai.google.dev/gemini-api/docs/embeddings), [Cohere Embed 4](https://cohere.com/blog/embed-4), [Cohere model docs](https://docs.cohere.com/docs/models), [Qwen3 Embedding](https://qwen.ai/blog?id=qwen3-embedding), [Microsoft GraphRAG](https://microsoft.github.io/graphrag/).
-
 > 💡 **9 sentences to nail RAG + Embedding** — one page covering the interview essentials (see §2–§11 for derivations).
 
 1. **What RAG is**: Retrieval-Augmented Generation = first **retrieve** relevant passages from an external knowledge base with the query, then stitch them into the prompt and let the LLM **generate** the answer. It addresses three things: stale knowledge, hallucination, private data (Lewis et al. 2020).
 
-2. **Two complementary halves**: the left half "**train embeddings**" is contrastive learning (bi-encoder + InfoNCE + hard negatives), math-dense; the right half "**use embeddings**" is the RAG pipeline (chunk → retrieve → rerank → assemble prompt), systems-dense.
+2. **Two complementary halves**: the left half "**train embeddings**" is contrastive learning (bi-encoder + InfoNCE + hard negatives), math-dense; the right half "**use embeddings**" is the RAG pipeline (chunk → retrieve → rerank → assemble prompt), systems-dense. In 2026 engineering you also need **multimodal embeddings** (images/PDFs/tables/screenshots) and task-specific rerankers in the same retrieval chain.
 
 3. **The embedding main loss, InfoNCE**: $\mathcal{L} = -\log \frac{\exp(\text{sim}(q,d^+)/\tau)}{\sum_i \exp(\text{sim}(q,d_i)/\tau)}$ — essentially the softmax cross-entropy of "the positive vs a pile of negatives," with temperature $\tau$ tuning sharpness.
 
@@ -19,13 +11,13 @@
 
 5. **Hard negatives**: pick "similar but irrelevant" docs from the retrieval top-k as negatives — more informative than random negatives; but beware the **false negative trap** — a picked "hard negative" may actually be relevant and become noise.
 
-6. **Sparse vs dense vs hybrid**: BM25 (exact term matching, strong on rare words / entities) + dense vectors (semantic matching) complement each other, fused by rank with **RRF** (Reciprocal Rank Fusion): $\text{RRF}(d)=\sum_r \frac{1}{k+\text{rank}_r(d)}$, $k\approx60$.
+6. **Sparse vs dense vs hybrid**: BM25 (exact term matching, strong on rare words / entities) + dense vectors (semantic matching) complement each other, fused by rank with **RRF** (Reciprocal Rank Fusion): $\text{RRF}(d)=\sum_r \frac{1}{k+\text{rank}_r(d)}$, $k\approx60$. Modern production RAG defaults to **hybrid recall + rerank + context packing**; pure vector recall is mainly for low-risk prototypes.
 
 7. **Matryoshka representations**: one training run makes the **first $m$ dims** of the embedding also a good embedding, so deployment truncates dimensions on demand (save storage / speed up recall) via the multi-granularity loss $\sum_m \mathcal{L}(\text{emb}[:m])$.
 
 8. **RAG vs long-context vs fine-tuning**: RAG injects **updatable external facts** and is traceable; long-context stuffs the full text but is expensive and suffers "lost in the middle"; fine-tuning changes **capability/style**, not great at injecting massive new facts. The three are often combined.
 
-9. **Evaluation**: don't only look at generation — evaluate in layers: **retrieval quality** (recall@k / nDCG) + **generation faithfulness** (faithfulness / context relevance / answer relevance, e.g. RAGAS).
+9. **Evaluation**: don't only look at generation — evaluate in layers: **retrieval quality** (recall@k / nDCG) + **generation faithfulness** (faithfulness / context relevance / answer relevance, e.g. RAGAS). Multimodal RAG also needs separate checks for OCR/table/image localization, cross-page citation, and source traceability.
 
 ## §1 Intuition: why we need RAG
 
@@ -207,6 +199,8 @@ LLM generate + cite   ⑤ optional self-check: Self-RAG(generation reflection) �
 
 Naive RAG recalls passages independently and is weak at "global questions spanning many documents" (e.g. "the thematic thread of the whole report"). **GraphRAG** (Microsoft, Edge 2024) first uses an LLM to extract the corpus into an **entity-relation knowledge graph + community summaries**, and global questions go through "community summaries" rather than scattered passages. Strong at query-focused summarization; the cost is expensive graph building.
 
+The 2025-2026 deployment lesson is that GraphRAG should not replace ordinary vector search; it should be **an extra retrieval route for global questions**. Local facts (a contract clause, a function definition) still go through BM25/vector/late-interaction. Global questions (risk themes across a project, patterns across meeting notes) go through community summaries, entity graphs, and map-reduce summarization. Online systems often route the query first, then choose local RAG, global GraphRAG, or a fused path.
+
 ### 8.2　RAG vs long-context vs fine-tuning
 
 | | RAG | Long-context | Fine-tuning |
@@ -294,7 +288,9 @@ This ties §5–§7 together: chunk → dense + BM25 dual recall → RRF fuse �
 - **Chunk size is the number-one knob**: too large → coarse retrieval, too small → broken context; start with 256/512 token + 10–20% overlap, tune by evaluation.
 - **Higher-value than tuning chunk size**: **Contextual Retrieval** (Anthropic 2024, prepend an LLM-generated whole-document context to each chunk before embedding) and **late chunking** (Jina 2024, run the full doc through a long-context encoder first, then chunk-pool) both target the root cause "plain chunking loses document-level context," often paying off more than just tuning chunk size.
 - **Match the embedding model to the domain**: a generic embedding may be weak in specialized domains (medical/legal/code); consider domain fine-tuning or a matching model (BGE-M3 / E5 / domain models).
+- **Choose new-generation embeddings by input shape**: Gemini Embedding, Cohere Embed 4, Qwen3 Embedding/Reranker, and similar models emphasize long text, multilingual, code, multimodal, or enterprise-document scenarios. Check context length, dimensions/truncation, reranker availability, image/PDF/table support, price, and latency; do not rely only on the MTEB average.
 - **Don't go pure dense**: for entity/rare-word/exact-match scenarios always add BM25 hybrid, otherwise "you can't retrieve the one that's obviously there."
+- **Do not flatten multimodal documents into one rough OCR blob**: PDFs, screenshots, charts, and tables benefit from layout-aware chunking + image/table embeddings. Index text chunks, table chunks, and image chunks separately, then merge citations during rerank/context packing.
 - **Hard-negative false negatives** (§2.3): dedup and filter when mining negatives, or you train it crooked.
 - **Lost in the middle** (§7): put key passages at the head/tail of the context, not piled in the middle.
 - **Don't skip reranking**: when recall is enough but precision isn't, a cross-encoder rerank of the top-k is often a high-ROI step (whether it is the highest depends on recall quality / latency budget / candidate scale).
@@ -690,5 +686,8 @@ Pure PyTorch, runs on CPU in seconds with no GPU: `python docs/tutorials/code/ra
 - **PLAID** — Santhanam et al., *PLAID: An Efficient Engine for Late Interaction Retrieval*, arXiv 2205.09707 (2022), CIKM 2022.
 - **Contextual Retrieval** — Anthropic, *Introducing Contextual Retrieval* (engineering blog, 2024).
 - **Late Chunking** — Günther et al., *Late Chunking: Contextual Chunk Embeddings Using Long-Context Embedding Models*, arXiv 2409.04701 (2024).
+- **Gemini Embedding** — Google Gemini API docs, embedding models and task types (2025-2026).
+- **Cohere Embed 4** — Cohere, *Embed 4* model docs / release notes (2025).
+- **Qwen3 Embedding / Reranker** — Qwen Team, *Qwen3 Embedding* release notes (2025).
 - **BEIR** — Thakur et al., *BEIR: A Heterogeneous Benchmark for Zero-shot Evaluation of Information Retrieval Models*, arXiv 2104.08663 (2021), NeurIPS 2021 D&B.
 - **MTEB** — Muennighoff et al., *MTEB: Massive Text Embedding Benchmark*, arXiv 2210.07316 (2022), EACL 2023.

@@ -1,12 +1,4 @@
 ## §0 TL;DR Cheat Sheet
-
-### 2026-06-29 SOTA 快照
-
-- **稀疏/线性注意力已经进入公开大模型主线，而不只是论文替代品**。DeepSeek-V3.2-Exp/V3.2 把 DSA（DeepSeek Sparse Attention）作为长上下文效率核心；Qwen3-Next 用 Gated DeltaNet + Gated Attention 的 hybrid attention，并配合高稀疏 MoE 与 MTP 降低训练/推理成本。
-- **2026 的结论不是“线性注意力取代 softmax”，而是“hybrid 成为默认折中”**。Qwen3-Next 保留部分 full/gated attention 来守住 recall，同时用 Gated DeltaNet 提高长上下文吞吐；DeepSeek DSA 保留 softmax over selected tokens/blocks 的思路，降低全量注意力成本。面试里要主动说明：稀疏 attention 省 compute/KV 访问，但 selector miss 会变成新的 failure mode。
-- **工程栈已经跟上**。vLLM 对 Qwen3-Next 这类非标准 attention 的早期支持，说明“能不能高效跑”已经和“模型结构是否优秀”同样重要。读新架构时，要同时看 kernel、cache layout、prefill/decode 分离和量化兼容性。
-- 来源：[DeepSeek-V3.2-Exp](https://api-docs.deepseek.com/news/news250929)、[DeepSeek-V3.2 Release](https://api-docs.deepseek.com/news/news251201)、[DeepSeek-V3.2 GitHub](https://github.com/deepseek-ai/DeepSeek-V3.2-Exp)、[Qwen3-Next/vLLM](https://vllm.ai/blog/2025-09-11-qwen3-next)、[Qwen3-Next model card](https://huggingface.co/Qwen/Qwen3-Next-80B-A3B-Instruct)。
-
 > 💡 **9 句话搞定高效注意力 / SSM / 稀疏注意力** — 一页拿下面试核心要点（详见后文 §1–§11 推导）。
 
 1. **二次瓶颈**：softmax attention 训练 $O(L^2 d)$ 时间，decode 时 KV cache 随上下文线性增长（$O(L)$ 显存、每步 $O(L)$ 计算）。逃逸有三条路：**线性注意力**、**SSM / Mamba**、**稀疏注意力**。
@@ -25,7 +17,7 @@
 
 8. **推理杀手锏**：线性 / SSM 保持**固定大小**递推状态（序列长度上 $O(1)$）→ 常数显存 + 每 token $O(1)$ 解码；softmax 的 KV cache 随长度线性涨；稀疏减少 KV 访问/计算但仍存 KV。
 
-9. **混合架构（hybrid）**：纯线性/SSM 的 **recall（联想回忆 / in-context copy）偏弱** —— recall–throughput 权衡。修法是在大量线性/SSM 层里**交错少数注意力层**（full / sliding / 门控 attention，具体类型和比例各模型不同）：Jamba、Hymba、Qwen3-Next、Kimi-Linear、MiniMax-01 都走这条路，兼顾吞吐与 recall。
+9. **混合架构（hybrid）**：纯线性/SSM 的 **recall（联想回忆 / in-context copy）偏弱** —— recall–throughput 权衡。修法是在大量线性/SSM 层里**交错少数注意力层**（full / sliding / 门控 attention，具体类型和比例各模型不同）：Jamba、Hymba、Qwen3-Next、Kimi-Linear、MiniMax-01 都走这条路，兼顾吞吐与 recall。2026 选型不能只看 $O(L)$ 复杂度，要同时测 needle / in-context copy、长代码定位、prefill TTFT、decode 吞吐和 runtime kernel 是否真的支持。
 
 ## §1 直觉：softmax 注意力的二次瓶颈与三条逃逸路线
 
@@ -398,7 +390,7 @@ $$\text{state} = n_{\text{layers}} \cdot (\text{每层状态大小}) ,\quad \tex
 
 ### 9.3　近期趋势
 
-2024→2025 的清晰趋势：**线性层从"纯加性线性注意力 / Mamba"升级到"门控 + 改写式更新"（Gated DeltaNet / KDA）**，因为后者 recall 更强、需要的 full attention 层更少；同时 full attention 那几层也常用上 GQA / MLA / 输出门控等省 KV 的手段。换句话说，hybrid 的两端都在各自变强：线性端靠 delta rule + 门控逼近 attention 的 recall，attention 端靠 MLA/GQA 压 KV cache。
+2024→2026 的清晰趋势：**线性层从"纯加性线性注意力 / Mamba"升级到"门控 + 改写式更新"（Gated DeltaNet / KDA）**，因为后者 recall 更强、需要的 full attention 层更少；同时 full attention 那几层也常用上 GQA / MLA / 输出门控等省 KV 的手段。DeepSeek-V3.2 的 DSA 说明另一条工业路线也在变强：保留 softmax attention 的质量，用轻量 indexer / sparse routing 只看少量关键 token。换句话说，hybrid 的两端都在各自变强：线性端靠 delta rule + 门控逼近 attention 的 recall，attention 端靠 MLA/GQA/DSA 压 KV cache 和访存。
 
 ## §10 工程实践与常见误区
 

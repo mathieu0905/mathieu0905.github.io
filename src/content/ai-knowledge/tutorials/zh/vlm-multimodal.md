@@ -1,13 +1,5 @@
 ## §0 TL;DR Cheat Sheet
-
-### 2026-06-29 SOTA 快照
-
-- **多模态前沿已经从“图像输入的 LLM”升级成“文本/图像/视频/音频/PDF 统一输入 + 工具使用”**。Gemini 3.1 Pro Preview 明确支持 text、image、video、audio、PDF 输入，并带 thinking、code execution、function calling、search grounding；Claude Fable/Opus 系列和 GPT-5.5 也把视觉、文档、computer/workflow tasks 放在核心能力里。闭源模型架构仍未公开，不能把它们简单等同于 LLaVA-style projector。
-- **VLM 资料要分两层读**：本文的 CLIP/SigLIP/LLaVA/Q-Former/M-RoPE 是可解释的开放架构基础；最新闭源 omni/multimodal 模型更多体现为 product/API capability。面试里可以先讲开放机制，再补一句“frontier closed models likely use more integrated multimodal pretraining and tool scaffolding; exact fusion is undisclosed”。
-- **检索也在多模态化**。Gemini Embedding 2、Cohere Embed 4 这类模型把 text、image、document，甚至 audio/video 映射到统一空间；这会影响 VLM-RAG 的设计：图片/PDF/视频不一定先 OCR 成纯文本，也可以先走多模态 embedding + rerank。
-- 来源：[Gemini 3.1 Pro Preview](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview)、[Claude models overview](https://platform.claude.com/docs/en/about-claude/models/overview)、[Gemini Embedding 2](https://ai.google.dev/gemini-api/docs/embeddings)、[Cohere Embed 4](https://cohere.com/blog/embed-4)。
-
-> 💡 **8 句话搞定 VLM** — 一页拿下视觉-语言模型面试核心要点（详见后文 §1–§13 推导与代码）。
+> 💡 **9 句话搞定 VLM** — 一页拿下视觉-语言模型面试核心要点（详见后文 §1–§13 推导与代码）。
 
 1. **视觉 encoder = ViT 主导**：Dosovitskiy et al. 2021 (ICLR) 把图像切 $P\times P$ patch（一般 $P=14$ 或 $16$）做线性投影 + 可学习 positional embedding + 可选 `[CLS]` token，输入 Transformer encoder。**CLIP / SigLIP / LLaVA 的视觉端都是 ViT 变体**。
 
@@ -24,6 +16,8 @@
 7. **Qwen2-VL 的 M-RoPE 必考**：Wang et al. 2024 把 RoPE 沿 head_dim 分成 6 段，按 axis 序列 $(t, h, w, t, h, w)$ 分配 (t / h / w 三组位置 id)；典型配置 `mrope_section=[16,24,24]`（单位是半 head_dim 的对数，$\sum \times 2 = $ head_dim=128，**全部 128 维都旋转**）。这样每个 token 同时携带 (t, h, w) 三维位置而不需要扁平化。**配合 native dynamic resolution**（不再 padding 到固定 224×224）。
 
 8. **训练三段式 + 偏好优化**：(1) **alignment** 训 projector / Q-Former；(2) **visual instruction tune** 解冻部分 LLM；(3) **preference**（LLaVA-RLHF, RLAIF-V, VLM-R1, DPO/PPO）治理幻觉、对齐 long-tail。**VLM-R1 (2025)** 用 GRPO + verifiable reward 把推理能力迁到视觉-语言任务。
+
+9. **闭源 VLM 已走向 unified multimodal agent**：GPT-5.5、Claude Fable/Opus、Gemini 3.1 Pro Preview 这类 API 不再只是“图片问答”，而是文本/图像/视频/音频/PDF + tool/function calling + 长上下文 + agent workflow。架构细节仍未公开，文章里的 CLIP/LLaVA/Qwen-VL 推导用于理解可见机制，不能直接套成闭源模型内部结构。
 
 ## §1 直觉：VLM 在做什么？
 
@@ -716,12 +710,13 @@ Wang et al. 2023 (CogVLM) 的核心：在 LLM 的 attention / FFN 里**复制一
 
 - 设计为"长尾视觉任务的 robust 基座"，视觉能力上限略低于 GPT-4V，但 **text-only benchmark 与 Llama-3 文本版几乎一致**
 
-### 9.3　Claude 3.5/3.7 Sonnet Vision 与 GPT-4V/4o
+### 9.3　闭源 unified multimodal：GPT-4V/4o → GPT-5.5、Claude Fable/Opus、Gemini 3.1
 
 Anthropic / OpenAI 的闭源模型架构未公开，但从 API 行为推断：
-- **GPT-4V (2023.09) / GPT-4o (2024.05)**：4o 是 native multimodal，从底层就联合训练 (image + text + audio)，**不是 LLaVA 式后接 projector**
-- **Claude 3.5/3.7 Sonnet (2024-2025)**：支持高分辨率图像（最多 8000×8000 像素，按需 tile），文档理解 (PDF/screenshot) 是其卖点之一
-- **共同特征**：能处理多页文档 / 截屏 / OCR 数学公式——远超 LLaVA 系列。这暗示它们在训练数据规模（document corpus）+ tiling 策略上有重大优化
+- **GPT-4V (2023.09) / GPT-4o (2024.05) → GPT-5.5 (2026)**：4o 开始把 image + text + audio 放进 native multimodal 产品路线；GPT-5.5 这类新 API 更强调复杂 reasoning、coding、tool/workflow 和多模态输入，不再是单纯 VQA。
+- **Claude 3.5/3.7 Sonnet → Claude Fable 5 / Opus 4.8**：Claude 系列的公开卖点持续集中在高分辨率图像、PDF/screenshot 文档理解、长程 agentic work 与 computer/tool use；内部视觉塔、tiling、fusion 方式未公开。
+- **Gemini 3.1 Pro Preview**：公开文档列出文本、图像、视频、音频、PDF 输入，百万级 input token，thinking、function calling 和 tool use。它代表 2026 VLM 的另一条产品形态：多模态理解 + 长上下文 + 工具闭环。
+- **共同特征**：能处理多页文档、截屏、OCR、数学公式、视频/音频上下文，并能把视觉理解接到工具调用。它们很可能在 document corpus、tiling/token budget、多模态对齐和安全过滤上有大量工程优化，但训练 recipe 和架构仍是黑箱。
 
 ## §10 Qwen2-VL / DeepSeek-VL：动态分辨率 + M-RoPE
 
@@ -915,6 +910,7 @@ CLIP 训练目标是 "image ↔ short caption" 对齐，**长 instruction 检索
 - **BGE-VL (2024)**：BGE 团队的 multimodal 版本，用 SigLIP-So400M + small LLM 做 instruction-aware retrieval
 - **VLM2Vec (Jiang et al. 2024)**：把 VLM（LLaVA / Qwen-VL）的最后一层 hidden state 做 instruction-conditioned mean pool，**只训 contrastive head**，benchmark MMEB 上显著超过 CLIP
 - **mmE5 (2024)**：multimodal 版本的 E5，支持 12 种 retrieval 任务类型
+- **Gemini Embedding / Cohere Embed 4 (2025-2026)**：产品 API 开始把文本、图像、PDF/文档乃至更复杂企业数据放进统一 embedding/RAG 场景。工程上要检查输入模态、维度、上下文长度、是否支持 Matryoshka/截断、是否有 reranker 配套，而不是只看 MTEB 总分。
 
 ### 13.3　核心 trick
 
@@ -1445,6 +1441,8 @@ $$\frac{\partial \mathcal{L}}{\partial S_{ij}} = \frac{1}{N}\cdot \frac{-y_{ij}}
 **VLM 偏好对齐**：Sun et al. arXiv 2023 (LLaVA-RLHF); Yu et al. arXiv 2024 (RLAIF-V); Zhou et al. arXiv 2024 (POVID); Shen et al. arXiv 2025 (VLM-R1)
 
 **多模态 embedding**：Koukounas et al. arXiv 2024 (Jina-CLIP); Jiang et al. arXiv 2024 (VLM2Vec); Zhang et al. arXiv 2024 (mmE5)
+
+**闭源/产品文档**：OpenAI model docs (GPT-5.5 / multimodal APIs); Anthropic Claude models overview (Fable / Opus / computer-use capabilities); Google Gemini 3.1 Pro Preview docs (multimodal input, 1M context, tool use); Gemini Embedding docs; Cohere Embed 4 docs
 
 **评测**：Li et al. EMNLP 2023 (POPE); Thrush et al. CVPR 2022 (Winoground); Liu et al. ECCV 2024 (MMBench); Yue et al. CVPR 2024 (MMMU); Fu et al. CVPR 2025 (Video-MME); Yu et al. ICML 2024 (MM-Vet); Mangalam et al. NeurIPS 2023 (EgoSchema)
 

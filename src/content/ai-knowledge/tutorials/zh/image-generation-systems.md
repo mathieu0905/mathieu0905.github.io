@@ -1,17 +1,9 @@
 ## §0 TL;DR Cheat Sheet
-
-### 2026-06-29 SOTA 快照
-
-- **图像生成系统不再只有 SDXL/SD3/FLUX 这条开放栈主线**。OpenAI API 文档已把 `gpt-image-2` 列为 GPT Image 系列的最新图像生成/编辑模型，并支持更灵活的尺寸；Google 的 Gemini 3 Image / Nano Banana 系列把“推理型图像生成”和多轮编辑作为卖点。开放 diffusion/flow 栈仍适合研究和可控部署，但产品 SOTA 已明显走向原生多模态图像模型。
-- **新的能力重点是文字渲染、多轮编辑、参考一致性和世界知识，而不只是 FID/审美分数**。Nano Banana Pro/2 强调文本可读性、复杂编辑、现实知识与 SynthID；GPT Image 系列强调 text+image 输入、生成和编辑统一。读本文的 ControlNet/IP-Adapter/LoRA 时，要把它们看成开放生态的可控组件，而不是全部最新产品能力的上限。
-- **部署判断要加上 provenance 与安全层**。商业图像模型普遍引入 watermark/SynthID/C2PA、内容过滤、人物/版权限制；本地 FLUX/SD 系列虽然自由度更高，但也需要自己的安全与来源标注策略。
-- 来源：[OpenAI Image Generation](https://developers.openai.com/api/docs/guides/image-generation)、[GPT Image 2 model docs](https://developers.openai.com/api/docs/models/gpt-image-2)、[OpenAI image API reference](https://developers.openai.com/api/reference/resources/images/methods/generate/)、[Google Nano Banana Pro](https://blog.google/innovation-and-ai/products/nano-banana-pro/)、[Gemini image generation docs](https://ai.google.dev/gemini-api/docs/image-generation)、[Gemini 3 Pro Image](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/3-pro-image)。
-
-> 💡 **8 句话搞定 Image Generation 系统** — 一页拿下 production text-to-image 栈核心（详见 §1–§10 推导）。
+> 💡 **9 句话搞定 Image Generation 系统** — 一页拿下 production text-to-image 栈核心（详见 §1–§10 推导）。
 
 1. **LDM 关键**：VAE encode 把 $H\times W\times 3$ 压成 $h\times w\times c$（SD 1.x: $8\times$ 下采样、$c=4$），扩散在 latent 上做，**计算节省 $8^2=64\times$**，最后再 VAE decode 出像素（Rombach et al. 2022 CVPR）。
 
-2. **SD 1.x → SDXL → SD3 → FLUX 主线**：1.x 用 CLIP-L 文本编码 + U-Net；SDXL 双编码器（OpenCLIP-G + CLIP-L）+ 2.6B U-Net + size/crop conditioning + Refiner（Podell et al. 2024 ICLR）；SD3 换 **MM-DiT** + Rectified Flow（Esser et al. 2024 ICML）；FLUX.1 12B MM-DiT 加 parallel attention（Black Forest Labs 2024）。
+2. **SD 1.x → SDXL → SD3 → FLUX 主线**：1.x 用 CLIP-L 文本编码 + U-Net；SDXL 双编码器（OpenCLIP-G + CLIP-L）+ 2.6B U-Net + size/crop conditioning + Refiner（Podell et al. 2024 ICLR）；SD3 换 **MM-DiT** + Rectified Flow（Esser et al. 2024 ICML）；FLUX.1 12B MM-DiT 加 parallel attention（Black Forest Labs 2024）。2026 产品侧还要把 **GPT Image 2、Gemini / Nano Banana Pro** 这类 native multimodal image models 单独看待：它们把生成、编辑、图文理解和安全/provenance 包成统一 API。
 
 3. **CFG（必考）**：训练时按概率 $p_\text{drop}\approx 0.1$ 把条件 $c$ 替换成 $\emptyset$；推理时输出 $\hat\epsilon_\text{cfg} = \hat\epsilon_\emptyset + s\,(\hat\epsilon_c - \hat\epsilon_\emptyset)$，$s \in [1.5, 12]$（Ho & Salimans 2022）。
 
@@ -24,6 +16,8 @@
 7. **DreamBooth**（Ruiz et al. 2023 CVPR）：rare-token（如 `sks dog`）+ **prior preservation loss** $L = \|\epsilon - \hat\epsilon(x_t, t, \text{"a sks dog"})\|^2 + \lambda \|\epsilon' - \hat\epsilon(x_t', t, \text{"a dog"})\|^2$，第二项防 language drift / 过拟合。
 
 8. **DiT vs MM-DiT**：DiT 用 **AdaLN-Zero**（条件 $\to$ MLP $\to$ scale/shift/gate，最后一层 $W_\text{gate}=0$ 实现恒等启动，Peebles & Xie 2023 ICCV）；MM-DiT 把 text token 和 image token **拼成一个序列做联合 self-attention**（每个模态独立 QKV 投影，但 attention 是全局的），信息流双向（Esser et al. 2024）。
+
+9. **生产系统关注点**：现在图像生成不是只比 FID/美感，还要比 **编辑一致性、文本渲染、角色/产品一致性、局部 mask 编辑、多图参考、C2PA/provenance、安全过滤和 API 稳定性**。开源 FLUX/SD 系适合可控部署和 LoRA 生态；闭源 GPT Image/Gemini/Midjourney/Runway 系适合高质量产品工作流。
 
 ## §1 直觉与全景
 
@@ -164,6 +158,14 @@ $$x_t = (1-t)\, x_0 + t\, x_1,\quad u_t = x_1 - x_0$$
 - **U-ViT**（Bao et al. 2023）：U-Net 风骨架但纯 transformer block + long skip connection，是早期 transformer-based diffusion 探索。
 
 - **Imagen**（Saharia et al. 2022 NeurIPS）：Google **pixel-space**（不是 latent）级联扩散——$64\times 64$ base + $256\times 256$ super-res + $1024\times 1024$ super-res；文本用大 T5-XXL，结果显示**文本编码器规模 > U-Net 规模**对文本对齐影响更大。
+
+### 3.6　Native multimodal image models（GPT Image / Gemini / Nano Banana）
+
+2025-2026 的闭源产品线不再只是“一个 T2I diffusion 模型 + 一个编辑脚本”，而是把**图像理解、生成、编辑、文本渲染和安全系统**包装成同一个多模态模型/API：
+
+- **GPT Image 2 / OpenAI image generation API**：重点是生成 + 编辑的统一接口，适合把多轮自然语言修改、局部编辑、参考图和产品安全策略接进同一条工作流。工程上应关注 supported input/output、mask/edit 行为、文本渲染、provenance 和内容安全，而不是只问“是不是 DiT”。
+- **Gemini image generation / Nano Banana Pro / Gemini 3 Pro Image**：Google 路线强调 Gemini 多模态理解与图像生成/编辑结合，适合文档、图表、产品图和 instruction-heavy editing。与 Imagen 论文时代不同，产品能力更像 VLM + image generator + safety/provenance 的组合系统。
+- **开源 FLUX/SD 生态 vs 闭源 native model**：开源侧强在 LoRA、ControlNet/IP-Adapter、私有部署、可复现和成本控制；闭源侧强在默认审美、文本渲染、复杂编辑、合规和多模态上下文。生产选型要按“可控性/数据隐私/成本/质量/安全审计”分，而不是只按榜单。
 
 ## §4 DiT 架构与 AdaLN-Zero（必考）
 
@@ -1428,11 +1430,15 @@ text K/V (frozen)  ──┘──► attended_out → 加到 image latent resid
 
 - FLUX.1 — Black Forest Labs 2024 (technical report)
 
+- GPT Image 2 / OpenAI image generation API — OpenAI developer docs, 2026
+
 - PixArt-α / Σ — Chen, Yu et al. 2024 ICLR / ECCV
 
 - Hunyuan-DiT — Zhimin Li, Jianwei Zhang et al. 2024 (arXiv 2405.08748)
 
 - Imagen — Saharia, Chan et al. 2022 NeurIPS
+
+- Gemini image generation / Nano Banana Pro / Gemini 3 Pro Image — Google / Gemini docs and product notes, 2025-2026
 
 - ADD / SDXL-Turbo — Sauer, Lorenz et al. 2024 ECCV (arXiv 2311.17042)
 
@@ -1452,7 +1458,7 @@ text K/V (frozen)  ──┘──► attended_out → 加到 image latent resid
 
 ### 一句话总结
 
-本 cheat sheet 覆盖从 latent diffusion 数学（VAE + DDPM/RF + CFG）到主流架构演进（SD 1.x → SDXL → SD3 → FLUX）、conditioning 体系（ControlNet / T2I-Adapter / IP-Adapter / InstantID）、个性化微调（DreamBooth / Textual Inversion / LoRA / Custom Diffusion）、编辑（SDEdit / InstructPix2Pix / Prompt-to-Prompt）、蒸馏（LCM / ADD / DMD）与评测（FID / CLIP-Score / ImageReward / HPSv2）。25 题按 L1/L2/L3 分布，L3 题强调 production lab 视角（零卷积 chain rule 推导、size conditioning 训练效果、MM-DiT 信息流、LoRA Q/K/V 选择、SDXL + LCM-LoRA + ControlNet + IP-Adapter 同栈部署 trade-off）。
+本 cheat sheet 覆盖从 latent diffusion 数学（VAE + DDPM/RF + CFG）到主流架构演进（SD 1.x → SDXL → SD3 → FLUX → GPT Image / Gemini native image models）、conditioning 体系（ControlNet / T2I-Adapter / IP-Adapter / InstantID）、个性化微调（DreamBooth / Textual Inversion / LoRA / Custom Diffusion）、编辑（SDEdit / InstructPix2Pix / Prompt-to-Prompt）、蒸馏（LCM / ADD / DMD）与评测/生产治理（FID / CLIP-Score / ImageReward / HPSv2 / provenance / safety）。25 题按 L1/L2/L3 分布，L3 题强调 production lab 视角（零卷积 chain rule 推导、size conditioning 训练效果、MM-DiT 信息流、LoRA Q/K/V 选择、SDXL + LCM-LoRA + ControlNet + IP-Adapter 同栈部署 trade-off）。
 
 ---
 

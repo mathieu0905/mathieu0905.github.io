@@ -1,13 +1,5 @@
 ## §0 TL;DR Cheat Sheet
-
-### 2026-06-29 SOTA Snapshot
-
-- **FP8 is now a normal training/inference tool, while FP4/NVFP4 is becoming a core inference format in the Blackwell era.** NVIDIA Transformer Engine documents FP8, MXFP8, and NVFP4 support; NVIDIA's NVFP4 blog explains that Blackwell Tensor Cores natively handle microscaled FP4. GPTQ/AWQ/SmoothQuant below remain PTQ fundamentals, but deployment decisions now need the FP8/FP4 hardware path.
-- **Do not collapse NF4, MXFP4, and NVFP4 into one thing.** NF4 mostly comes from the bitsandbytes/QLoRA weight-storage context; NVFP4 is a Blackwell Tensor Core low-precision compute format; MXFP8/MXFP4 belong to the microscaling format family. The common interview mistake is treating “4-bit storage” as “native FP4 matrix-multiply compute.”
-- **The toolchain has moved from isolated algorithms to end-to-end export.** NVIDIA Model Optimizer/TensorRT-LLM plus vLLM/SGLang integrations connect PTQ/QAT, KV-cache quantization, FP8/FP4 export, and kernel backends. In practice, report weight bitwidth, activation bitwidth, KV-cache bitwidth, calibration set, target GPU, throughput, and quality regression together.
-- Sources: [NVIDIA Transformer Engine](https://docs.nvidia.com/deeplearning/transformer-engine/user-guide/), [NVFP4 blog](https://developer.nvidia.com/blog/introducing-nvfp4-for-efficient-and-accurate-low-precision-inference/), [TensorRT-LLM Quantization](https://nvidia.github.io/TensorRT-LLM/latest/features/quantization.html), [NVIDIA Model Optimizer](https://github.com/NVIDIA/Model-Optimizer), [TensorRT quantized types](https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/work-quantized-types.html).
-
-> 💡 **LLM Quantization in 8 sentences** — one page covering interview essentials (see §2–§11 for derivations).
+> 💡 **LLM Quantization in 9 sentences** — one page covering interview essentials (see §2–§11 for derivations).
 
 1. **Affine quantization formula**: $q = \mathrm{round}(x / s) + z$, dequantize $\hat{x} = s\,(q - z)$. Symmetric quantization $z = 0$; asymmetric quantization $z$ aligns the zero-point to an integer.
 
@@ -24,6 +16,8 @@
 7. **Low-precision float families**: FP8 (E4M3/E5M2, Hopper), MX (OCP MXFP8/MXFP6/MXFP4, 32-elem block + E8M0 shared exp), NVFP4 (Blackwell B100/B200, FP4 E2M1 + per-16-elem FP8 E4M3 scale + per-tensor FP32 scale). Blackwell tensor cores natively support FP4 matmul.
 
 8. **KV cache quant**: K uses **per-channel** (K's outliers are stable along the channel dim), V uses **per-token** (V outliers vary along the token dim)—the basic design of KIVI / KVQuant. QServe further co-designs the entire W4A8KV4 quantization at the SM89/SM90 kernel level.
+
+9. **How to read the 2026 toolchain**: quantization is not done once you pick GPTQ/AWQ; it is a combination of **format × hardware × kernel × calibration × serving runtime**. On Hopper/Blackwell, FP8/NVFP4 depends on Transformer Engine, TensorRT-LLM, NVIDIA Model Optimizer, and actual fused-kernel support. The same W4/FP4 name can mean different numeric formats, scale granularities, and throughput across backends.
 
 ## §1 Intuition: why LLMs need quantization, and why it's so hard
 
@@ -1288,6 +1282,7 @@ Only say "use GPTQ 4-bit"—doesn't explain how to choose calibration / group_si
 | FP8 Training | Micikevicius et al., 2022 | E4M3 forward / E5M2 backward |
 | MX formats | OCP / Microsoft, 2024 | Block-scaled FP4/6/8 with E8M0 |
 | NVFP4 | NVIDIA Blackwell, 2025 | FP4 E2M1 + FP8 E4M3 block + FP32 tensor scale |
+| Transformer Engine / TensorRT-LLM / Model Optimizer | NVIDIA docs, 2024-2026 | FP8/NVFP4 training-inference toolchain, calibration, export, fused kernels |
 
 ### A.2 At-a-glance: which quantization scheme to pick
 
@@ -1328,6 +1323,7 @@ Only say "use GPTQ 4-bit"—doesn't explain how to choose calibration / group_si
 | Training fp8 LLM | TE FP8 (E4M3/E5M2) + amax history | Transformer Engine |
 | QLoRA finetune | NF4 + double quant + LoRA | bitsandbytes + peft |
 | Max throughput H100/B200 serving | QoQ W4A8KV4 / NVFP4 | QServe / TensorRT-LLM |
+| Blackwell FP4/NVFP4 production deployment | NVFP4 + Model Optimizer calibration/export | NVIDIA Model Optimizer + TensorRT-LLM |
 | Edge < 100 MB model | BitNet b1.58 (1.58-bit) from scratch | custom / bitnet.cpp |
 
 ### A.4 Sanity check checklist
@@ -1348,4 +1344,4 @@ Before deploying any quantized model, must run:
 
 - [ ] **Peak memory**: measured vs nominal $\text{bits} \cdot \text{params} / 8 + \text{KV cache} + \text{activations}$
 
-**Quantization Quick Reference** · Main references: Dettmers 2022 (LLM.int8()), Frantar 2023 (GPTQ), Xiao 2023 (SmoothQuant), Lin 2024 (AWQ), Ashkboos 2024 (QuaRot), Lin 2025 (QServe). Last updated: 2026-05.
+**Quantization Quick Reference** · Main references: Dettmers 2022 (LLM.int8()), Frantar 2023 (GPTQ), Xiao 2023 (SmoothQuant), Lin 2024 (AWQ), Ashkboos 2024 (QuaRot), Lin 2025 (QServe), NVIDIA Transformer Engine / TensorRT-LLM / Model Optimizer docs, NVIDIA NVFP4 Blackwell notes. Last updated: 2026-06.
