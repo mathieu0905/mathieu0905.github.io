@@ -1,5 +1,5 @@
 ---
-title: "重读 Attention Is All You Need：我把 Transformer 的几个误解拆开了"
+title: "论文精读：注意力就是你所需要的一切（Attention Is All You Need）"
 date: "2026-07-02"
 description: "从 seq2seq、RNN/CNN、QKV 到位置编码和长上下文，整理一次从原论文读出来的 Transformer 知识笔记。"
 tags: ["论文阅读", "Transformer", "大模型", "深度学习"]
