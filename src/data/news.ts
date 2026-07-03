@@ -13,6 +13,7 @@ export type NewsItem =
     };
 
 export const news: NewsItem[] = [
+  { type: "paper", date: "2026.07", paperId: "reporescue-arxiv-2026" },
   { type: "paper", date: "2026.06", paperId: "run-less-issta-2026" },
   { type: "paper", date: "2026.06", paperId: "codeanchor-issta-2026" },
   { type: "paper", date: "2026.04", paperId: "eager-parallel-execution" },

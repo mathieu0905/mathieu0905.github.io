@@ -142,6 +142,15 @@ export const papers: Paper[] = [
     pdfFile: "https://dl.acm.org/doi/epdf/10.1145/3818607",
   },
   {
+    id: "reporescue-arxiv-2026",
+    title: "RepoRescue: An Empirical Study of LLM Agents on Whole-Repository Compatibility Rescue",
+    authors: ["Zhihao Lin", "Mingyi Zhou", "Zhensu Sun", "Yizhuo Yang", "Renyu Yang", "David Lo", "Li Li"],
+    tags: ["Program Repair", "Code Agents"],
+    status: "manuscript",
+    abstract: "Studies whether deployed LLM agents can rescue old repositories broken by runtime and dependency drift, with source-only auditing, runtime blocking, and realistic-use validation.",
+    pdfFile: "https://arxiv.org/abs/2607.01213",
+  },
+  {
     id: "eager-parallel-execution",
     title: "Executing as You Generate: Hiding Execution Latency in LLM Code Generation",
     authors: ["Zhensu Sun*", "Zhihao Lin*", "Zhi Chen", "Chengran Yang", "Mingyi Zhou", "Li Li", "David Lo"],
