@@ -13,7 +13,13 @@ export type NewsItem =
     };
 
 export const news: NewsItem[] = [
-  { type: "paper", date: "2026.07", paperId: "reporescue-arxiv-2026" },
+  {
+    type: "other",
+    date: "2026.07",
+    title: "RepoRescue 论文上线 arXiv：旧仓库不是坏了，是世界变了",
+    detail: "关于 LLM agents 能否真正修源码、拯救被生态漂移困住的旧仓库。",
+    link: "/blog/paper-reporescue",
+  },
   { type: "paper", date: "2026.06", paperId: "run-less-issta-2026" },
   { type: "paper", date: "2026.06", paperId: "codeanchor-issta-2026" },
   { type: "paper", date: "2026.04", paperId: "eager-parallel-execution" },
