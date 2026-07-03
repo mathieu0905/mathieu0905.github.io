@@ -267,6 +267,22 @@ export default function HomeEn() {
                 <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">GitHub</span>
               </div>
             </a>
+            <a
+              href="https://github.com/mathieu0905/skilllens"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] group"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">🧭</span>
+                <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">SkillLens</h3>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Local SKILL coverage and optimization framework for Codex / Claude Code traces, aligning SKILL.md constraints with real agent behavior to reveal followed, violated, and ignored paths.</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="px-2 py-0.5 bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 rounded text-xs font-medium">Agent Skills</span>
+                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">GitHub</span>
+              </div>
+            </a>
           </div>
         </section>
 

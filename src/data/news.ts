@@ -16,6 +16,13 @@ export const news: NewsItem[] = [
   {
     type: "other",
     date: "2026.07",
+    title: "开源 SkillLens：面向 Codex / Claude Code 的 SKILL 可视化优化框架",
+    detail: "把 SKILL.md 约束与真实 agent 轨迹对齐，展示覆盖、违反、忽略路径，并生成 anti-bloat 优化建议。",
+    link: "https://github.com/mathieu0905/skilllens",
+  },
+  {
+    type: "other",
+    date: "2026.07",
     title: "RepoRescue 论文上线 arXiv：旧仓库不是坏了，是世界变了",
     detail: "关于 LLM agents 能否真正修源码、拯救被生态漂移困住的旧仓库。",
     link: "/blog/paper-reporescue",
