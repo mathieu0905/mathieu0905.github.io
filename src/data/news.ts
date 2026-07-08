@@ -16,6 +16,13 @@ export const news: NewsItem[] = [
   {
     type: "other",
     date: "2026.07",
+    title: "AtomicCommitBench 论文上线 arXiv：代码智能体不该只交一坨 diff",
+    detail: "把 squashed patch 重新组织成可 replay、可 review、可 selective revert 的原子提交历史。",
+    link: "/blog/paper-atomiccommitbench",
+  },
+  {
+    type: "other",
+    date: "2026.07",
     title: "开源 SkillLens：面向 Codex / Claude Code 的 SKILL 可视化优化框架",
     detail: "把 SKILL.md 约束与真实 agent 轨迹对齐，展示覆盖、违反、忽略路径，并生成 anti-bloat 优化建议。",
     link: "https://github.com/mathieu0905/skilllens",

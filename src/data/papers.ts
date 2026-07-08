@@ -151,6 +151,15 @@ export const papers: Paper[] = [
     pdfFile: "https://arxiv.org/abs/2607.01213",
   },
   {
+    id: "atomiccommitbench-arxiv-2026",
+    title: "AtomicCommitBench: Can Coding Agents Reconstruct Commit Histories from Squashed Patches?",
+    authors: ["Zhihao Lin", "Mingyi Zhou", "Li Li"],
+    tags: ["Code Agents"],
+    status: "manuscript",
+    abstract: "Benchmarks whether coding agents can reconstruct replayable, reviewable commit histories from squashed patches, measuring replay validity, human-aligned grouping, and selective-revert failure containment.",
+    pdfFile: "https://arxiv.org/abs/2607.03332",
+  },
+  {
     id: "eager-parallel-execution",
     title: "Executing as You Generate: Hiding Execution Latency in LLM Code Generation",
     authors: ["Zhensu Sun*", "Zhihao Lin*", "Zhi Chen", "Chengran Yang", "Mingyi Zhou", "Li Li", "David Lo"],
