@@ -292,7 +292,7 @@ arXiv：[2607.06000](https://arxiv.org/abs/2607.06000)
 
 ### 5. SCOPE：subgoal critique 比笼统 self-reflection 更接近你真正想要的修复反馈
 
-*SCOPE: Leveraging Subgoal Critiques for Code Generation*（[2607.05810](https://arxiv.org/abs/2607.05810)）提出一个 prover-initialized subgoal critic，给 code generation 提供 `subgoals`、`gap analysis` 和 `robustness checklist` 三类结构化反馈。它在 `LiveCodeBench V6` 上把 `pass@1` 做到 `39.4%`，高于 `Reflexion` 的 `36.6%`；在 `BigCodeBench (Hard)`` 上到 `42.6%`，也高于对照。对今天主题最有启发的点是：不是所有 feedback 都一样。结构化、能说清“还差什么语义子目标”的反馈，比泛泛 self-reflection 更有可能带来可复用的修复行为。它不进深读，是因为主要对象仍是 code generation 而不是 repo-level change。
+*SCOPE: Leveraging Subgoal Critiques for Code Generation*（[2607.05810](https://arxiv.org/abs/2607.05810)）提出一个 prover-initialized subgoal critic，给 code generation 提供 `subgoals`、`gap analysis` 和 `robustness checklist` 三类结构化反馈。它在 `LiveCodeBench V6` 上把 `pass@1` 做到 `39.4%`，高于 `Reflexion` 的 `36.6%`；在 `BigCodeBench (Hard)` 上到 `42.6%`，也高于对照。对今天主题最有启发的点是：不是所有 feedback 都一样。结构化、能说清“还差什么语义子目标”的反馈，比泛泛 self-reflection 更有可能带来可复用的修复行为。它不进深读，是因为主要对象仍是 code generation 而不是 repo-level change。
 
 ### 6. Mitigating Errors in LLM-Generated Web API Invocations：参数错、endpoint 错、调用时机错，很多 API 失败不是“模型不懂语义”，而是少了约束
 
