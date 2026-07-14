@@ -39,6 +39,7 @@ date: "YYYY-MM-DD"
 description: "每日精选 arXiv 论文推荐：AI x Software Engineering 最新研究动态"
 tags: ["arXiv速递", "论文推荐"]
 series: "arXiv每日速递"
+category: "arxiv"
 coverColor: "from-emerald-500 to-teal-600"
 ```
 

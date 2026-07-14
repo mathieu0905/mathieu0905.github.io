@@ -2,6 +2,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
+import {
+  BLOG_CATEGORIES,
+  resolveBlogCategory,
+  type BlogCategory,
+} from "@/lib/blogCategories";
 
 const REPO_OWNER = "mathieu0905";
 const REPO_NAME = "mathieu0905.github.io";
@@ -18,32 +23,102 @@ interface PostData {
   title: string;
   date: string;
   description: string;
+  category: BlogCategory;
+  tags: string[];
+  series: string;
+  coverColor: string;
   content: string;
 }
 
 type View = "list" | "edit" | "new";
 
-function parsePost(raw: string): PostData {
-  const match = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-  if (!match) return { title: "", date: "", description: "", content: raw };
+function createEmptyPost(date = ""): PostData {
+  return {
+    title: "",
+    date,
+    description: "",
+    category: "notes",
+    tags: [],
+    series: "",
+    coverColor: "",
+    content: "",
+  };
+}
+
+function parsePost(raw: string, slug: string): PostData {
+  const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
+  if (!match) return { ...createEmptyPost(), content: raw };
   const frontmatter = match[1];
   const content = match[2].trimStart();
-  const get = (key: string) => {
-    const m = frontmatter.match(new RegExp(`^${key}:\\s*"?(.*?)"?\\s*$`, "m"));
-    return m ? m[1] : "";
+  const getRaw = (key: string) => {
+    const field = frontmatter.match(new RegExp(`^${key}:\\s*(.*?)\\s*$`, "m"));
+    return field ? field[1].trim() : "";
   };
-  return { title: get("title"), date: get("date"), description: get("description"), content };
+  const getString = (key: string) => {
+    const value = getRaw(key);
+    if (!value) return "";
+    if (value.startsWith('"')) {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value.slice(1, -1);
+      }
+    }
+    if (value.startsWith("'") && value.endsWith("'")) {
+      return value.slice(1, -1).replace(/''/g, "'");
+    }
+    return value;
+  };
+  const getArray = (key: string) => {
+    const value = getRaw(key);
+    if (!value) return [];
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) return parsed.map(String);
+    } catch {
+      // Fall back to the common inline YAML array form.
+    }
+    return value
+      .replace(/^\[/, "")
+      .replace(/\]$/, "")
+      .split(",")
+      .map((item) => item.trim().replace(/^["']|["']$/g, ""))
+      .filter(Boolean);
+  };
+  const tags = getArray("tags");
+  const series = getString("series");
+
+  return {
+    title: getString("title"),
+    date: getString("date"),
+    description: getString("description"),
+    category: resolveBlogCategory({
+      category: getString("category"),
+      slug,
+      tags,
+      series,
+    }),
+    tags,
+    series,
+    coverColor: getString("coverColor"),
+    content,
+  };
 }
 
 function serializePost(data: PostData): string {
-  return `---
-title: "${data.title.replace(/"/g, '\\"')}"
-date: "${data.date}"
-description: "${data.description.replace(/"/g, '\\"')}"
----
+  const tags = data.tags.map((tag) => tag.trim()).filter(Boolean);
+  const fields = [
+    `title: ${JSON.stringify(data.title)}`,
+    `date: ${JSON.stringify(data.date)}`,
+    `description: ${JSON.stringify(data.description)}`,
+    `category: ${JSON.stringify(data.category)}`,
+  ];
 
-${data.content}
-`;
+  if (tags.length > 0) fields.push(`tags: ${JSON.stringify(tags)}`);
+  if (data.series.trim()) fields.push(`series: ${JSON.stringify(data.series.trim())}`);
+  if (data.coverColor.trim()) fields.push(`coverColor: ${JSON.stringify(data.coverColor.trim())}`);
+
+  return `---\n${fields.join("\n")}\n---\n\n${data.content}\n`;
 }
 
 async function ghApi(path: string, token: string, options?: RequestInit) {
@@ -84,7 +159,7 @@ export default function AdminPage() {
   const [view, setView] = useState<View>("list");
   const [posts, setPosts] = useState<PostFile[]>([]);
   const [currentFile, setCurrentFile] = useState<PostFile | null>(null);
-  const [post, setPost] = useState<PostData>({ title: "", date: "", description: "", content: "" });
+  const [post, setPost] = useState<PostData>(() => createEmptyPost());
   const [currentSha, setCurrentSha] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -99,7 +174,7 @@ export default function AdminPage() {
       const decoded = new TextDecoder().decode(
         Uint8Array.from(atob(data.content), (c) => c.charCodeAt(0))
       );
-      setPost(parsePost(decoded));
+      setPost(parsePost(decoded, slug));
       setCurrentSha(data.sha);
       setCurrentFile({ name: `${slug}.md`, path: `${POSTS_PATH}/${slug}.md`, sha: data.sha });
       setView("edit");
@@ -118,7 +193,7 @@ export default function AdminPage() {
 
     if (action === "new") {
       const today = new Date().toISOString().slice(0, 10);
-      setPost({ title: "", date: today, description: "", content: "" });
+      setPost(createEmptyPost(today));
       setCurrentFile(null);
       setCurrentSha("");
       setView("new");
@@ -209,7 +284,7 @@ export default function AdminPage() {
       const decoded = new TextDecoder().decode(
         Uint8Array.from(atob(data.content), (c) => c.charCodeAt(0))
       );
-      setPost(parsePost(decoded));
+      setPost(parsePost(decoded, file.name.replace(/\.md$/, "")));
       setCurrentSha(data.sha);
       setCurrentFile(file);
       setView("edit");
@@ -222,7 +297,7 @@ export default function AdminPage() {
 
   const newPost = () => {
     const today = new Date().toISOString().slice(0, 10);
-    setPost({ title: "", date: today, description: "", content: "" });
+    setPost(createEmptyPost(today));
     setCurrentFile(null);
     setCurrentSha("");
     setView("new");
@@ -419,8 +494,8 @@ export default function AdminPage() {
 
           {/* Meta fields */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg space-y-4 mb-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-1">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
                 <input
                   value={post.title}
@@ -438,6 +513,20 @@ export default function AdminPage() {
                 />
               </div>
               <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                <select
+                  value={post.category}
+                  onChange={(e) => setPost({ ...post, category: e.target.value as BlogCategory })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {BLOG_CATEGORIES.map((category) => (
+                    <option key={category.key} value={category.key}>
+                      {category.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
                 <input
                   value={post.description}
@@ -445,11 +534,39 @@ export default function AdminPage() {
                   className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tags</label>
+                <input
+                  value={post.tags.join(", ")}
+                  onChange={(e) =>
+                    setPost({
+                      ...post,
+                      tags: e.target.value
+                        .split(",")
+                        .map((tag) => tag.trim()),
+                    })
+                  }
+                  placeholder="LLM, 软件工程"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Series</label>
+                <input
+                  value={post.series}
+                  onChange={(e) => setPost({ ...post, series: e.target.value })}
+                  placeholder="可选系列名"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
           </div>
 
           {/* Split editor + live preview */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" style={{ height: "calc(100vh - 240px)" }}>
+          <div
+            className="grid grid-cols-1 gap-4 lg:grid-cols-2"
+            style={{ height: "calc(100vh - 330px)", minHeight: "560px" }}
+          >
             {/* Editor */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg flex flex-col overflow-hidden">
               <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">

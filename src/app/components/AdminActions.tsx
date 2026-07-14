@@ -7,9 +7,10 @@ export function NewPostButton() {
   return (
     <Link
       href="/admin?action=new"
-      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition"
+      aria-label="新建文章"
+      className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-blue-700 sm:px-4"
     >
-      <FaPlus className="text-xs" /> New Post
+      <FaPlus className="text-xs" /> <span className="hidden sm:inline">New Post</span>
     </Link>
   );
 }

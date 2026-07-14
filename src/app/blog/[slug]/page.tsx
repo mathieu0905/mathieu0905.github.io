@@ -8,6 +8,7 @@ import { MarkdownRenderer } from '@/app/components/MarkdownRenderer';
 import { ReadingProgress } from '@/app/components/ReadingProgress';
 import { TableOfContents } from '@/app/components/TableOfContents';
 import { ShareButtons } from '@/app/components/ShareButtons';
+import { getBlogCategoryDefinition } from '@/lib/blogCategories';
 
 export async function generateStaticParams() {
   const posts = getPostMetadata();
@@ -27,6 +28,7 @@ export default async function BlogPost({ params }: Props) {
   }
 
   const seriesPosts = post.series ? getSeriesPosts(post.series) : [];
+  const category = getBlogCategoryDefinition(post.category);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900">
@@ -48,13 +50,19 @@ export default async function BlogPost({ params }: Props) {
             <div className="p-8">
               <header className="mb-8 border-b border-gray-100 dark:border-gray-700 pb-8">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
                       {post.date}
                     </span>
                     <span className="text-xs text-gray-400 dark:text-gray-500">
                       · 约 {post.readingTime} 分钟
                     </span>
+                    <Link
+                      href={`/blog?category=${post.category}`}
+                      className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100 dark:bg-blue-900/40 dark:text-blue-300 dark:hover:bg-blue-900/70"
+                    >
+                      {category.label}
+                    </Link>
                   </div>
                   <EditPostButton slug={slug} />
                 </div>
