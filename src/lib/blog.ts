@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
+import { resolveBlogCategory, type BlogCategory } from './blogCategories';
 
 const postsDirectory = path.join(process.cwd(), 'src/content/posts');
 
@@ -12,6 +13,7 @@ export interface BlogPost {
   content: string;
   tags?: string[];
   series?: string;
+  category: BlogCategory;
   coverColor?: string;
   readingTime: number; // minutes
 }
@@ -40,14 +42,22 @@ export function getPostMetadata(): BlogPostMeta[] {
       const fullPath = path.join(postsDirectory, fileName);
       const fileContents = fs.readFileSync(fullPath, 'utf8');
       const matterResult = matter(fileContents);
+      const tags = matterResult.data.tags || [];
+      const series = matterResult.data.series;
 
       return {
         slug,
         title: matterResult.data.title,
         date: matterResult.data.date,
         description: matterResult.data.description,
-        tags: matterResult.data.tags || [],
-        series: matterResult.data.series,
+        tags,
+        series,
+        category: resolveBlogCategory({
+          category: matterResult.data.category,
+          slug,
+          tags,
+          series,
+        }),
         coverColor: matterResult.data.coverColor,
         readingTime: estimateReadingTime(matterResult.content),
       };
@@ -65,14 +75,22 @@ export function getPostContent(slug: string): BlogPost | null {
 
   const fileContents = fs.readFileSync(fullPath, 'utf8');
   const matterResult = matter(fileContents);
+  const tags = matterResult.data.tags || [];
+  const series = matterResult.data.series;
 
   return {
     slug,
     title: matterResult.data.title,
     date: matterResult.data.date,
     description: matterResult.data.description,
-    tags: matterResult.data.tags || [],
-    series: matterResult.data.series,
+    tags,
+    series,
+    category: resolveBlogCategory({
+      category: matterResult.data.category,
+      slug,
+      tags,
+      series,
+    }),
     coverColor: matterResult.data.coverColor,
     readingTime: estimateReadingTime(matterResult.content),
     content: matterResult.content,
