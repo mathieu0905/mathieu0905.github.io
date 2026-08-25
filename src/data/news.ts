@@ -15,6 +15,13 @@ export type NewsItem =
 export const news: NewsItem[] = [
   {
     type: "other",
+    date: "2026.08",
+    title: "OpenHarmony Bench 技术报告上线 arXiv：能编译，不等于真的完成了应用需求",
+    detail: "我在实习期间参与的 OpenHarmony 应用级 coding-agent benchmark，覆盖新功能开发、规格驱动实现和真实缺陷修复。",
+    link: "/blog/paper-openharmony-bench",
+  },
+  {
+    type: "other",
     date: "2026.07",
     title: "AtomicCommitBench 论文上线 arXiv：代码智能体不该只交一坨 diff",
     detail: "把 squashed patch 重新组织成可 replay、可 review、可 selective revert 的原子提交历史。",

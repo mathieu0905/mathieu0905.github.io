@@ -142,6 +142,17 @@ export const papers: Paper[] = [
     pdfFile: "https://dl.acm.org/doi/epdf/10.1145/3818607",
   },
   {
+    id: "openharmony-bench-arxiv-2026",
+    title: "OpenHarmony Bench: Evaluating LLMs and Coding Agents on OpenHarmony App Development",
+    venue: "Technical Report",
+    year: 2026,
+    authors: ["Li Li", "Han Hu", "Tianjian Zhang", "Xin Peng", "Fangzhu Mao", "Qingyu Zhang", "Xiaoheng Xie", "Zhongmin Tang", "Zhihao Lin", "Haolin Ruan", "Miaomiao Dong", "Liuchuan Zhu", "Yue Li", "Chi Chen", "Wenkang Zhong", "Mingfei Zhang", "Yang Yu", "Bo Sun", "Chaorui Zhang", "Weixi Zhang", "Wei Han", "Bo Bai", "Kui Liu", "Gang Fan", "Siru Liu", "Jiaqian Zhou", "Jiali Sun", "Yunbiao Dong", "Wenhao Zhong", "Yunhong Xu"],
+    tags: ["Code Agents"],
+    status: "manuscript",
+    abstract: "An app-level benchmark for OpenHarmony ArkTS development that evaluates whether coding agents can turn feature requests, structured specifications, and bug reports into buildable applications with correct end-to-end behavior.",
+    pdfFile: "https://arxiv.org/abs/2608.16022",
+  },
+  {
     id: "reporescue-arxiv-2026",
     title: "RepoRescue: An Empirical Study of LLM Agents on Whole-Repository Compatibility Rescue",
     authors: ["Zhihao Lin", "Mingyi Zhou", "Zhensu Sun", "Yizhuo Yang", "Renyu Yang", "David Lo", "Li Li"],
