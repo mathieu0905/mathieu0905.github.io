@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { acceptedPapers, manuscriptPapers } from "@/data/papers";
 
+export const metadata = {
+  title: "Papers | Zhihao Lin",
+};
+
 function pdfHref(pdfFile?: string) {
   if (!pdfFile) return undefined;
   if (/^https?:\/\//i.test(pdfFile)) return pdfFile;

@@ -7,6 +7,10 @@ import { acceptedPapers, papers } from "@/data/papers";
 import { sortedNews } from "@/data/news";
 import { collaborators, type CollaboratorOrg } from "@/data/collaborators";
 
+export const metadata = {
+  title: "Zhihao Lin - Academic Homepage",
+};
+
 function pdfHref(pdfFile?: string) {
   if (!pdfFile) return undefined;
   if (/^https?:\/\//i.test(pdfFile)) return pdfFile;
@@ -67,7 +71,7 @@ export default function HomeEn() {
             </div>
             <div className="text-center md:text-left flex-1">
               <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent mb-2">
-                林智灏 (Zhihao Lin)
+                Zhihao Lin
               </h1>
               <p className="text-xl text-blue-600 dark:text-blue-400 font-medium mb-3">
                 Ph.D. Student @ Beihang University
@@ -98,18 +102,21 @@ export default function HomeEn() {
               {sortedNews.map((item) => {
                 if (item.type === "other") {
                   return (
-                    <div key={`${item.type}-${item.date}-${item.title}`} className="flex items-start gap-4">
+                    <div key={`${item.type}-${item.date}-${item.title.en}`} className="flex items-start gap-4">
                       <div className="flex-shrink-0 w-20 text-sm font-mono text-blue-600 dark:text-blue-400">{item.date}</div>
                       <div className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-blue-500" />
                       <div className="min-w-0">
                         <div className="text-gray-700 dark:text-gray-300">
                           {item.link ? (
-                            <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">{item.title}</a>
+                            <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">
+                              {item.title.en}
+                              {item.link.startsWith("/blog/") && <span className="text-xs font-normal"> (Chinese)</span>}
+                            </a>
                           ) : (
-                            item.title
+                            item.title.en
                           )}
                         </div>
-                        {item.detail && <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">{item.detail}</div>}
+                        {item.detail && <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">{item.detail.en}</div>}
                       </div>
                     </div>
                   );
@@ -152,8 +159,8 @@ export default function HomeEn() {
               <p>
                 I am a first-year Ph.D. student at <strong className="text-gray-900 dark:text-white">Beihang University</strong>,
                 working in the <strong className="text-gray-900 dark:text-white">SMAT Laboratory</strong> under the supervision of
-                Prof. <a href="https://scholar.google.com/citations?user=zuUsFkgAAAAJ" target="_blank" rel="noopener noreferrer" className="font-bold text-blue-600 dark:text-blue-400 hover:underline">Li Li (黎立)</a>,
-                co-supervised by <a href="https://scholar.google.com/citations?user=2emq9AoAAAAJ" target="_blank" rel="noopener noreferrer" className="font-bold text-blue-600 dark:text-blue-400 hover:underline">Mingyi Zhou (周鸣一)</a>.
+                Prof. <a href="https://scholar.google.com/citations?user=zuUsFkgAAAAJ" target="_blank" rel="noopener noreferrer" className="font-bold text-blue-600 dark:text-blue-400 hover:underline">Li Li</a>,
+                co-supervised by <a href="https://scholar.google.com/citations?user=2emq9AoAAAAJ" target="_blank" rel="noopener noreferrer" className="font-bold text-blue-600 dark:text-blue-400 hover:underline">Mingyi Zhou</a>.
               </p>
               <p>
                 My research focuses on <strong className="text-blue-600 dark:text-blue-400">AI for Software Engineering (AI4SE)</strong>,

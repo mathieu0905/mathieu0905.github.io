@@ -9,13 +9,13 @@ type NavItem = { label: string; href: string };
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const locale = pathname.startsWith("/en") ? "en" : "zh";
+  const locale = pathname === "/en" || pathname.startsWith("/en/") ? "en" : "zh";
 
   const items: NavItem[] =
     locale === "en"
       ? [
           { label: "Home", href: "/en" },
-          { label: "Blog", href: "/blog" },
+          { label: "Blog (Chinese)", href: "/blog" },
           { label: "Papers", href: "/en/papers" },
         ]
       : [
@@ -26,8 +26,8 @@ export function Navbar() {
 
   const langSwitch =
     locale === "en"
-      ? { label: "中文", href: "/" }
-      : { label: "EN", href: "/en" };
+      ? { label: "中文", href: pathname.replace(/^\/en/, "") || "/" }
+      : { label: "EN", href: pathname === "/papers" ? "/en/papers" : "/en" };
 
   return (
     <nav className="sticky top-0 z-50 backdrop-blur-md bg-white/80 dark:bg-gray-900/80 border-b border-gray-200/50 dark:border-gray-700/50">

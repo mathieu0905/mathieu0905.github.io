@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { FaMusic, FaChevronDown, FaCompactDisc } from "react-icons/fa6";
 
 // 你的网易云歌单 ID
@@ -65,6 +66,8 @@ function initPlayer() {
 }
 
 export default function MusicPlayer() {
+  const pathname = usePathname();
+  const isEnglish = pathname === "/en" || pathname.startsWith("/en/");
   const [isOpen, setIsOpen] = useState(true);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -96,12 +99,12 @@ export default function MusicPlayer() {
         <div className="flex items-center justify-between px-4 pt-3 pb-1">
           <div className="flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400">
             <FaCompactDisc className="text-purple-500 animate-spin-slow" />
-            我的音乐
+            {isEnglish ? "My Music" : "我的音乐"}
           </div>
           <button
             onClick={() => setIsOpen(false)}
             className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            aria-label="收起播放器"
+            aria-label={isEnglish ? "Minimize music player" : "收起播放器"}
           >
             <FaChevronDown className="text-gray-400 text-sm" />
           </button>
@@ -119,7 +122,7 @@ export default function MusicPlayer() {
             ? "scale-0 opacity-0 pointer-events-none"
             : "scale-100 opacity-100"
         }`}
-        aria-label="打开音乐播放器"
+        aria-label={isEnglish ? "Open music player" : "打开音乐播放器"}
       >
         <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg shadow-purple-500/30 flex items-center justify-center transition-transform hover:scale-110 animate-spin-slow">
           <div className="absolute inset-1 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">

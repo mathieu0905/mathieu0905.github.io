@@ -109,18 +109,18 @@ export default function Home() {
               {sortedNews.map((item) => {
                 if (item.type === "other") {
                   return (
-                    <div key={`${item.type}-${item.date}-${item.title}`} className="flex items-start gap-4">
+                    <div key={`${item.type}-${item.date}-${item.title.zh}`} className="flex items-start gap-4">
                       <div className="flex-shrink-0 w-20 text-sm font-mono text-blue-600 dark:text-blue-400">{item.date}</div>
                       <div className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-blue-500" />
                       <div className="min-w-0">
                         <div className="text-gray-700 dark:text-gray-300">
                           {item.link ? (
-                            <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">{item.title}</a>
+                            <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">{item.title.zh}</a>
                           ) : (
-                            item.title
+                            item.title.zh
                           )}
                         </div>
-                        {item.detail && <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">{item.detail}</div>}
+                        {item.detail && <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">{item.detail.zh}</div>}
                       </div>
                     </div>
                   );
