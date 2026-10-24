@@ -101,60 +101,6 @@ export default function Home() {
           </div>
         </header>
 
-        {/* 最新动态 */}
-        <section id="news" className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">最新动态</h2>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-            <div className="space-y-4">
-              {sortedNews.map((item) => {
-                if (item.type === "other") {
-                  return (
-                    <div key={`${item.type}-${item.date}-${item.title.zh}`} className="flex items-start gap-4">
-                      <div className="flex-shrink-0 w-20 text-sm font-mono text-blue-600 dark:text-blue-400">{item.date}</div>
-                      <div className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-blue-500" />
-                      <div className="min-w-0">
-                        <div className="text-gray-700 dark:text-gray-300">
-                          {item.link ? (
-                            <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">{item.title.zh}</a>
-                          ) : (
-                            item.title.zh
-                          )}
-                        </div>
-                        {item.detail && <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">{item.detail.zh}</div>}
-                      </div>
-                    </div>
-                  );
-                }
-
-                const paper = papers.find((p) => p.id === item.paperId);
-                if (!paper) return null;
-
-                const href = pdfHref(paper.pdfFile);
-
-                return (
-                  <div key={`${item.type}-${item.date}-${item.paperId}`} className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-20 text-sm font-mono text-blue-600 dark:text-blue-400">{item.date}</div>
-                    <div className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-blue-500" />
-                    <div className="min-w-0">
-                      <div className="text-gray-700 dark:text-gray-300">
-                        {href ? (
-                          <a href={href} className="font-medium text-blue-600 dark:text-blue-400 hover:underline">{paper.title}</a>
-                        ) : (
-                          <span className="font-medium">{paper.title}</span>
-                        )}
-                        {paper.venue && paper.year && <span className="text-gray-500 dark:text-gray-400"> — 已接收于 {paper.venue} {paper.year}</span>}
-                      </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        {paper.authors && paper.authors.length > 0 ? paper.authors.join(", ") : "作者信息待补充"}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
         {/* 关于我 */}
         <section id="about" className="mb-8">
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
@@ -313,6 +259,60 @@ export default function Home() {
                   相信好的研究和好的生活一样，需要节奏感。
                 </p>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 最新动态 */}
+        <section id="news" className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">最新动态</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
+            <div className="space-y-4">
+              {sortedNews.map((item) => {
+                if (item.type === "other") {
+                  return (
+                    <div key={`${item.type}-${item.date}-${item.title.zh}`} className="flex items-start gap-4">
+                      <div className="flex-shrink-0 w-20 text-sm font-mono text-blue-600 dark:text-blue-400">{item.date}</div>
+                      <div className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-blue-500" />
+                      <div className="min-w-0">
+                        <div className="text-gray-700 dark:text-gray-300">
+                          {item.link ? (
+                            <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">{item.title.zh}</a>
+                          ) : (
+                            item.title.zh
+                          )}
+                        </div>
+                        {item.detail && <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">{item.detail.zh}</div>}
+                      </div>
+                    </div>
+                  );
+                }
+
+                const paper = papers.find((p) => p.id === item.paperId);
+                if (!paper) return null;
+
+                const href = pdfHref(paper.pdfFile);
+
+                return (
+                  <div key={`${item.type}-${item.date}-${item.paperId}`} className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-20 text-sm font-mono text-blue-600 dark:text-blue-400">{item.date}</div>
+                    <div className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-blue-500" />
+                    <div className="min-w-0">
+                      <div className="text-gray-700 dark:text-gray-300">
+                        {href ? (
+                          <a href={href} className="font-medium text-blue-600 dark:text-blue-400 hover:underline">{paper.title}</a>
+                        ) : (
+                          <span className="font-medium">{paper.title}</span>
+                        )}
+                        {paper.venue && paper.year && <span className="text-gray-500 dark:text-gray-400"> — 已接收于 {paper.venue} {paper.year}</span>}
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        {paper.authors && paper.authors.length > 0 ? paper.authors.join(", ") : "作者信息待补充"}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>

@@ -94,6 +94,38 @@ export default function HomeEn() {
           </div>
         </header>
 
+        {/* About Me */}
+        <section id="about" className="mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">About Me</h2>
+            <div className="space-y-4 text-gray-600 dark:text-gray-300 leading-relaxed">
+              <p>
+                I am a first-year Ph.D. student at <strong className="text-gray-900 dark:text-white">Beihang University</strong>,
+                working in the <strong className="text-gray-900 dark:text-white">SMAT Laboratory</strong> under the supervision of
+                Prof. <a href="https://scholar.google.com/citations?user=zuUsFkgAAAAJ" target="_blank" rel="noopener noreferrer" className="font-bold text-blue-600 dark:text-blue-400 hover:underline">Li Li</a>,
+                co-supervised by <a href="https://scholar.google.com/citations?user=2emq9AoAAAAJ" target="_blank" rel="noopener noreferrer" className="font-bold text-blue-600 dark:text-blue-400 hover:underline">Mingyi Zhou</a>.
+              </p>
+              <p>
+                My research focuses on <strong className="text-blue-600 dark:text-blue-400">AI for Software Engineering (AI4SE)</strong>,
+                combining Large Language Models (LLMs), static analysis, and verifiable software-engineering environments to study reliable coding agents and ecosystem-specific toolchains.
+              </p>
+
+              <div className="mt-6 space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Research Directions</h3>
+                <AboutResearchDirections />
+              </div>
+
+              <p className="mt-4">
+                I collaborate closely with <strong className="text-gray-900 dark:text-white">Huawei</strong> on OpenHarmony quality and UI performance,{" "}
+                <strong className="text-gray-900 dark:text-white">Wei Ma at BTH</strong> on LLM code understanding and AI4SE evaluation, and{" "}
+                <strong className="text-gray-900 dark:text-white">Zhensu Sun at SMU</strong> on LLM coding agents and execution efficiency.
+                My work has been published at top SE venues including <strong className="text-gray-900 dark:text-white">ICSE</strong>,
+                <strong className="text-gray-900 dark:text-white"> FSE</strong>, <strong className="text-gray-900 dark:text-white">TOSEM</strong>, and <strong className="text-gray-900 dark:text-white">EMSE</strong>.
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* What's New */}
         <section id="news" className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">What&apos;s New</h2>
@@ -147,38 +179,6 @@ export default function HomeEn() {
                   </div>
                 );
               })}
-            </div>
-          </div>
-        </section>
-
-        {/* About Me */}
-        <section id="about" className="mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">About Me</h2>
-            <div className="space-y-4 text-gray-600 dark:text-gray-300 leading-relaxed">
-              <p>
-                I am a first-year Ph.D. student at <strong className="text-gray-900 dark:text-white">Beihang University</strong>,
-                working in the <strong className="text-gray-900 dark:text-white">SMAT Laboratory</strong> under the supervision of
-                Prof. <a href="https://scholar.google.com/citations?user=zuUsFkgAAAAJ" target="_blank" rel="noopener noreferrer" className="font-bold text-blue-600 dark:text-blue-400 hover:underline">Li Li</a>,
-                co-supervised by <a href="https://scholar.google.com/citations?user=2emq9AoAAAAJ" target="_blank" rel="noopener noreferrer" className="font-bold text-blue-600 dark:text-blue-400 hover:underline">Mingyi Zhou</a>.
-              </p>
-              <p>
-                My research focuses on <strong className="text-blue-600 dark:text-blue-400">AI for Software Engineering (AI4SE)</strong>,
-                combining Large Language Models (LLMs), static analysis, and verifiable software-engineering environments to study reliable coding agents and ecosystem-specific toolchains.
-              </p>
-
-              <div className="mt-6 space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Research Directions</h3>
-                <AboutResearchDirections />
-              </div>
-
-              <p className="mt-4">
-                I collaborate closely with <strong className="text-gray-900 dark:text-white">Huawei</strong> on OpenHarmony quality and UI performance,{" "}
-                <strong className="text-gray-900 dark:text-white">Wei Ma at BTH</strong> on LLM code understanding and AI4SE evaluation, and{" "}
-                <strong className="text-gray-900 dark:text-white">Zhensu Sun at SMU</strong> on LLM coding agents and execution efficiency.
-                My work has been published at top SE venues including <strong className="text-gray-900 dark:text-white">ICSE</strong>,
-                <strong className="text-gray-900 dark:text-white"> FSE</strong>, <strong className="text-gray-900 dark:text-white">TOSEM</strong>, and <strong className="text-gray-900 dark:text-white">EMSE</strong>.
-              </p>
             </div>
           </div>
         </section>
