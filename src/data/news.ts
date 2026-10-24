@@ -17,6 +17,19 @@ export type NewsItem =
 export const news: NewsItem[] = [
   {
     type: "other",
+    date: "2026.10",
+    title: {
+      zh: "2026 博士生青培计划入选",
+      en: "Selected for the 2026 PhD Student Young Talent Development Program",
+    },
+    detail: {
+      zh: "带着新的认可与期待，继续在 AI 与软件工程交叉方向做有价值的研究。",
+      en: "Moving forward with renewed encouragement to pursue meaningful research at the intersection of AI and software engineering.",
+    },
+    link: "/blog/2026-phd-youth-training-program",
+  },
+  {
+    type: "other",
     date: "2026.08",
     title: {
       zh: "OpenHarmony Bench 技术报告上线 arXiv：能编译，不等于真的完成了应用需求",
