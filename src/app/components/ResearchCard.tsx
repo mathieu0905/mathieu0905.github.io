@@ -237,16 +237,6 @@ export const researchProjectsZh: ResearchProject[] = [
   },
 ];
 
-const colorMap: Record<string, { bg: string; text: string; darkBg: string; darkText: string }> = {
-  blue: { bg: "bg-blue-100", text: "text-blue-700", darkBg: "dark:bg-blue-900", darkText: "dark:text-blue-300" },
-  purple: { bg: "bg-purple-100", text: "text-purple-700", darkBg: "dark:bg-purple-900", darkText: "dark:text-purple-300" },
-  green: { bg: "bg-green-100", text: "text-green-700", darkBg: "dark:bg-green-900", darkText: "dark:text-green-300" },
-  yellow: { bg: "bg-yellow-100", text: "text-yellow-700", darkBg: "dark:bg-yellow-900", darkText: "dark:text-yellow-300" },
-  orange: { bg: "bg-orange-100", text: "text-orange-700", darkBg: "dark:bg-orange-900", darkText: "dark:text-orange-300" },
-  pink: { bg: "bg-pink-100", text: "text-pink-700", darkBg: "dark:bg-pink-900", darkText: "dark:text-pink-300" },
-  cyan: { bg: "bg-cyan-100", text: "text-cyan-700", darkBg: "dark:bg-cyan-900", darkText: "dark:text-cyan-300" },
-};
-
 export function ResearchCards({ locale = "en" }: { locale?: "en" | "zh" }) {
   const [selectedProject, setSelectedProject] = useState<ResearchProject | null>(null);
   const projects = locale === "zh" ? researchProjectsZh : researchProjects;
@@ -254,156 +244,117 @@ export function ResearchCards({ locale = "en" }: { locale?: "en" | "zh" }) {
 
   return (
     <>
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
         {projects.map((project) => (
-          <div
+          <button
             key={project.id}
+            type="button"
             onClick={() => setSelectedProject(project)}
-            className={`bg-white dark:bg-gray-800 rounded-xl p-5 shadow-md border-l-4 ${project.borderColor} cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all`}
+            className="group block border-t border-[color:var(--rule)] pt-4 text-left"
           >
-            <div className="flex items-center gap-2 mb-2">
-              {project.tags.map((tag) => {
-                const colors = colorMap[tag.color];
-                return (
-                  <span
-                    key={tag.label}
-                    className={`px-2 py-0.5 ${colors.bg} ${colors.darkBg} ${colors.text} ${colors.darkText} rounded text-xs`}
-                  >
-                    {tag.label}
-                  </span>
-                );
-              })}
+            <div className="mb-1.5 text-xs text-[color:var(--ink-faint)]">
+              {project.tags.map((tag) => tag.label).join(" · ")}
             </div>
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{project.title}</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">{project.summary}</p>
-            {project.highlights && project.highlights.length > 0 && (
-              <ul className="mt-3 space-y-1 text-xs text-gray-600 dark:text-gray-400">
-                {project.highlights.slice(0, 2).map((item) => (
-                  <li key={item} className="flex items-start gap-2">
-                    <span className="mt-[3px] h-1.5 w-1.5 rounded-full bg-blue-500 flex-shrink-0" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <h3 className="font-medium text-[color:var(--ink)] transition-colors group-hover:text-[color:var(--accent)]">
+              {project.title}
+            </h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-[color:var(--ink-soft)]">{project.summary}</p>
             {project.relatedPapers && project.relatedPapers.length > 0 && (
-              <div className="mt-3">
-                <div className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1">{t.relatedPubs}</div>
-                <div className="flex flex-wrap gap-1.5">
-                  {project.relatedPapers.slice(0, 2).map((paper) => (
-                    <span
-                      key={paper}
-                      className="px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-[11px] text-gray-600 dark:text-gray-300"
-                    >
-                      {paper}
-                    </span>
-                  ))}
-                </div>
-              </div>
+              <p className="mt-2 text-xs text-[color:var(--ink-faint)]">
+                {project.relatedPapers.slice(0, 2).join(" · ")}
+              </p>
             )}
-            <div className="mt-3 flex items-center justify-between gap-3">
-              <span className="text-xs text-gray-400 dark:text-gray-500">
-                {project.methods?.length ? `${project.methods.length} ${t.methods}` : t.moreDetails}
-              </span>
-              <span className="text-xs text-blue-500">{t.clickDetails}</span>
-            </div>
-          </div>
+            <span className="mt-2 inline-block text-xs text-[color:var(--accent)] opacity-0 transition-opacity group-hover:opacity-100">
+              {t.clickDetails}
+            </span>
+          </button>
         ))}
       </div>
 
-      {/* Modal */}
+      {/* Detail dialog */}
       {selectedProject && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
           onClick={() => setSelectedProject(null)}
         >
           <div
-            className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-2xl"
+            className="max-h-[82vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-[color:var(--rule)] bg-[color:var(--paper-raised)]"
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
           >
-            <div className={`p-6 border-b border-gray-200 dark:border-gray-700 border-l-4 ${selectedProject.borderColor} rounded-t-2xl`}>
-              <div className="flex items-center gap-2 mb-3">
-                {selectedProject.tags.map((tag) => {
-                  const colors = colorMap[tag.color];
-                  return (
-                    <span
-                      key={tag.label}
-                      className={`px-2 py-0.5 ${colors.bg} ${colors.darkBg} ${colors.text} ${colors.darkText} rounded text-xs`}
-                    >
-                      {tag.label}
-                    </span>
-                  );
-                })}
-                {selectedProject.status && (
-                  <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">
-                    {selectedProject.status}
-                  </span>
-                )}
+            <div className="flex items-start justify-between gap-4 border-b border-[color:var(--rule)] px-6 py-5">
+              <div className="min-w-0">
+                <div className="mb-1 text-xs text-[color:var(--ink-faint)]">
+                  {selectedProject.tags.map((tag) => tag.label).join(" · ")}
+                </div>
+                <h2 className="text-xl font-semibold text-[color:var(--ink)]">{selectedProject.title}</h2>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedProject.title}</h2>
+              <button
+                type="button"
+                onClick={() => setSelectedProject(null)}
+                className="flex-shrink-0 text-xs text-[color:var(--ink-faint)] transition-colors hover:text-[color:var(--ink)]"
+              >
+                {t.close}
+              </button>
             </div>
-            <div className="p-6">
-              <div className="prose dark:prose-invert max-w-none">
+
+            <div className="px-6 py-5">
+              <div className="space-y-4 text-sm leading-[1.8] text-[color:var(--ink-soft)]">
                 {selectedProject.detail.split("\n\n").map((paragraph, i) => (
-                  <p key={i} className="text-gray-700 dark:text-gray-300 mb-4 whitespace-pre-line">
+                  <p key={i} className="whitespace-pre-line">
                     {paragraph}
                   </p>
                 ))}
               </div>
-              {(selectedProject.highlights?.length || selectedProject.methods?.length || selectedProject.outcomes?.length) && (
-                <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <div className="grid md:grid-cols-3 gap-4">
-                    {selectedProject.highlights?.length ? (
-                      <div>
-                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{t.highlights}</h4>
-                        <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                          {selectedProject.highlights.map((item) => (
-                            <li key={item}>• {item}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    ) : null}
-                    {selectedProject.methods?.length ? (
-                      <div>
-                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{t.methodsTitle}</h4>
-                        <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                          {selectedProject.methods.map((item) => (
-                            <li key={item}>• {item}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    ) : null}
-                    {selectedProject.outcomes?.length ? (
-                      <div>
-                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{t.outcomes}</h4>
-                        <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                          {selectedProject.outcomes.map((item) => (
-                            <li key={item}>• {item}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    ) : null}
+
+              <div className="mt-6 grid gap-6 border-t border-[color:var(--rule)] pt-5 sm:grid-cols-3">
+                {selectedProject.highlights?.length ? (
+                  <div>
+                    <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-[color:var(--ink-faint)]">
+                      {t.highlights}
+                    </h4>
+                    <ul className="space-y-1.5 text-sm text-[color:var(--ink-soft)]">
+                      {selectedProject.highlights.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
                   </div>
-                </div>
-              )}
+                ) : null}
+                {selectedProject.methods?.length ? (
+                  <div>
+                    <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-[color:var(--ink-faint)]">
+                      {t.methodsTitle}
+                    </h4>
+                    <ul className="space-y-1.5 text-sm text-[color:var(--ink-soft)]">
+                      {selectedProject.methods.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+                {selectedProject.outcomes?.length ? (
+                  <div>
+                    <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-[color:var(--ink-faint)]">
+                      {t.outcomes}
+                    </h4>
+                    <ul className="space-y-1.5 text-sm text-[color:var(--ink-soft)]">
+                      {selectedProject.outcomes.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
+
               {selectedProject.relatedPapers && (
-                <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{t.relatedPubs}</h4>
-                  <ul className="text-sm text-gray-600 dark:text-gray-400">
-                    {selectedProject.relatedPapers.map((paper) => (
-                      <li key={paper}>• {paper}</li>
-                    ))}
-                  </ul>
+                <div className="mt-5 border-t border-[color:var(--rule)] pt-4">
+                  <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-[color:var(--ink-faint)]">
+                    {t.relatedPubs}
+                  </h4>
+                  <p className="text-sm text-[color:var(--ink-soft)]">{selectedProject.relatedPapers.join(" · ")}</p>
                 </div>
               )}
-            </div>
-            <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
-              <button
-                onClick={() => setSelectedProject(null)}
-                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-              >
-                {t.close}
-              </button>
             </div>
           </div>
         </div>

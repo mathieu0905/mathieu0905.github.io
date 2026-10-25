@@ -2,12 +2,30 @@
 @plugin "@tailwindcss/typography";
 @import "katex/dist/katex.min.css";
 
+/*
+ * Design tokens.
+ *
+ * The site follows a single-column, typography-first academic layout: warm
+ * off-white paper, near-black ink, one restrained accent, and hairline rules
+ * instead of stacked shadows. Everything below is driven by these variables so
+ * light and dark stay consistent.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --font-geist-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, "Apple Color Emoji",
-    "Segoe UI Emoji";
+  --paper: #fdfcfa;
+  --paper-raised: #ffffff;
+  --ink: #1a1a1a;
+  --ink-soft: #52525b;
+  --ink-faint: #8a8a93;
+  --rule: #e7e5e1;
+  --accent: #1f5fa0;
+  --accent-soft: #eef4fa;
+  --font-geist-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", Helvetica, Arial, sans-serif;
   --font-geist-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* Back-compat aliases used by a few existing components. */
+  --background: var(--paper);
+  --foreground: var(--ink);
 }
 
 @theme inline {
@@ -19,15 +37,161 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --paper: #16161a;
+    --paper-raised: #1d1d22;
+    --ink: #ececee;
+    --ink-soft: #a8a8b3;
+    --ink-faint: #6f6f7a;
+    --rule: #2c2c33;
+    --accent: #7cb0e8;
+    --accent-soft: #1b2530;
   }
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--paper);
+  color: var(--ink);
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ---------------------------------------------------------------------------
+ * Page shell
+ * ------------------------------------------------------------------------- */
+
+.site-shell {
+  min-height: 100vh;
+  background: var(--paper);
+}
+
+.site-container {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 46rem;
+  padding-inline: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .site-container {
+    padding-inline: 2rem;
+  }
+}
+
+.site-container-wide {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 72rem;
+  padding-inline: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .site-container-wide {
+    padding-inline: 2rem;
+  }
+}
+
+/* Section heading: small caps label with a hairline rule, no boxes. */
+.section-label {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.section-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+  transform: translateY(-0.2rem);
+}
+
+/* ---------------------------------------------------------------------------
+ * Prose
+ * ------------------------------------------------------------------------- */
+
+.prose {
+  --tw-prose-body: var(--ink-soft);
+  --tw-prose-headings: var(--ink);
+  --tw-prose-links: var(--accent);
+  --tw-prose-bold: var(--ink);
+  --tw-prose-counters: var(--ink-faint);
+  --tw-prose-bullets: var(--rule);
+  --tw-prose-hr: var(--rule);
+  --tw-prose-quotes: var(--ink-soft);
+  --tw-prose-quote-borders: var(--accent);
+  --tw-prose-captions: var(--ink-faint);
+  --tw-prose-code: var(--ink);
+  --tw-prose-pre-bg: #282c34;
+  --tw-prose-th-borders: var(--rule);
+  --tw-prose-td-borders: var(--rule);
+}
+
+.prose {
+  font-size: 1.0625rem;
+  line-height: 1.85;
+}
+
+.prose :where(p, ul, ol) {
+  margin-top: 1.1em;
+  margin-bottom: 1.1em;
+}
+
+.prose :where(h2) {
+  margin-top: 2.75em;
+  margin-bottom: 0.9em;
+  font-size: 1.5rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.prose :where(h3) {
+  margin-top: 2em;
+  margin-bottom: 0.7em;
+  font-size: 1.2rem;
+  font-weight: 650;
+}
+
+.prose :where(h4) {
+  margin-top: 1.6em;
+  font-size: 1.05rem;
+  font-weight: 650;
+}
+
+.prose :where(a) {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.prose :where(strong) {
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.prose :where(blockquote) {
+  font-style: normal;
+  border-left-width: 2px;
+  padding-left: 1.1em;
+  color: var(--ink-soft);
+}
+
+.prose :where(hr) {
+  margin: 3em 0;
 }
 
 .prose :where(h2, h3, h4) {
@@ -44,9 +208,156 @@ body {
   display: block;
   overflow-x: auto;
   white-space: nowrap;
+  font-size: 0.925rem;
 }
 
-/* Custom animations */
+/* Markdown figures */
+.prose .markdown-figure {
+  margin: 2rem 0;
+}
+
+.prose .markdown-figcaption {
+  margin-top: 0.65rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  font-style: normal;
+  color: var(--ink-faint);
+}
+
+/* Code blocks: highlighting happens at build time, so styles live here. */
+.prose .code-block-wrapper {
+  position: relative;
+  margin: 1.75rem 0;
+  border-radius: 0.5rem;
+  background: #282c34;
+  overflow: hidden;
+}
+
+.prose .code-block-wrapper::before {
+  content: attr(data-language);
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.68rem;
+  font-family: var(--font-geist-mono);
+  letter-spacing: 0.04em;
+  color: #7f848e;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom-left-radius: 0.4rem;
+  pointer-events: none;
+}
+
+.prose .code-block-wrapper pre {
+  margin: 0;
+  padding: 1.9rem 1.15rem 1.15rem;
+  overflow-x: auto;
+  background: transparent;
+  border-radius: 0;
+}
+
+.prose .code-block-wrapper code {
+  display: block;
+  padding: 0;
+  background: transparent;
+  color: #abb2bf;
+  font-size: 0.845rem;
+  line-height: 1.7;
+  white-space: pre;
+}
+
+.prose :not(pre) > code {
+  padding: 0.12rem 0.38rem;
+  border-radius: 0.2rem;
+  background: #f0eeea;
+  color: var(--ink);
+  font-size: 0.875em;
+  font-family: var(--font-geist-mono);
+}
+
+.prose :not(pre) > code::before,
+.prose :not(pre) > code::after {
+  content: none;
+}
+
+/* Prism tokens (One Dark) */
+.prose .code-block .token.comment,
+.prose .code-block .token.prolog,
+.prose .code-block .token.doctype,
+.prose .code-block .token.cdata {
+  color: #7f848e;
+  font-style: italic;
+}
+
+.prose .code-block .token.punctuation {
+  color: #abb2bf;
+}
+
+.prose .code-block .token.property,
+.prose .code-block .token.tag,
+.prose .code-block .token.constant,
+.prose .code-block .token.symbol,
+.prose .code-block .token.deleted {
+  color: #e06c75;
+}
+
+.prose .code-block .token.boolean,
+.prose .code-block .token.number {
+  color: #d19a66;
+}
+
+.prose .code-block .token.selector,
+.prose .code-block .token.attr-name,
+.prose .code-block .token.string,
+.prose .code-block .token.char,
+.prose .code-block .token.builtin,
+.prose .code-block .token.inserted {
+  color: #98c379;
+}
+
+.prose .code-block .token.operator,
+.prose .code-block .token.entity,
+.prose .code-block .token.url,
+.prose .code-block .token.variable {
+  color: #56b6c2;
+}
+
+.prose .code-block .token.atrule,
+.prose .code-block .token.attr-value,
+.prose .code-block .token.function,
+.prose .code-block .token.class-name {
+  color: #61afef;
+}
+
+.prose .code-block .token.keyword {
+  color: #c678dd;
+}
+
+.prose .code-block .token.regex,
+.prose .code-block .token.important {
+  color: #e5c07b;
+}
+
+.prose .code-block .token.important,
+.prose .code-block .token.bold {
+  font-weight: 600;
+}
+
+.prose .code-block .token.italic {
+  font-style: italic;
+}
+
+@media (prefers-color-scheme: dark) {
+  .prose :not(pre) > code {
+    background: #2a2a31;
+    color: #e6e6ea;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Custom animations
+ * ------------------------------------------------------------------------- */
+
 @keyframes spin-slow {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -56,19 +367,32 @@ body {
   animation: spin-slow 4s linear infinite;
 }
 
-/* Smooth scrollbar */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.45s ease-out both;
+}
+
+/* ---------------------------------------------------------------------------
+ * Scrollbar
+ * ------------------------------------------------------------------------- */
+
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
+  background: #d6d3cd;
+  border-radius: 4px;
 }
 @media (prefers-color-scheme: dark) {
   ::-webkit-scrollbar-thumb {
-    background: #475569;
+    background: #3a3a42;
   }
 }

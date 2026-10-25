@@ -19,393 +19,508 @@ function pdfHref(pdfFile?: string) {
 
 const collaborationGroups: {
   org: CollaboratorOrg;
-  initial: string;
   name: string;
   subtitle: string;
   topics: string[];
-  badgeClassName: string;
 }[] = [
   {
     org: "Huawei",
-    initial: "H",
     name: "Huawei",
     subtitle: "OpenHarmony / mobile app quality",
     topics: ["OpenHarmony app repair", "Phantom Rendering / UI performance analysis", "Cangjie low-resource language fine-tuning"],
-    badgeClassName: "bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400",
   },
   {
     org: "BTH",
-    initial: "B",
     name: "Blekinge Institute of Technology (BTH)",
     subtitle: "LLM code understanding / AI4SE evaluation",
     topics: ["LLM code understanding and semantic evaluation", "MazeBreaker adaptive evaluation", "AI4SE open-source ecosystem studies"],
-    badgeClassName: "bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400",
   },
   {
     org: "SMU",
-    initial: "S",
     name: "Singapore Management University (SMU)",
     subtitle: "LLM agents / execution efficiency",
-    topics: ["LLM coding agents", "Execution cost and latency optimization", "Code generation and program repair evaluation"],
-    badgeClassName: "bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400",
+    topics: ["LLM coding agents", "Execution cost and latency optimization", "Code generation and repair evaluation"],
   },
 ];
 
-export default function HomeEn() {
+const researchTags = [
+  "Coding Agents",
+  "Program Repair",
+  "Execution Feedback",
+  "Repo-Scale Benchmarks",
+  "Change Impact Analysis",
+  "Atomic Commits",
+  "OpenHarmony",
+  "Static Analysis",
+  "Code Understanding",
+  "Low-resource Languages",
+];
+
+const openSourceTools = [
+  {
+    name: "HapRay",
+    href: "https://gitcode.com/SMAT/ArkAnalyzer-HapRay",
+    description: "Performance analysis tool for OpenHarmony apps, detecting Phantom Rendering issues in UI.",
+    meta: "FSE 2026 · GitCode",
+  },
+  {
+    name: "HomeCheck",
+    href: "https://gitcode.com/openharmony-sig/homecheck",
+    description: "Static checker and auto-repair tool for OpenHarmony apps; core module of HapRepair.",
+    meta: "FSE Industry 2025 · GitCode",
+  },
+  {
+    name: "HomeTrans",
+    href: "https://gitcode.com/SMAT/HomeTrans",
+    description: "Android → OpenHarmony migration tool, helping apps enter the HarmonyOS ecosystem.",
+    meta: "Migration tool · GitCode",
+  },
+  {
+    name: "ResearchClaw",
+    href: "https://github.com/Noietch/ResearchClaw",
+    description: "AI-powered research desktop app: literature management, smart reading notes, and idea generation.",
+    meta: "Electron + TypeScript · GitHub",
+  },
+  {
+    name: "SkillLens",
+    href: "https://github.com/mathieu0905/skilllens",
+    description: "SKILL coverage and optimization framework for Codex / Claude Code agent traces.",
+    meta: "Agent Skills · GitHub",
+  },
+];
+
+const featuredWorks = [
+  {
+    title: "To Run or Not to Run",
+    venue: "ISSTA 2026",
+    topic: "Program Repair",
+    summary: "Analyzes the cost and benefit of code execution in LLM-based repair, arguing that execution feedback is a costly resource rather than a default action.",
+  },
+  {
+    title: "CodeAnchor",
+    venue: "ISSTA 2026",
+    topic: "Code Agents",
+    summary: "Studies how lightweight static structure acts as deterministic anchors, improving localization stability, reproducibility, and navigation efficiency in real repositories.",
+  },
+  {
+    title: "Phantom Rendering Detection",
+    venue: "FSE 2026",
+    topic: "Performance",
+    summary: "Identifies unnecessary UI computations so developers can find hidden performance bottlenecks and improve mobile app smoothness.",
+  },
+  {
+    title: "MazeBreaker",
+    venue: "ICSE 2026",
+    topic: "LLM Security",
+    summary: "Proposes a multi-agent reinforcement learning framework that dynamically evaluates jailbreak vulnerabilities in LLM safety defenses.",
+  },
+];
+
+const timeline = [
+  {
+    period: "Late 2023",
+    body: "Started research as an undergraduate and joined the SMAT Laboratory.",
+  },
+  {
+    period: "2023.11",
+    body: (
+      <>
+        First submission —{" "}
+        <a href="https://arxiv.org/abs/2305.12138" target="_blank" rel="noopener noreferrer" className="text-[color:var(--accent)] hover:underline">
+          Open-Source AI-based SE Tools
+        </a>
+        , a survey of the AI4SE open-source ecosystem.
+      </>
+    ),
+  },
+  {
+    period: "2024",
+    body: (
+      <>
+        First paper accepted at <span className="font-medium text-[color:var(--ink)]">TOSEM</span> — a panoramic survey covering 100+ open-source tools.
+      </>
+    ),
+  },
+  {
+    period: "2024.09",
+    body: "Graduated and began the combined M.S.–Ph.D. program; started collaborations with Huawei, BTH, and SMU.",
+  },
+  {
+    period: "2025.03",
+    body: "HapRepair accepted at FSE Industry 2025 — automated repair for the OpenHarmony ecosystem, from paper to engineering.",
+  },
+  {
+    period: "2025.06",
+    body: "MazeBreaker accepted at ICSE 2026 — adaptive security evaluation with multi-agent reinforcement learning.",
+  },
+  {
+    period: "2025 – 2026",
+    body: "Research expands: Phantom Rendering (FSE 2026), Cangjie fine-tuning (EMSE 2026), and several submissions on repository-scale compatibility maintenance, change impact analysis, and OpenHarmony migration.",
+  },
+];
+
+export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900">
-      <main className="max-w-7xl mx-auto px-6 py-12">
-        {/* Hero Section */}
-        <header className="relative overflow-hidden rounded-3xl bg-white dark:bg-gray-800 shadow-xl p-8 mb-8">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-          <div className="relative flex flex-col md:flex-row gap-8 items-center md:items-start">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full blur-lg opacity-30 scale-110" />
-              <Image
-                src="/avatar.jpg"
-                alt="Zhihao Lin"
-                width={160}
-                height={160}
-                className="relative rounded-full ring-4 ring-white dark:ring-gray-700 shadow-lg"
-              />
-            </div>
-            <div className="text-center md:text-left flex-1">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent mb-2">
+    <div className="site-shell">
+      <main className="site-container pb-24 pt-16 sm:pt-20">
+        {/* Header */}
+        <header className="border-b border-[color:var(--rule)] pb-12">
+          <div className="flex flex-col items-start gap-7 sm:flex-row sm:items-start sm:gap-9">
+            <Image
+              src="/avatar.jpg"
+              alt="Zhihao Lin"
+              width={120}
+              height={120}
+              className="h-[120px] w-[120px] flex-shrink-0 rounded-full object-cover object-top ring-1 ring-[color:var(--rule)]"
+              priority
+            />
+            <div className="min-w-0">
+              <h1 className="text-[2rem] font-semibold leading-tight tracking-tight text-[color:var(--ink)] sm:text-[2.35rem]">
                 Zhihao Lin
               </h1>
-              <p className="text-xl text-blue-600 dark:text-blue-400 font-medium mb-3">
-                Ph.D. Student @ Beihang University
+              <p className="mt-2.5 text-[color:var(--ink-soft)]">
+                Ph.D. Student · Beihang University · SMAT Laboratory
               </p>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
-                SMAT Laboratory | AI for Software Engineering
+              <p className="mt-1 text-[color:var(--ink-soft)]">
+                Research: <span className="text-[color:var(--ink)]">AI for Software Engineering</span>
               </p>
-              <div className="flex gap-3 justify-center md:justify-start">
-                <a href="mailto:mathieulin@buaa.edu.cn" className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors" aria-label="Email">
-                  <FaEnvelope className="text-xl text-gray-700 dark:text-gray-300" />
+              <div className="mt-5 flex items-center gap-4">
+                <a
+                  href="mailto:mathieulin@buaa.edu.cn"
+                  className="text-[color:var(--ink-faint)] transition-colors hover:text-[color:var(--ink)]"
+                  aria-label="Email"
+                  title="mathieulin@buaa.edu.cn"
+                >
+                  <FaEnvelope size={17} />
                 </a>
-                <a href="https://github.com/mathieu0905" target="_blank" rel="noopener noreferrer" className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" aria-label="GitHub">
-                  <FaGithub className="text-xl text-gray-700 dark:text-gray-300" />
+                <a
+                  href="https://github.com/mathieu0905"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[color:var(--ink-faint)] transition-colors hover:text-[color:var(--ink)]"
+                  aria-label="GitHub"
+                  title="GitHub"
+                >
+                  <FaGithub size={17} />
                 </a>
-                <a href="https://scholar.google.co.uk/citations?user=iPrIsSUAAAAJ" target="_blank" rel="noopener noreferrer" className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-green-100 dark:hover:bg-green-900 transition-colors" aria-label="Google Scholar">
-                  <FaGoogleScholar className="text-xl text-gray-700 dark:text-gray-300" />
+                <a
+                  href="https://scholar.google.co.uk/citations?user=iPrIsSUAAAAJ"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[color:var(--ink-faint)] transition-colors hover:text-[color:var(--ink)]"
+                  aria-label="Google Scholar"
+                  title="Google Scholar"
+                >
+                  <FaGoogleScholar size={17} />
                 </a>
               </div>
             </div>
           </div>
         </header>
 
-        {/* About Me */}
-        <section id="about" className="mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">About Me</h2>
-            <div className="space-y-4 text-gray-600 dark:text-gray-300 leading-relaxed">
-              <p>
-                I am a first-year Ph.D. student at <strong className="text-gray-900 dark:text-white">Beihang University</strong>,
-                working in the <strong className="text-gray-900 dark:text-white">SMAT Laboratory</strong> under the supervision of
-                Prof. <a href="https://scholar.google.com/citations?user=zuUsFkgAAAAJ" target="_blank" rel="noopener noreferrer" className="font-bold text-blue-600 dark:text-blue-400 hover:underline">Li Li</a>,
-                co-supervised by <a href="https://scholar.google.com/citations?user=2emq9AoAAAAJ" target="_blank" rel="noopener noreferrer" className="font-bold text-blue-600 dark:text-blue-400 hover:underline">Mingyi Zhou</a>.
-              </p>
-              <p>
-                My research focuses on <strong className="text-blue-600 dark:text-blue-400">AI for Software Engineering (AI4SE)</strong>,
-                combining Large Language Models (LLMs), static analysis, and verifiable software-engineering environments to study reliable coding agents and ecosystem-specific toolchains.
-              </p>
+        {/* About */}
+        <section id="about" className="border-b border-[color:var(--rule)] py-10">
+          <h2 className="section-label">About</h2>
+          <div className="space-y-5 leading-[1.85] text-[color:var(--ink-soft)]">
+            <p>
+              I am a Ph.D. student at{" "}
+              <a href="https://www.buaa.edu.cn/" target="_blank" rel="noopener noreferrer" className="text-[color:var(--accent)] hover:underline">
+                Beihang University
+              </a>
+              , working in the SMAT Laboratory under Prof.{" "}
+              <a href="https://scholar.google.com/citations?user=zuUsFkgAAAAJ" target="_blank" rel="noopener noreferrer" className="text-[color:var(--accent)] hover:underline">
+                Li Li
+              </a>
+              , co-supervised by{" "}
+              <a href="https://scholar.google.com/citations?user=2emq9AoAAAAJ" target="_blank" rel="noopener noreferrer" className="text-[color:var(--accent)] hover:underline">
+                Mingyi Zhou
+              </a>
+              .
+            </p>
 
-              <div className="mt-6 space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Research Directions</h3>
-                <AboutResearchDirections />
-              </div>
+            <p>
+              My research focuses on{" "}
+              <span className="font-medium text-[color:var(--ink)]">AI for Software Engineering (AI4SE)</span>, combining
+              large language models, program analysis, and verifiable software-engineering environments to build reliable
+              coding agents and ecosystem toolchains. The work spans execution feedback, repository-scale benchmarks,
+              change impact analysis, OpenHarmony quality assurance, and low-resource programming languages — all around
+              one core question:{" "}
+              <em className="not-italic text-[color:var(--ink)]">how to make AI genuinely reliable for software engineering practice</em>.
+            </p>
 
-              <p className="mt-4">
-                I collaborate closely with <strong className="text-gray-900 dark:text-white">Huawei</strong> on OpenHarmony quality and UI performance,{" "}
-                <strong className="text-gray-900 dark:text-white">Wei Ma at BTH</strong> on LLM code understanding and AI4SE evaluation, and{" "}
-                <strong className="text-gray-900 dark:text-white">Zhensu Sun at SMU</strong> on LLM coding agents and execution efficiency.
-                My work has been published at top SE venues including <strong className="text-gray-900 dark:text-white">ICSE</strong>,
-                <strong className="text-gray-900 dark:text-white"> FSE</strong>, <strong className="text-gray-900 dark:text-white">TOSEM</strong>, and <strong className="text-gray-900 dark:text-white">EMSE</strong>.
+            <div className="border-l-2 border-[color:var(--rule)] pl-5">
+              <h3 className="mb-2 font-medium text-[color:var(--ink)]">Motivation</h3>
+              <p>
+                LLMs already generate code well, but real software engineering is not only about writing a patch: an agent
+                must understand repositories, select evidence, control execution cost, maintain change history, and survive
+                verification in a specific ecosystem. My central question is{" "}
+                <em className="not-italic text-[color:var(--ink)]">
+                  how to combine LLM generation, the determinism of program analysis, and real software-engineering
+                  environments into reliable coding agents and ecosystem toolchains
+                </em>.
               </p>
+              <p className="mt-3">
+                In coding agents, this means analyzing when execution feedback is worth its cost (
+                <Link href="/papers/issta2026-to-run-or-not-to-run.pdf" className="text-[color:var(--accent)] hover:underline">
+                  To Run or Not to Run
+                </Link>
+                ) and using lightweight static structure to stabilize repository navigation (
+                <Link href="/papers/issta2026-codeanchor.pdf" className="text-[color:var(--accent)] hover:underline">
+                  CodeAnchor
+                </Link>
+                ). In the OpenHarmony ecosystem, it means combining domain rules, static analysis, LLMs, and real feedback
+                for repair, migration, and performance analysis (
+                <a href="https://doi.org/10.1145/3696630.3728556" target="_blank" rel="noopener noreferrer" className="text-[color:var(--accent)] hover:underline">
+                  HapRepair
+                </a>
+                ,{" "}
+                <Link href="/papers/hapray_fse.pdf" className="text-[color:var(--accent)] hover:underline">
+                  Phantom Rendering Detection
+                </Link>
+                ). On the evaluation side, it means systematically examining what code knowledge LLMs actually understand
+                and how AI4SE tools should be measured.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="mb-3 font-medium text-[color:var(--ink)]">Education</h3>
+              <dl className="space-y-2.5 text-sm">
+                <div className="flex flex-wrap gap-x-4 gap-y-1">
+                  <dt className="w-28 flex-shrink-0 text-[color:var(--ink-faint)]">2024 – present</dt>
+                  <dd className="text-[color:var(--ink-soft)]">Beihang University · Computer Science · M.S.–Ph.D. program</dd>
+                </div>
+                <div className="flex flex-wrap gap-x-4 gap-y-1">
+                  <dt className="w-28 flex-shrink-0 text-[color:var(--ink-faint)]">2019 – 2024</dt>
+                  <dd className="text-[color:var(--ink-soft)]">Beihang University · Software Engineering · B.Eng.</dd>
+                </div>
+              </dl>
             </div>
           </div>
         </section>
 
-        {/* What's New */}
-        <section id="news" className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">What&apos;s New</h2>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-            <div className="space-y-4">
-              {sortedNews.map((item) => {
-                if (item.type === "other") {
-                  return (
-                    <div key={`${item.type}-${item.date}-${item.title.en}`} className="flex items-start gap-4">
-                      <div className="flex-shrink-0 w-20 text-sm font-mono text-blue-600 dark:text-blue-400">{item.date}</div>
-                      <div className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-blue-500" />
-                      <div className="min-w-0">
-                        <div className="text-gray-700 dark:text-gray-300">
-                          {item.link ? (
-                            <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">
-                              {item.title.en}
-                              {item.link.startsWith("/blog/") && <span className="text-xs font-normal"> (Chinese)</span>}
-                            </a>
-                          ) : (
-                            item.title.en
-                          )}
-                        </div>
-                        {item.detail && <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">{item.detail.en}</div>}
-                      </div>
-                    </div>
-                  );
-                }
-
-                const paper = papers.find((p) => p.id === item.paperId);
-                if (!paper) return null;
-
-                const href = pdfHref(paper.pdfFile);
-
+        {/* News */}
+        <section id="news" className="border-b border-[color:var(--rule)] py-10">
+          <h2 className="section-label">News</h2>
+          <ul className="space-y-3.5 text-sm">
+            {sortedNews.slice(0, 9).map((item) => {
+              if (item.type === "other") {
                 return (
-                  <div key={`${item.type}-${item.date}-${item.paperId}`} className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-20 text-sm font-mono text-blue-600 dark:text-blue-400">{item.date}</div>
-                    <div className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-blue-500" />
-                    <div className="min-w-0">
-                      <div className="text-gray-700 dark:text-gray-300">
-                        {href ? (
-                          <a href={href} className="font-medium text-blue-600 dark:text-blue-400 hover:underline">{paper.title}</a>
-                        ) : (
-                          <span className="font-medium">{paper.title}</span>
-                        )}
-                        {paper.venue && paper.year && <span className="text-gray-500 dark:text-gray-400"> — accepted at {paper.venue} {paper.year}</span>}
-                      </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        {paper.authors && paper.authors.length > 0 ? paper.authors.join(", ") : "Authors: (to be added)"}
-                      </div>
+                  <li key={`${item.type}-${item.date}-${item.title.en}`} className="flex gap-5">
+                    <time className="w-20 flex-shrink-0 font-mono text-xs leading-6 text-[color:var(--ink-faint)]">
+                      {item.date}
+                    </time>
+                    <div className="min-w-0 leading-6">
+                      {item.link ? (
+                        <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-[color:var(--ink)] hover:text-[color:var(--accent)]">
+                          {item.title.en}
+                          {item.link.startsWith("/blog/") && (
+                            <span className="ml-1.5 text-xs text-[color:var(--ink-faint)]">(Chinese)</span>
+                          )}
+                        </a>
+                      ) : (
+                        <span className="text-[color:var(--ink)]">{item.title.en}</span>
+                      )}
+                      {item.detail && <span className="ml-2 text-[color:var(--ink-faint)]">— {item.detail.en}</span>}
                     </div>
-                  </div>
+                  </li>
                 );
-              })}
-            </div>
+              }
+
+              const paper = papers.find((p) => p.id === item.paperId);
+              if (!paper) return null;
+              const href = pdfHref(paper.pdfFile);
+
+              return (
+                <li key={`${item.type}-${item.date}-${item.paperId}`} className="flex gap-5">
+                  <time className="w-20 flex-shrink-0 font-mono text-xs leading-6 text-[color:var(--ink-faint)]">
+                    {item.date}
+                  </time>
+                  <div className="min-w-0 leading-6">
+                    {href ? (
+                      <a href={href} className="text-[color:var(--ink)] hover:text-[color:var(--accent)]">
+                        {paper.title}
+                      </a>
+                    ) : (
+                      <span className="text-[color:var(--ink)]">{paper.title}</span>
+                    )}
+                    {paper.venue && paper.year && (
+                      <span className="ml-2 text-[color:var(--ink-faint)]">— {paper.venue} {paper.year}</span>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+
+        {/* Selected work */}
+        <section className="border-b border-[color:var(--rule)] py-10">
+          <h2 className="section-label">Selected Work</h2>
+          <div className="grid gap-x-10 gap-y-7 sm:grid-cols-2">
+            {featuredWorks.map((work) => (
+              <article key={work.title}>
+                <div className="mb-1.5 flex items-center gap-2 text-xs text-[color:var(--ink-faint)]">
+                  <span className="font-medium text-[color:var(--accent)]">{work.venue}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>{work.topic}</span>
+                </div>
+                <h3 className="font-medium text-[color:var(--ink)]">{work.title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-[color:var(--ink-soft)]">{work.summary}</p>
+              </article>
+            ))}
           </div>
         </section>
 
-        {/* Research Interests Tags */}
-        <section id="research" className="mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Research Interests</h2>
-            <div className="flex flex-wrap gap-2">
-              {["Coding Agents", "Program Repair", "Execution Feedback", "Repo-Scale Benchmarks", "Change Impact Analysis", "Atomic Commits", "OpenHarmony", "Static Analysis", "Code Understanding", "Low-resource Languages"].map(tag => (
-                <span key={tag} className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium">
-                  {tag}
+        {/* Timeline */}
+        <section className="border-b border-[color:var(--rule)] py-10">
+          <h2 className="section-label">Timeline</h2>
+          <ol className="space-y-4 text-sm">
+            {timeline.map((entry) => (
+              <li key={entry.period} className="flex flex-col gap-1 sm:flex-row sm:gap-6">
+                <span className="w-28 flex-shrink-0 font-mono text-xs leading-6 text-[color:var(--ink-faint)]">
+                  {entry.period}
                 </span>
-              ))}
-            </div>
-          </div>
+                <span className="leading-6 text-[color:var(--ink-soft)]">{entry.body}</span>
+              </li>
+            ))}
+          </ol>
         </section>
 
-        {/* Ongoing Research */}
-        <section className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <span className="text-2xl">🔬</span> Research Directions
-          </h2>
+        {/* Research directions */}
+        <section id="research" className="border-b border-[color:var(--rule)] py-10">
+          <h2 className="section-label">Research Directions</h2>
+          <p className="mb-5 text-sm leading-relaxed text-[color:var(--ink-soft)]">
+            Four threads sharing one question: how to make coding agents both reliable and verifiable in real
+            software-engineering environments. Click to expand.
+          </p>
+          <AboutResearchDirections />
+        </section>
+
+        {/* Research themes */}
+        <section className="border-b border-[color:var(--rule)] py-10">
+          <h2 className="section-label">Research Themes</h2>
+          <div className="mb-8 flex flex-wrap gap-2">
+            {researchTags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border border-[color:var(--rule)] px-3 py-1 text-xs text-[color:var(--ink-soft)]"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
           <ResearchCards />
         </section>
 
-        {/* Open-Source Tools */}
-        <section id="tools" className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Open-Source Tools</h2>
-          <div className="grid md:grid-cols-3 gap-4">
-            <a
-              href="https://gitcode.com/SMAT/ArkAnalyzer-HapRay"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] group"
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-2xl">🔍</span>
-                <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">HapRay</h3>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Performance analysis tool for OpenHarmony apps, detecting Phantom Rendering issues in UI.</p>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-2 py-0.5 bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 rounded text-xs font-medium">FSE 2026</span>
-                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">GitCode</span>
-              </div>
-            </a>
-            <a
-              href="https://gitcode.com/openharmony-sig/homecheck"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] group"
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-2xl">🔧</span>
-                <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">HomeCheck</h3>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Static checker and auto-repair tool for OpenHarmony apps. Core module of HapRepair with rule-driven defect detection.</p>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded text-xs font-medium">FSE Industry 2025</span>
-                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">GitCode</span>
-              </div>
-            </a>
-            <a
-              href="https://gitcode.com/SMAT/HomeTrans"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] group"
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-2xl">🔄</span>
-                <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">HomeTrans</h3>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Android → OpenHarmony migration tool, helping developers automatically convert Android apps to the HarmonyOS ecosystem.</p>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">Migration</span>
-                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">GitCode</span>
-              </div>
-            </a>
-            <a
-              href="https://github.com/Noietch/ResearchClaw"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] group"
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-2xl">📚</span>
-                <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">ResearchClaw</h3>
-                <span className="px-1.5 py-0.5 bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 rounded text-xs font-medium">⭐ 59</span>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">AI-powered research desktop app combining literature management, smart reading notes, and research idea generation. Supports arXiv discovery, PDF AI chat, semantic search, and citation networks.</p>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded text-xs font-medium">Electron + TypeScript</span>
-                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">GitHub</span>
-              </div>
-            </a>
-            <a
-              href="https://github.com/mathieu0905/skilllens"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] group"
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-2xl">🧭</span>
-                <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">SkillLens</h3>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Local SKILL coverage and optimization framework for Codex / Claude Code traces, aligning SKILL.md constraints with real agent behavior to reveal followed, violated, and ignored paths.</p>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-2 py-0.5 bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 rounded text-xs font-medium">Agent Skills</span>
-                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">GitHub</span>
-              </div>
-            </a>
-          </div>
-        </section>
-
         {/* Publications */}
-        <section id="publications" className="mb-8">
-          <div className="flex items-end justify-between gap-4 mb-4">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Accepted Papers (PDF)</h2>
-            <Link href="/en/papers" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
-              View all →
+        <section id="publications" className="border-b border-[color:var(--rule)] py-10">
+          <div className="mb-6 flex items-baseline justify-between gap-4">
+            <h2 className="section-label mb-0 flex-1">Accepted Papers</h2>
+            <Link href="/en/papers" className="flex-shrink-0 text-xs text-[color:var(--ink-faint)] transition-colors hover:text-[color:var(--ink)]">
+              All papers →
             </Link>
           </div>
-          <div className="space-y-4">
+          <ul className="divide-y divide-[color:var(--rule)]">
             {acceptedPapers.map((paper) => {
               const href = pdfHref(paper.pdfFile);
               return (
-                <div key={paper.id} className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-md hover:shadow-lg transition-shadow">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0">
-                      <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{paper.title}</h3>
-                      {(paper.venue || paper.year) && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{[paper.venue, paper.year].filter(Boolean).join(" ")}</p>
-                      )}
-                    </div>
-                    {href ? (
-                      <a
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-shrink-0 px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm font-medium"
-                      >
-                        PDF
-                      </a>
-                    ) : (
-                      <span className="flex-shrink-0 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-sm">
-                        No PDF
+                <li key={paper.id} className="flex items-baseline gap-4 py-3">
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[color:var(--ink)]">{paper.title}</span>
+                    {(paper.venue || paper.year) && (
+                      <span className="ml-2 text-xs text-[color:var(--ink-faint)]">
+                        {[paper.venue, paper.year].filter(Boolean).join(" ")}
                       </span>
                     )}
                   </div>
+                  {href ? (
+                    <a href={href} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 text-xs text-[color:var(--accent)] hover:underline">
+                      PDF
+                    </a>
+                  ) : (
+                    <span className="flex-shrink-0 text-xs text-[color:var(--ink-faint)]">—</span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+
+        {/* Open source */}
+        <section id="tools" className="border-b border-[color:var(--rule)] py-10">
+          <h2 className="section-label">Open Source</h2>
+          <div className="grid gap-x-10 gap-y-7 sm:grid-cols-2">
+            {openSourceTools.map((tool) => (
+              <a key={tool.name} href={tool.href} target="_blank" rel="noopener noreferrer" className="group block">
+                <h3 className="font-medium text-[color:var(--ink)] transition-colors group-hover:text-[color:var(--accent)]">
+                  {tool.name}
+                </h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-[color:var(--ink-soft)]">{tool.description}</p>
+                <p className="mt-1.5 text-xs text-[color:var(--ink-faint)]">{tool.meta}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        {/* Collaborations */}
+        <section className="border-b border-[color:var(--rule)] py-10">
+          <h2 className="section-label">Collaborations</h2>
+          <div className="space-y-9">
+            {collaborationGroups.map((group) => {
+              const people = collaborators.filter((c) => c.org === group.org);
+              return (
+                <div key={group.org}>
+                  <div className="mb-3">
+                    <h3 className="font-medium text-[color:var(--ink)]">{group.name}</h3>
+                    <p className="text-xs text-[color:var(--ink-faint)]">{group.subtitle}</p>
+                  </div>
+                  <div className="space-y-4">
+                    {people.map((person) => (
+                      <div key={person.name} className="text-sm">
+                        <div className="flex flex-wrap items-baseline gap-x-3">
+                          <span className="font-medium text-[color:var(--ink)]">{person.name}</span>
+                          {person.role && <span className="text-xs text-[color:var(--ink-faint)]">{person.role.en}</span>}
+                          {person.links?.map((link) => (
+                            <a
+                              key={link.href}
+                              href={link.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-[color:var(--accent)] hover:underline"
+                            >
+                              {link.label}
+                            </a>
+                          ))}
+                        </div>
+                        {person.acknowledgement && (
+                          <p className="mt-1 text-xs leading-relaxed text-[color:var(--ink-faint)]">
+                            {person.acknowledgement.en}
+                          </p>
+                        )}
+                        {person.works && person.works.length > 0 && (
+                          <ul className="mt-1.5 space-y-1 text-[color:var(--ink-soft)]">
+                            {person.works.map((work) => (
+                              <li key={work.en} className="flex gap-2 leading-6">
+                                <span className="text-[color:var(--ink-faint)]" aria-hidden="true">–</span>
+                                <span>{work.en}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-xs leading-relaxed text-[color:var(--ink-faint)]">
+                    Topics: {group.topics.join(", ")}
+                  </p>
                 </div>
               );
             })}
           </div>
         </section>
 
-        {/* Collaborations */}
-        <section className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Collaborations</h2>
-          <div className="grid lg:grid-cols-3 gap-4">
-            {collaborationGroups.map((group) => (
-              <div key={group.org} className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${group.badgeClassName}`}>
-                    {group.initial}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="font-medium text-gray-900 dark:text-white">{group.name}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">{group.subtitle}</div>
-                  </div>
-                </div>
-
-                <div className="text-sm text-gray-700 dark:text-gray-300">
-                  <div className="font-semibold text-gray-900 dark:text-white mb-2">People and Works</div>
-                  <div className="space-y-4">
-                    {collaborators
-                      .filter((c) => c.org === group.org)
-                      .map((c) => (
-                        <div key={c.name} className="border-t border-gray-100 dark:border-gray-700 pt-3 first:border-t-0 first:pt-0">
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <div className="font-medium text-gray-900 dark:text-white">{c.name}</div>
-                              {c.role && <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{c.role.en}</div>}
-                            </div>
-                            {c.links && c.links.length > 0 && (
-                              <div className="flex flex-wrap justify-end gap-2">
-                                {c.links.map((l) => (
-                                  <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
-                                    {l.label}
-                                  </a>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                          {c.acknowledgement && (
-                            <p className="mt-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:text-amber-200">
-                              {c.acknowledgement.en}
-                            </p>
-                          )}
-                          {c.works && c.works.length > 0 && (
-                            <ul className="mt-2 space-y-1 text-xs text-gray-600 dark:text-gray-400">
-                              {c.works.map((work) => (
-                                <li key={work.en} className="flex items-start gap-2">
-                                  <span className="mt-[5px] h-1 w-1 rounded-full bg-blue-500 flex-shrink-0" />
-                                  <span>{work.en}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                      ))}
-                  </div>
-
-                  <div className="font-semibold text-gray-900 dark:text-white mt-5 mb-2">Topics</div>
-                  <ul className="space-y-1 text-gray-600 dark:text-gray-400">
-                    {group.topics.map((topic) => (
-                      <li key={topic}>• {topic}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer className="text-center text-gray-400 dark:text-gray-500 text-sm py-8">
-          <p>&copy; 2024-2025 Zhihao Lin | Built with Next.js & Tailwind CSS</p>
+        <footer className="pt-10 text-xs text-[color:var(--ink-faint)]">
+          <p>© 2024–2025 Zhihao Lin · Built with Next.js &amp; Tailwind CSS</p>
         </footer>
       </main>
     </div>

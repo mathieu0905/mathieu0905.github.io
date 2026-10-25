@@ -1,44 +1,61 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 export function ShareButtons({ title }: { title: string }) {
   const pathname = usePathname();
+  const [copied, setCopied] = useState(false);
+  const [showTip, setShowTip] = useState(false);
 
-  const url = typeof window !== "undefined"
-    ? `${window.location.origin}${pathname}`
-    : pathname;
+  // Build the absolute share URL after mount so server output stays stable.
+  const [url, setUrl] = useState("");
+  useEffect(() => {
+    setUrl(`${window.location.origin}${pathname}`);
+  }, [pathname]);
 
-  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`;
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(timer);
+  }, [copied]);
+
+  const twitterHref = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`;
 
   const copyLink = async () => {
     try {
       await navigator.clipboard.writeText(url);
-      alert("链接已复制！");
+      setCopied(true);
     } catch {
-      // fallback
+      setShowTip(true);
+      setTimeout(() => setShowTip(false), 2400);
     }
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-sm text-gray-500 dark:text-gray-400">分享：</span>
+    <div className="relative flex items-center gap-3 text-xs">
       <a
-        href={twitterUrl}
+        href={twitterHref}
         target="_blank"
         rel="noopener noreferrer"
-        className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors text-gray-600 dark:text-gray-300 text-sm"
-        title="Share on Twitter"
+        className="text-[color:var(--ink-faint)] transition-colors hover:text-[color:var(--ink)]"
+        title="分享到 X"
       >
-        𝕏
+        分享
       </a>
       <button
+        type="button"
         onClick={copyLink}
-        className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-green-100 dark:hover:bg-green-900 transition-colors text-gray-600 dark:text-gray-300 text-sm"
+        className="text-[color:var(--ink-faint)] transition-colors hover:text-[color:var(--ink)]"
         title="复制链接"
       >
-        🔗
+        {copied ? "已复制" : "复制链接"}
       </button>
+      {showTip && (
+        <span className="absolute right-0 top-6 whitespace-nowrap rounded bg-[color:var(--ink)] px-2 py-1 text-[11px] text-[color:var(--paper)]">
+          请手动复制地址栏链接
+        </span>
+      )}
     </div>
   );
 }

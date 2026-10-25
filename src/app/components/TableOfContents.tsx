@@ -39,7 +39,7 @@ export function TableOfContents() {
         const visible = entries.find((e) => e.isIntersecting);
         if (visible) setActiveId(visible.target.id);
       },
-      { rootMargin: "-80px 0px -60% 0px" }
+      { rootMargin: "-80px 0px -60% 0px" },
     );
 
     headings.forEach((h) => {
@@ -53,21 +53,21 @@ export function TableOfContents() {
   if (headings.length < 3) return null;
 
   return (
-    <nav className="hidden xl:block sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto">
-      <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+    <nav className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto">
+      <div className="mb-3 text-[11px] font-medium uppercase tracking-[0.12em] text-[color:var(--ink-faint)]">
         目录
       </div>
-      <ul className="space-y-1 text-sm border-l-2 border-gray-200 dark:border-gray-700">
+      <ul className="space-y-1.5 border-l border-[color:var(--rule)] text-[13px] leading-snug">
         {headings.map((h) => (
-          <li key={h.id}>
+          <li key={h.id} className={h.level === 3 ? "hidden 2xl:block" : ""}>
             <a
               href={`#${h.id}`}
-              className={`block py-1 transition-colors border-l-2 -ml-[2px] ${
-                h.level === 3 ? "pl-6" : "pl-3"
+              className={`-ml-px block border-l py-0.5 pl-3 pr-1 transition-colors ${
+                h.level === 3 ? "ml-3" : ""
               } ${
                 activeId === h.id
-                  ? "border-blue-500 text-blue-600 dark:text-blue-400 font-medium"
-                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                  ? "border-[color:var(--accent)] text-[color:var(--ink)]"
+                  : "border-transparent text-[color:var(--ink-faint)] hover:text-[color:var(--ink-soft)]"
               }`}
             >
               {h.text}

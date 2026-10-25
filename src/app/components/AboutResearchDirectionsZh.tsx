@@ -113,90 +113,89 @@ export function AboutResearchDirectionsZh() {
 
   return (
     <>
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid gap-x-10 gap-y-6 sm:grid-cols-2">
         {directions.map((d) => (
           <button
             key={d.id}
             type="button"
             onClick={() => setSelected(d)}
-            className={`text-left p-4 rounded-xl ${d.cardClassName} hover:shadow-md transition-shadow`}
+            className="group block border-t border-[color:var(--rule)] pt-4 text-left"
           >
-            <div className="text-2xl mb-2">{d.icon}</div>
-            <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{d.title}</h4>
-            <p className="text-sm text-gray-700 dark:text-gray-300">{d.summary}</p>
-            <div className="mt-3 text-xs text-blue-600 dark:text-blue-400">点击查看详情 →</div>
+            <h4 className="font-medium text-[color:var(--ink)] transition-colors group-hover:text-[color:var(--accent)]">
+              {d.title}
+            </h4>
+            <p className="mt-1.5 text-sm leading-relaxed text-[color:var(--ink-soft)]">{d.summary}</p>
+            <span className="mt-2 inline-block text-xs text-[color:var(--accent)] opacity-0 transition-opacity group-hover:opacity-100">
+              了解详情
+            </span>
           </button>
         ))}
       </div>
 
       {selected && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSelected(null)}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setSelected(null)}
+        >
           <div
-            className="bg-white dark:bg-gray-800 rounded-2xl max-w-3xl w-full max-h-[80vh] overflow-y-auto shadow-2xl"
+            className="max-h-[82vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-[color:var(--rule)] bg-[color:var(--paper-raised)]"
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
           >
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="text-2xl">{selected.icon}</div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{selected.title}</h3>
-              </div>
-              <p className="text-gray-600 dark:text-gray-300">{selected.detail}</p>
+            <div className="flex items-start justify-between gap-4 border-b border-[color:var(--rule)] px-6 py-5">
+              <h3 className="text-xl font-semibold text-[color:var(--ink)]">{selected.title}</h3>
+              <button
+                type="button"
+                onClick={() => setSelected(null)}
+                className="flex-shrink-0 text-xs text-[color:var(--ink-faint)] transition-colors hover:text-[color:var(--ink)]"
+              >
+                关闭
+              </button>
             </div>
 
-            <div className="p-6">
-              <div className="grid md:grid-cols-3 gap-6">
+            <div className="px-6 py-5">
+              <p className="text-sm leading-[1.8] text-[color:var(--ink-soft)]">{selected.detail}</p>
+
+              <div className="mt-6 grid gap-6 border-t border-[color:var(--rule)] pt-5 sm:grid-cols-3">
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">关注点</h4>
-                  <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
+                  <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-[color:var(--ink-faint)]">关注点</h4>
+                  <ul className="space-y-1.5 text-sm text-[color:var(--ink-soft)]">
                     {selected.focus.map((x) => (
-                      <li key={x}>• {x}</li>
+                      <li key={x}>{x}</li>
                     ))}
                   </ul>
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">方法</h4>
-                  <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
+                  <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-[color:var(--ink-faint)]">方法</h4>
+                  <ul className="space-y-1.5 text-sm text-[color:var(--ink-soft)]">
                     {selected.methods.map((x) => (
-                      <li key={x}>• {x}</li>
+                      <li key={x}>{x}</li>
                     ))}
                   </ul>
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">产出</h4>
-                  <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
+                  <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-[color:var(--ink-faint)]">产出</h4>
+                  <ul className="space-y-1.5 text-sm text-[color:var(--ink-soft)]">
                     {selected.outputs.map((x) => (
-                      <li key={x}>• {x}</li>
+                      <li key={x}>{x}</li>
                     ))}
                   </ul>
                 </div>
               </div>
 
               {selected.related && selected.related.length > 0 && (
-                <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">代表性工作</h4>
-                  <div className="flex flex-wrap gap-3">
+                <div className="mt-5 border-t border-[color:var(--rule)] pt-4">
+                  <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-[color:var(--ink-faint)]">代表性工作</h4>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-sm">
                     {selected.related.map((link) => (
-                      <Link
-                        key={link.href}
-                        href={link.href}
-                        className="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
-                      >
+                      <Link key={link.href} href={link.href} className="text-[color:var(--accent)] hover:underline">
                         {link.label}
                       </Link>
                     ))}
                   </div>
                 </div>
               )}
-            </div>
-
-            <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setSelected(null)}
-                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-              >
-                关闭
-              </button>
             </div>
           </div>
         </div>

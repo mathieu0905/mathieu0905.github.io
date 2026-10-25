@@ -13,15 +13,13 @@ export function ReadingProgress() {
       setProgress(scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0);
     }
     window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
-    <div className="fixed top-14 left-0 right-0 z-40 h-0.5 bg-gray-200/50 dark:bg-gray-700/50">
-      <div
-        className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-[width] duration-150"
-        style={{ width: `${progress}%` }}
-      />
+    <div className="fixed left-0 right-0 top-16 z-40 h-px bg-transparent">
+      <div className="h-full bg-[color:var(--accent)]/70" style={{ width: `${progress}%` }} />
     </div>
   );
 }

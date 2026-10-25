@@ -15,549 +15,523 @@ function pdfHref(pdfFile?: string) {
 
 const collaborationGroups: {
   org: CollaboratorOrg;
-  initial: string;
   name: string;
   subtitle: string;
   topics: string[];
-  badgeClassName: string;
 }[] = [
   {
     org: "Huawei",
-    initial: "H",
-    name: "Huawei",
+    name: "华为",
     subtitle: "OpenHarmony / 移动应用质量",
     topics: ["OpenHarmony 应用修复", "Phantom Rendering / UI 性能分析", "Cangjie 低资源语言微调"],
-    badgeClassName: "bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400",
   },
   {
     org: "BTH",
-    initial: "B",
     name: "Blekinge Institute of Technology (BTH)",
     subtitle: "LLM 代码理解 / AI4SE 评估",
     topics: ["LLM 代码理解与语义评估", "MazeBreaker 自适应评测", "AI4SE 开源生态与实证研究"],
-    badgeClassName: "bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400",
   },
   {
     org: "SMU",
-    initial: "S",
     name: "Singapore Management University (SMU)",
     subtitle: "LLM Agent / 执行效率",
     topics: ["LLM 编程智能体", "执行成本与延迟优化", "代码生成与程序修复评估"],
-    badgeClassName: "bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400",
+  },
+];
+
+const researchTags = [
+  "代码智能体",
+  "程序修复",
+  "执行反馈",
+  "仓库级基准",
+  "变更影响分析",
+  "原子提交",
+  "OpenHarmony",
+  "静态分析",
+  "代码理解",
+  "低资源语言",
+];
+
+const openSourceTools = [
+  {
+    name: "HapRay",
+    href: "https://gitcode.com/SMAT/ArkAnalyzer-HapRay",
+    description: "OpenHarmony 应用性能分析工具，用于检测 UI 中的 Phantom Rendering 问题。",
+    meta: "FSE 2026 · GitCode",
+  },
+  {
+    name: "HomeCheck",
+    href: "https://gitcode.com/openharmony-sig/homecheck",
+    description: "OpenHarmony 静态检查与自动修复工具，HapRepair 的核心模块。",
+    meta: "FSE Industry 2025 · GitCode",
+  },
+  {
+    name: "HomeTrans",
+    href: "https://gitcode.com/SMAT/HomeTrans",
+    description: "Android → OpenHarmony 应用迁移工具，辅助应用进入鸿蒙生态。",
+    meta: "迁移工具 · GitCode",
+  },
+  {
+    name: "ResearchClaw",
+    href: "https://github.com/Noietch/ResearchClaw",
+    description: "AI 驱动的科研桌面应用：文献管理、智能阅读笔记与 Research Idea 生成。",
+    meta: "Electron + TypeScript · GitHub",
+  },
+  {
+    name: "SkillLens",
+    href: "https://github.com/mathieu0905/skilllens",
+    description: "面向 Codex / Claude Code 的 SKILL 覆盖分析与优化框架。",
+    meta: "Agent Skills · GitHub",
+  },
+];
+
+const timeline = [
+  {
+    period: "2023 年底",
+    body: "大四期间开始接触科研，加入 SMAT 实验室。",
+  },
+  {
+    period: "2023.11",
+    body: (
+      <>
+        第一篇论文投稿 ——{" "}
+        <a
+          href="https://arxiv.org/abs/2305.12138"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[color:var(--accent)] hover:underline"
+        >
+          开源 AI 软件工程工具的机遇与挑战
+        </a>
+        ，系统梳理 AI4SE 领域的开源生态现状。
+      </>
+    ),
+  },
+  {
+    period: "2024",
+    body: (
+      <>
+        第一篇论文被 <span className="font-medium text-[color:var(--ink)]">TOSEM</span> 接收 ——{" "}
+        <a href="/papers/fse_2030.pdf" target="_blank" rel="noopener noreferrer" className="text-[color:var(--accent)] hover:underline">
+          Open-Source AI-based SE Tools
+        </a>
+        ，覆盖 100+ 开源工具的全景式综述。
+      </>
+    ),
+  },
+  {
+    period: "2024.09",
+    body: "本科毕业，正式开始硕博连读；同期开启与华为、BTH 和 SMU 的合作研究。",
+  },
+  {
+    period: "2025.03",
+    body: "HapRepair 被 FSE Industry 2025 接收 —— 面向 OpenHarmony 生态的自动修复，从论文走向工程落地。",
+  },
+  {
+    period: "2025.06",
+    body: "MazeBreaker 被 ICSE 2026 接收 —— 用多智能体强化学习做自适应安全评估。",
+  },
+  {
+    period: "2025 – 2026",
+    body: "研究全面推进：Phantom Rendering（FSE 2026）、Cangjie 微调（EMSE 2026），以及围绕仓库级兼容性维护、变更影响分析与 OpenHarmony 迁移的多个在投工作。",
+  },
+];
+
+const featuredWorks = [
+  {
+    title: "To Run or Not to Run",
+    venue: "ISSTA 2026",
+    topic: "程序修复",
+    summary: "系统分析 LLM 程序修复智能体中的代码执行成本与收益，说明执行反馈应被当作有成本的资源，而不是默认动作。",
+  },
+  {
+    title: "CodeAnchor",
+    venue: "ISSTA 2026",
+    topic: "Code Agent",
+    summary: "研究轻量静态结构如何作为确定性锚点，提升代码智能体在真实仓库中的定位稳定性、复现性与导航效率。",
+  },
+  {
+    title: "Phantom Rendering Detection",
+    venue: "FSE 2026",
+    topic: "性能分析",
+    summary: "识别和分析 UI 中不必要的渲染计算，帮助开发者发现隐藏的性能瓶颈，提升移动应用流畅度。",
+  },
+  {
+    title: "MazeBreaker",
+    venue: "ICSE 2026",
+    topic: "LLM 安全",
+    summary: "提出多智能体强化学习框架，动态评估 LLM 安全防线的越狱漏洞，揭示现有防御机制的系统性弱点。",
   },
 ];
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900">
-      <main className="max-w-7xl mx-auto px-6 py-12">
-        <header className="relative overflow-hidden rounded-3xl bg-white dark:bg-gray-800 shadow-xl p-8 mb-8">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-          <div className="relative flex flex-col md:flex-row gap-8 items-center md:items-start">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full blur-lg opacity-30 scale-110" />
-              <Image
-                src="/avatar.jpg"
-                alt="Zhihao Lin"
-                width={160}
-                height={160}
-                className="relative rounded-full ring-4 ring-white dark:ring-gray-700 shadow-lg"
-              />
-            </div>
-            <div className="text-center md:text-left flex-1">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent mb-2">
-                林智灏 (Zhihao Lin)
+    <div className="site-shell">
+      <main className="site-container py-16 pb-24 sm:py-20">
+        {/* ------------------------------------------------------------------ */}
+        {/* Header                                                              */}
+        {/* ------------------------------------------------------------------ */}
+        <header className="border-b border-[color:var(--rule)] pb-12">
+          <div className="flex flex-col items-start gap-7 sm:flex-row sm:items-start sm:gap-9">
+            <Image
+              src="/avatar.jpg"
+              alt="Zhihao Lin"
+              width={120}
+              height={120}
+              className="h-[120px] w-[120px] flex-shrink-0 rounded-full object-cover object-top ring-1 ring-[color:var(--rule)]"
+              priority
+            />
+            <div className="min-w-0">
+              <h1 className="text-[2rem] font-semibold leading-tight tracking-tight text-[color:var(--ink)] sm:text-[2.35rem]">
+                林智灏 <span className="text-[color:var(--ink-faint)]">Zhihao Lin</span>
               </h1>
-              <p className="text-xl text-blue-600 dark:text-blue-400 font-medium mb-3">北航博士生 | 北航 SMAT 实验室</p>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">研究方向：AI for Software Engineering</p>
-              <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+              <p className="mt-2.5 text-[color:var(--ink-soft)]">
+                北京航空航天大学 · SMAT 实验室 · 博士研究生
+              </p>
+              <p className="mt-1 text-[color:var(--ink-soft)]">
+                研究方向：<span className="text-[color:var(--ink)]">AI for Software Engineering</span>
+              </p>
+              <div className="mt-5 flex items-center gap-4">
                 <a
                   href="mailto:mathieulin@buaa.edu.cn"
-                  className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors"
+                  className="text-[color:var(--ink-faint)] transition-colors hover:text-[color:var(--ink)]"
                   aria-label="Email"
+                  title="mathieulin@buaa.edu.cn"
                 >
-                  <FaEnvelope className="text-xl text-gray-700 dark:text-gray-300" />
+                  <FaEnvelope size={17} />
                 </a>
                 <a
                   href="https://github.com/mathieu0905"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  className="text-[color:var(--ink-faint)] transition-colors hover:text-[color:var(--ink)]"
                   aria-label="GitHub"
+                  title="GitHub"
                 >
-                  <FaGithub className="text-xl text-gray-700 dark:text-gray-300" />
+                  <FaGithub size={17} />
                 </a>
                 <a
                   href="https://scholar.google.co.uk/citations?user=iPrIsSUAAAAJ"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-green-100 dark:hover:bg-green-900 transition-colors"
+                  className="text-[color:var(--ink-faint)] transition-colors hover:text-[color:var(--ink)]"
                   aria-label="Google Scholar"
+                  title="Google Scholar"
                 >
-                  <FaGoogleScholar className="text-xl text-gray-700 dark:text-gray-300" />
+                  <FaGoogleScholar size={17} />
                 </a>
               </div>
             </div>
           </div>
         </header>
 
-        {/* 关于我 */}
-        <section id="about" className="mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">关于我</h2>
-            <div className="space-y-4 text-gray-600 dark:text-gray-300 leading-relaxed">
-              {/* 基本信息 */}
+        {/* ------------------------------------------------------------------ */}
+        {/* About                                                               */}
+        {/* ------------------------------------------------------------------ */}
+        <section id="about" className="border-b border-[color:var(--rule)] py-10">
+          <h2 className="section-label">关于我</h2>
+          <div className="space-y-5 leading-[1.85] text-[color:var(--ink-soft)]">
+            <p>
+              我是<a href="https://www.buaa.edu.cn/" target="_blank" rel="noopener noreferrer" className="text-[color:var(--accent)] hover:underline">北京航空航天大学</a>博士生，隶属于 SMAT 实验室，导师为
+              <a href="https://scholar.google.com/citations?user=zuUsFkgAAAAJ" target="_blank" rel="noopener noreferrer" className="text-[color:var(--accent)] hover:underline">黎立</a>教授，
+              副导师为<a href="https://scholar.google.com/citations?user=2emq9AoAAAAJ" target="_blank" rel="noopener noreferrer" className="text-[color:var(--accent)] hover:underline">周鸣一</a>。
+            </p>
+
+            <p>
+              研究聚焦于 <span className="font-medium text-[color:var(--ink)]">AI for Software Engineering (AI4SE)</span>，
+              将大语言模型、程序分析与可验证的软件工程环境结合，构建更可靠的代码智能体与生态工具链。
+              工作横跨执行反馈、仓库级基准、变更影响分析、OpenHarmony 生态质量保障与低资源编程语言支持，
+              但都围绕同一个核心：<em className="not-italic text-[color:var(--ink)]">让 AI 真正可靠地服务于软件工程实践</em>。
+            </p>
+
+            <div className="border-l-2 border-[color:var(--rule)] pl-5">
+              <h3 className="mb-2 font-medium text-[color:var(--ink)]">研究动机</h3>
               <p>
-                我是<strong className="text-gray-900 dark:text-white">北京航空航天大学</strong>博士生，隶属于
-                <strong className="text-gray-900 dark:text-white"> SMAT 实验室</strong>，导师为
-                <a href="https://scholar.google.com/citations?user=zuUsFkgAAAAJ" target="_blank" rel="noopener noreferrer" className="font-bold text-blue-600 dark:text-blue-400 hover:underline">黎立</a>教授，副导师为
-                <a href="https://scholar.google.com/citations?user=2emq9AoAAAAJ" target="_blank" rel="noopener noreferrer" className="font-bold text-blue-600 dark:text-blue-400 hover:underline">周鸣一</a>。
+                大语言模型已经展现出很强的代码生成能力，但真实软件工程并不只需要「写出补丁」：
+                agent 还要理解仓库、选择证据、控制执行成本、维护变更历史，并在特定生态中经得起验证。
+                我关注的核心问题是：<em className="not-italic text-[color:var(--ink)]">如何把 LLM 的生成能力、程序分析的确定性与真实软件工程环境结合起来，构建可靠的代码智能体与生态工具链？</em>
               </p>
-
-              {/* 教育背景 */}
-              <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">教育背景</h3>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 text-sm font-bold">博</div>
-                    <div>
-                      <div className="font-medium text-gray-900 dark:text-white">北京航空航天大学 · 硕博连读</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">2024 – 至今 · 计算机科学与技术 · SMAT 实验室</div>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center text-green-600 dark:text-green-400 text-sm font-bold">本</div>
-                    <div>
-                      <div className="font-medium text-gray-900 dark:text-white">北京航空航天大学 · 软件工程</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">2019 – 2024 · 软件学院</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 研究概述 */}
-              <p>
-                研究聚焦于<strong className="text-blue-600 dark:text-blue-400">AI for Software Engineering (AI4SE)</strong>，将大语言模型（LLM）、程序分析和可验证软件工程环境结合，构建更可靠的代码智能体与生态工具链。
-                我的工作横跨多个子方向——从执行反馈与静态锚点，到仓库级基准、变更影响分析、OpenHarmony 生态质量保障和低资源编程语言支持——始终围绕同一个核心：<em>让 AI 真正可靠地服务于软件工程实践</em>。
+              <p className="mt-3">
+                在代码智能体场景中，分析执行反馈何时值得使用（<Link href="/papers/issta2026-to-run-or-not-to-run.pdf" className="text-[color:var(--accent)] hover:underline">To Run or Not to Run</Link>），
+                并用轻量静态结构提升仓库导航稳定性（<Link href="/papers/issta2026-codeanchor.pdf" className="text-[color:var(--accent)] hover:underline">CodeAnchor</Link>）；
+                在 OpenHarmony 生态中，把领域规则、静态分析、LLM 与真实反馈结合起来做修复、迁移和性能分析（<a href="https://doi.org/10.1145/3696630.3728556" target="_blank" rel="noopener noreferrer" className="text-[color:var(--accent)] hover:underline">HapRepair</a>、
+                <Link href="/papers/hapray_fse.pdf" className="text-[color:var(--accent)] hover:underline">Phantom Rendering Detection</Link>）；
+                在评估层面，系统分析 LLM 究竟理解了什么代码知识，以及 AI4SE 工具应该如何被可靠衡量。
               </p>
+            </div>
 
-              {/* 研究动机与愿景 */}
-              <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">研究动机与愿景</h3>
-                <p>
-                  大语言模型已经展现出很强的代码生成能力，但真实软件工程并不只需要“写出补丁”：
-                  agent 还要理解仓库、选择证据、控制执行成本、维护变更历史，并在特定生态中经得起验证。
-                  我的研究围绕一个核心问题展开：<em>如何把 LLM 的生成能力、程序分析的确定性和真实软件工程环境结合起来，构建可靠的代码智能体与生态工具链？</em>
-                </p>
-                <p className="mt-2">
-                  具体来说，这意味着：在<strong className="text-gray-900 dark:text-white">代码智能体</strong>场景中，分析执行反馈到底何时值得使用（如 <a href="/papers/issta2026-to-run-or-not-to-run.pdf" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">To Run or Not to Run</a>），并用轻量静态结构提升仓库导航稳定性（如 <a href="/papers/issta2026-codeanchor.pdf" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">CodeAnchor</a>）；
-                  在<strong className="text-gray-900 dark:text-white">OpenHarmony 生态</strong>中，把领域规则、静态分析、LLM 和真实反馈结合起来做修复、迁移和性能分析（如 <a href="https://doi.org/10.1145/3696630.3728556" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">HapRepair</a> 与 <a href="/papers/hapray_fse.pdf" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">Phantom Rendering Detection</a>）；
-                  在<strong className="text-gray-900 dark:text-white">评估与度量</strong>层面，系统分析 LLM 到底理解了什么代码知识，以及 AI4SE 工具应该如何被可靠衡量。
-                </p>
-                <p className="mt-2">
-                  长远愿景是<strong className="text-blue-600 dark:text-blue-400">构建高效可靠的代码智能体与可验证 SWE 环境</strong>：让 agent 不仅能生成代码，更能自主理解代码库结构、定位缺陷、评估变更影响、维护原子化修改过程，并在真实生态中生成可验证的工程方案。
-                </p>
-              </div>
-
-              {/* 代表性工作 */}
-              <div className="mt-6 space-y-3">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">代表性工作</h3>
-                <div className="grid md:grid-cols-2 gap-3">
-                  <div className="p-4 bg-rose-50 dark:bg-rose-900/20 rounded-xl border border-rose-100 dark:border-rose-800">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="px-2 py-0.5 bg-rose-100 dark:bg-rose-800 text-rose-700 dark:text-rose-300 rounded text-xs font-medium">ISSTA 2026</span>
-                      <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">程序修复</span>
-                    </div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm mb-1">To Run or Not to Run</h4>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">系统分析 LLM 程序修复智能体中的代码执行成本与收益，说明执行反馈应被当作有成本的资源，而不是默认动作。</p>
-                  </div>
-                  <div className="p-4 bg-sky-50 dark:bg-sky-900/20 rounded-xl border border-sky-100 dark:border-sky-800">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="px-2 py-0.5 bg-sky-100 dark:bg-sky-800 text-sky-700 dark:text-sky-300 rounded text-xs font-medium">ISSTA 2026</span>
-                      <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 rounded text-xs font-medium">Code Agent</span>
-                    </div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm mb-1">CodeAnchor</h4>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">研究轻量静态结构如何作为 deterministic anchors，提升代码智能体在真实仓库中的定位稳定性、复现性和导航效率。</p>
-                  </div>
-                  <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-100 dark:border-orange-800">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="px-2 py-0.5 bg-orange-100 dark:bg-orange-800 text-orange-700 dark:text-orange-300 rounded text-xs font-medium">FSE 2026</span>
-                      <span className="px-2 py-0.5 bg-yellow-100 dark:bg-yellow-800 text-yellow-700 dark:text-yellow-300 rounded text-xs font-medium">性能分析</span>
-                    </div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm mb-1">Phantom Rendering Detection</h4>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">识别和分析 UI 中不必要的渲染计算，帮助开发者发现隐藏的性能瓶颈，提升移动应用的流畅度。</p>
-                  </div>
-                  <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-100 dark:border-purple-800">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-800 text-purple-700 dark:text-purple-300 rounded text-xs font-medium">ICSE 2026</span>
-                      <span className="px-2 py-0.5 bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-300 rounded text-xs font-medium">LLM 安全</span>
-                    </div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm mb-1">MazeBreaker</h4>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">提出多智能体强化学习框架，动态评估 LLM 安全防线的越狱漏洞，揭示现有防御机制的系统性弱点。</p>
-                  </div>
+            <div>
+              <h3 className="mb-3 font-medium text-[color:var(--ink)]">教育背景</h3>
+              <dl className="space-y-2.5 text-sm">
+                <div className="flex flex-wrap gap-x-4 gap-y-1">
+                  <dt className="w-28 flex-shrink-0 text-[color:var(--ink-faint)]">2024 – 至今</dt>
+                  <dd className="text-[color:var(--ink-soft)]">北京航空航天大学 · 计算机科学与技术 · 硕博连读</dd>
                 </div>
-              </div>
-
-              {/* 科研时间线 */}
-              <div className="mt-6 space-y-3">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">科研历程</h3>
-                <div className="relative pl-6 border-l-2 border-blue-200 dark:border-blue-700 space-y-4">
-                  <div className="relative">
-                    <div className="absolute -left-[25px] w-3 h-3 rounded-full bg-gray-400" />
-                    <div className="text-sm font-mono text-blue-600 dark:text-blue-400">2023 年底</div>
-                    <div>大四期间开始接触科研，加入 SMAT 实验室</div>
-                  </div>
-                  <div className="relative">
-                    <div className="absolute -left-[25px] w-3 h-3 rounded-full bg-blue-500" />
-                    <div className="text-sm font-mono text-blue-600 dark:text-blue-400">2023.11</div>
-                    <div>第一篇论文投稿 — <a href="https://arxiv.org/abs/2305.12138" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">开源 AI 软件工程工具的机遇与挑战</a>，系统梳理了 AI4SE 领域的开源生态现状</div>
-                  </div>
-                  <div className="relative">
-                    <div className="absolute -left-[25px] w-3 h-3 rounded-full bg-green-500" />
-                    <div className="text-sm font-mono text-blue-600 dark:text-blue-400">2024</div>
-                    <div>第一篇论文被 <strong className="text-gray-900 dark:text-white">TOSEM</strong> 接收 — <a href="/papers/fse_2030.pdf" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">Open-Source AI-based SE Tools</a>，这是一篇覆盖 100+ 开源工具的全景式综述</div>
-                  </div>
-                  <div className="relative">
-                    <div className="absolute -left-[25px] w-3 h-3 rounded-full bg-purple-500" />
-                    <div className="text-sm font-mono text-blue-600 dark:text-blue-400">2024.09</div>
-                    <div>本科毕业，正式开始硕博连读；同时开启与<strong className="text-gray-900 dark:text-white">华为</strong>、<strong className="text-gray-900 dark:text-white">BTH</strong> 和 <strong className="text-gray-900 dark:text-white">SMU</strong> 的合作研究</div>
-                  </div>
-                  <div className="relative">
-                    <div className="absolute -left-[25px] w-3 h-3 rounded-full bg-orange-500" />
-                    <div className="text-sm font-mono text-blue-600 dark:text-blue-400">2025.03</div>
-                    <div><strong className="text-gray-900 dark:text-white">HapRepair</strong> 被 FSE Industry 2025 接收 — 面向 OpenHarmony 生态的自动修复，实现从论文到工程落地</div>
-                  </div>
-                  <div className="relative">
-                    <div className="absolute -left-[25px] w-3 h-3 rounded-full bg-red-500" />
-                    <div className="text-sm font-mono text-blue-600 dark:text-blue-400">2025.06</div>
-                    <div><strong className="text-gray-900 dark:text-white">MazeBreaker</strong> 被 ICSE 2026 接收 — 用多智能体强化学习做自适应安全评估，也强化了我后续做评测方法论的经验</div>
-                  </div>
-                  <div className="relative">
-                    <div className="absolute -left-[25px] w-3 h-3 rounded-full bg-cyan-500" />
-                    <div className="text-sm font-mono text-blue-600 dark:text-blue-400">2025–2026</div>
-                    <div>研究全面铺开：Phantom Rendering（FSE 2026）、Cangjie 微调（EMSE 2026），以及多个在投工作围绕仓库级兼容性维护、变更影响分析、原子提交重构和 OpenHarmony 迁移环境展开</div>
-                  </div>
+                <div className="flex flex-wrap gap-x-4 gap-y-1">
+                  <dt className="w-28 flex-shrink-0 text-[color:var(--ink-faint)]">2019 – 2024</dt>
+                  <dd className="text-[color:var(--ink-soft)]">北京航空航天大学 · 软件工程 · 本科</dd>
                 </div>
-              </div>
-
-              {/* 合作与发表 */}
-              <p className="mt-4">
-                我与<strong className="text-gray-900 dark:text-white">华为</strong>（OpenHarmony 生态质量、UI 性能分析）、<strong className="text-gray-900 dark:text-white">BTH 的 Wei Ma</strong>（LLM 代码理解与 AI4SE 评估）以及 <strong className="text-gray-900 dark:text-white">SMU 的 Zhensu Sun</strong>（LLM 编程智能体与执行效率）保持紧密合作。
-                迄今已在 <strong className="text-gray-900 dark:text-white">ICSE</strong>、<strong className="text-gray-900 dark:text-white">FSE</strong>、<strong className="text-gray-900 dark:text-white">TOSEM</strong>、<strong className="text-gray-900 dark:text-white">EMSE</strong> 等软件工程顶级会议和期刊发表论文，另有多篇工作在投。
-              </p>
-
-              <div className="mt-6 space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">研究方向（可点击展开）</h3>
-                <AboutResearchDirectionsZh />
-              </div>
-
-              {/* 个人兴趣 */}
-              <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">科研之外</h3>
-                <p>
-                  平时喜欢运动，是<strong className="text-gray-900 dark:text-white">陈奕迅</strong>和<strong className="text-gray-900 dark:text-white">张敬轩</strong>的忠实歌迷，也爱玩 NBA 2K、FIFA 等体育类电子游戏。
-                  相信好的研究和好的生活一样，需要节奏感。
-                </p>
-              </div>
+              </dl>
             </div>
           </div>
         </section>
 
-        {/* 最新动态 */}
-        <section id="news" className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">最新动态</h2>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-            <div className="space-y-4">
-              {sortedNews.map((item) => {
-                if (item.type === "other") {
-                  return (
-                    <div key={`${item.type}-${item.date}-${item.title.zh}`} className="flex items-start gap-4">
-                      <div className="flex-shrink-0 w-20 text-sm font-mono text-blue-600 dark:text-blue-400">{item.date}</div>
-                      <div className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-blue-500" />
-                      <div className="min-w-0">
-                        <div className="text-gray-700 dark:text-gray-300">
-                          {item.link ? (
-                            <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">{item.title.zh}</a>
-                          ) : (
-                            item.title.zh
-                          )}
-                        </div>
-                        {item.detail && <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">{item.detail.zh}</div>}
-                      </div>
-                    </div>
-                  );
-                }
-
-                const paper = papers.find((p) => p.id === item.paperId);
-                if (!paper) return null;
-
-                const href = pdfHref(paper.pdfFile);
-
+        {/* ------------------------------------------------------------------ */}
+        {/* News                                                                */}
+        {/* ------------------------------------------------------------------ */}
+        <section id="news" className="border-b border-[color:var(--rule)] py-10">
+          <h2 className="section-label">最新动态</h2>
+          <ul className="space-y-3.5 text-sm">
+            {sortedNews.slice(0, 9).map((item) => {
+              if (item.type === "other") {
                 return (
-                  <div key={`${item.type}-${item.date}-${item.paperId}`} className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-20 text-sm font-mono text-blue-600 dark:text-blue-400">{item.date}</div>
-                    <div className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-blue-500" />
-                    <div className="min-w-0">
-                      <div className="text-gray-700 dark:text-gray-300">
-                        {href ? (
-                          <a href={href} className="font-medium text-blue-600 dark:text-blue-400 hover:underline">{paper.title}</a>
-                        ) : (
-                          <span className="font-medium">{paper.title}</span>
-                        )}
-                        {paper.venue && paper.year && <span className="text-gray-500 dark:text-gray-400"> — 已接收于 {paper.venue} {paper.year}</span>}
-                      </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        {paper.authors && paper.authors.length > 0 ? paper.authors.join(", ") : "作者信息待补充"}
-                      </div>
+                  <li key={`${item.type}-${item.date}-${item.title.zh}`} className="flex gap-5">
+                    <time className="w-20 flex-shrink-0 font-mono text-xs leading-6 text-[color:var(--ink-faint)]">
+                      {item.date}
+                    </time>
+                    <div className="min-w-0 leading-6">
+                      {item.link ? (
+                        <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-[color:var(--ink)] hover:text-[color:var(--accent)]">
+                          {item.title.zh}
+                        </a>
+                      ) : (
+                        <span className="text-[color:var(--ink)]">{item.title.zh}</span>
+                      )}
+                      {item.detail && (
+                        <span className="ml-2 text-[color:var(--ink-faint)]">— {item.detail.zh}</span>
+                      )}
                     </div>
-                  </div>
+                  </li>
                 );
-              })}
-            </div>
+              }
+
+              const paper = papers.find((p) => p.id === item.paperId);
+              if (!paper) return null;
+              const href = pdfHref(paper.pdfFile);
+
+              return (
+                <li key={`${item.type}-${item.date}-${item.paperId}`} className="flex gap-5">
+                  <time className="w-20 flex-shrink-0 font-mono text-xs leading-6 text-[color:var(--ink-faint)]">
+                    {item.date}
+                  </time>
+                  <div className="min-w-0 leading-6">
+                    {href ? (
+                      <a href={href} className="text-[color:var(--ink)] hover:text-[color:var(--accent)]">
+                        {paper.title}
+                      </a>
+                    ) : (
+                      <span className="text-[color:var(--ink)]">{paper.title}</span>
+                    )}
+                    {paper.venue && paper.year && (
+                      <span className="ml-2 text-[color:var(--ink-faint)]">— {paper.venue} {paper.year}</span>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+
+        {/* ------------------------------------------------------------------ */}
+        {/* Featured work                                                       */}
+        {/* ------------------------------------------------------------------ */}
+        <section className="border-b border-[color:var(--rule)] py-10">
+          <h2 className="section-label">代表性工作</h2>
+          <div className="grid gap-x-10 gap-y-7 sm:grid-cols-2">
+            {featuredWorks.map((work) => (
+              <article key={work.title}>
+                <div className="mb-1.5 flex items-center gap-2 text-xs text-[color:var(--ink-faint)]">
+                  <span className="font-medium text-[color:var(--accent)]">{work.venue}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>{work.topic}</span>
+                </div>
+                <h3 className="font-medium text-[color:var(--ink)]">{work.title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-[color:var(--ink-soft)]">{work.summary}</p>
+              </article>
+            ))}
           </div>
         </section>
 
-        {/* 研究兴趣 */}
-        <section id="research" className="mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">研究兴趣</h2>
-            <div className="flex flex-wrap gap-2">
-              {["代码智能体", "程序修复", "执行反馈", "仓库级基准", "变更影响分析", "原子提交", "OpenHarmony", "静态分析", "代码理解", "低资源语言"].map(tag => (
-                <span key={tag} className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium">
-                  {tag}
+        {/* ------------------------------------------------------------------ */}
+        {/* Timeline                                                            */}
+        {/* ------------------------------------------------------------------ */}
+        <section className="border-b border-[color:var(--rule)] py-10">
+          <h2 className="section-label">科研历程</h2>
+          <ol className="space-y-4 text-sm">
+            {timeline.map((entry) => (
+              <li key={entry.period} className="flex flex-col gap-1 sm:flex-row sm:gap-6">
+                <span className="w-28 flex-shrink-0 font-mono text-xs leading-6 text-[color:var(--ink-faint)]">
+                  {entry.period}
                 </span>
-              ))}
-            </div>
-          </div>
+                <span className="leading-6 text-[color:var(--ink-soft)]">{entry.body}</span>
+              </li>
+            ))}
+          </ol>
         </section>
 
-        {/* 研究方向 */}
-        <section className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <span className="text-2xl">🔬</span> 研究方向
-          </h2>
+        {/* ------------------------------------------------------------------ */}
+        {/* Research directions                                                 */}
+        {/* ------------------------------------------------------------------ */}
+        <section id="research" className="border-b border-[color:var(--rule)] py-10">
+          <h2 className="section-label">研究方向</h2>
+          <p className="mb-5 text-sm leading-relaxed text-[color:var(--ink-soft)]">
+            四条主线共享同一个问题：如何让代码智能体在真实软件工程环境中既可靠又可验证。点击展开细节。
+          </p>
+          <AboutResearchDirectionsZh />
+        </section>
+
+        {/* ------------------------------------------------------------------ */}
+        {/* Research cards + tags                                               */}
+        {/* ------------------------------------------------------------------ */}
+        <section className="border-b border-[color:var(--rule)] py-10">
+          <h2 className="section-label">研究主题</h2>
+          <div className="mb-8 flex flex-wrap gap-2">
+            {researchTags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border border-[color:var(--rule)] px-3 py-1 text-xs text-[color:var(--ink-soft)]"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
           <ResearchCards locale="zh" />
         </section>
 
-        {/* 开源工具 */}
-        <section id="tools" className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">开源工具</h2>
-          <div className="grid md:grid-cols-3 gap-4">
-            <a
-              href="https://gitcode.com/SMAT/ArkAnalyzer-HapRay"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] group"
+        {/* ------------------------------------------------------------------ */}
+        {/* Publications                                                        */}
+        {/* ------------------------------------------------------------------ */}
+        <section id="publications" className="border-b border-[color:var(--rule)] py-10">
+          <div className="mb-6 flex items-baseline justify-between gap-4">
+            <h2 className="section-label mb-0 flex-1">已接收论文</h2>
+            <Link
+              href="/papers"
+              className="flex-shrink-0 text-xs text-[color:var(--ink-faint)] transition-colors hover:text-[color:var(--ink)]"
             >
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-2xl">🔍</span>
-                <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">HapRay</h3>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">OpenHarmony 应用性能分析工具，用于检测 UI 中的 Phantom Rendering（幽灵渲染）问题。</p>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-2 py-0.5 bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 rounded text-xs font-medium">FSE 2026</span>
-                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">GitCode</span>
-              </div>
-            </a>
-            <a
-              href="https://gitcode.com/openharmony-sig/homecheck"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] group"
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-2xl">🔧</span>
-                <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">HomeCheck</h3>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">OpenHarmony 应用静态检查与自动修复工具，HapRepair 的核心模块，支持规则驱动的缺陷检测。</p>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded text-xs font-medium">FSE Industry 2025</span>
-                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">GitCode</span>
-              </div>
-            </a>
-            <a
-              href="https://gitcode.com/SMAT/HomeTrans"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] group"
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-2xl">🔄</span>
-                <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">HomeTrans</h3>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Android → OpenHarmony 应用迁移工具，辅助开发者将安卓应用自动转换为鸿蒙生态。</p>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">迁移工具</span>
-                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">GitCode</span>
-              </div>
-            </a>
-            <a
-              href="https://github.com/Noietch/ResearchClaw"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] group"
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-2xl">📚</span>
-                <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">ResearchClaw</h3>
-                <span className="px-1.5 py-0.5 bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 rounded text-xs font-medium">⭐ 59</span>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">AI 驱动的科研桌面应用，集文献管理、智能阅读笔记、Research Idea 生成于一体，支持 arXiv 论文发现、PDF AI 对话、语义搜索与引用网络。</p>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded text-xs font-medium">Electron + TypeScript</span>
-                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">GitHub</span>
-              </div>
-            </a>
-            <a
-              href="https://github.com/mathieu0905/skilllens"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] group"
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-2xl">🧭</span>
-                <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">SkillLens</h3>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">面向 Codex / Claude Code 的本地 SKILL 覆盖分析与优化框架，将 SKILL.md 约束和真实 agent 轨迹对齐，定位遵循、违反和忽略路径。</p>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-2 py-0.5 bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 rounded text-xs font-medium">Agent Skills</span>
-                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">GitHub</span>
-              </div>
-            </a>
-          </div>
-        </section>
-
-        {/* 已接收论文 */}
-        <section id="publications" className="mb-8">
-          <div className="flex items-end justify-between gap-4 mb-4">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">已接收论文（PDF）</h2>
-            <Link href="/papers" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
-              查看全部 →
+              全部论文 →
             </Link>
           </div>
-          <div className="space-y-4">
+          <ul className="divide-y divide-[color:var(--rule)]">
             {acceptedPapers.map((paper) => {
               const href = pdfHref(paper.pdfFile);
               return (
-                <div key={paper.id} className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-md hover:shadow-lg transition-shadow">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0">
-                      <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{paper.title}</h3>
-                      {(paper.venue || paper.year) && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{[paper.venue, paper.year].filter(Boolean).join(" ")}</p>
-                      )}
-                    </div>
-                    {href ? (
-                      <a
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-shrink-0 px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm font-medium"
-                      >
-                        PDF
-                      </a>
-                    ) : (
-                      <span className="flex-shrink-0 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-sm">
-                        无 PDF
+                <li key={paper.id} className="flex items-baseline gap-4 py-3">
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[color:var(--ink)]">{paper.title}</span>
+                    {(paper.venue || paper.year) && (
+                      <span className="ml-2 text-xs text-[color:var(--ink-faint)]">
+                        {[paper.venue, paper.year].filter(Boolean).join(" ")}
                       </span>
                     )}
                   </div>
+                  {href ? (
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-shrink-0 text-xs text-[color:var(--accent)] hover:underline"
+                    >
+                      PDF
+                    </a>
+                  ) : (
+                    <span className="flex-shrink-0 text-xs text-[color:var(--ink-faint)]">—</span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+
+        {/* ------------------------------------------------------------------ */}
+        {/* Open source                                                         */}
+        {/* ------------------------------------------------------------------ */}
+        <section id="tools" className="border-b border-[color:var(--rule)] py-10">
+          <h2 className="section-label">开源工具</h2>
+          <div className="grid gap-x-10 gap-y-7 sm:grid-cols-2">
+            {openSourceTools.map((tool) => (
+              <a key={tool.name} href={tool.href} target="_blank" rel="noopener noreferrer" className="group block">
+                <h3 className="font-medium text-[color:var(--ink)] transition-colors group-hover:text-[color:var(--accent)]">
+                  {tool.name}
+                </h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-[color:var(--ink-soft)]">{tool.description}</p>
+                <p className="mt-1.5 text-xs text-[color:var(--ink-faint)]">{tool.meta}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        {/* ------------------------------------------------------------------ */}
+        {/* Collaboration                                                       */}
+        {/* ------------------------------------------------------------------ */}
+        <section className="border-b border-[color:var(--rule)] py-10">
+          <h2 className="section-label">合作</h2>
+          <div className="space-y-9">
+            {collaborationGroups.map((group) => {
+              const people = collaborators.filter((c) => c.org === group.org);
+              return (
+                <div key={group.org}>
+                  <div className="mb-3">
+                    <h3 className="font-medium text-[color:var(--ink)]">{group.name}</h3>
+                    <p className="text-xs text-[color:var(--ink-faint)]">{group.subtitle}</p>
+                  </div>
+                  <div className="space-y-4">
+                    {people.map((person) => (
+                      <div key={person.name} className="text-sm">
+                        <div className="flex flex-wrap items-baseline gap-x-3">
+                          <span className="font-medium text-[color:var(--ink)]">{person.name}</span>
+                          {person.role && <span className="text-xs text-[color:var(--ink-faint)]">{person.role.zh}</span>}
+                          {person.links?.map((link) => (
+                            <a
+                              key={link.href}
+                              href={link.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-[color:var(--accent)] hover:underline"
+                            >
+                              {link.label}
+                            </a>
+                          ))}
+                        </div>
+                        {person.acknowledgement && (
+                          <p className="mt-1 text-xs leading-relaxed text-[color:var(--ink-faint)]">
+                            {person.acknowledgement.zh}
+                          </p>
+                        )}
+                        {person.works && person.works.length > 0 && (
+                          <ul className="mt-1.5 space-y-1 text-[color:var(--ink-soft)]">
+                            {person.works.map((work) => (
+                              <li key={work.zh} className="flex gap-2 leading-6">
+                                <span className="text-[color:var(--ink-faint)]" aria-hidden="true">–</span>
+                                <span>{work.zh}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-xs leading-relaxed text-[color:var(--ink-faint)]">
+                    合作主题：{group.topics.join("、")}
+                  </p>
                 </div>
               );
             })}
           </div>
         </section>
 
-        {/* 合作 */}
-        <section className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">合作</h2>
-          <div className="grid lg:grid-cols-3 gap-4">
-            {collaborationGroups.map((group) => (
-              <div key={group.org} className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${group.badgeClassName}`}>
-                    {group.initial}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="font-medium text-gray-900 dark:text-white">{group.name}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">{group.subtitle}</div>
-                  </div>
-                </div>
-
-                <div className="text-sm text-gray-700 dark:text-gray-300">
-                  <div className="font-semibold text-gray-900 dark:text-white mb-2">合作人员与工作</div>
-                  <div className="space-y-4">
-                    {collaborators
-                      .filter((c) => c.org === group.org)
-                      .map((c) => (
-                        <div key={c.name} className="border-t border-gray-100 dark:border-gray-700 pt-3 first:border-t-0 first:pt-0">
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <div className="font-medium text-gray-900 dark:text-white">{c.name}</div>
-                              {c.role && <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{c.role.zh}</div>}
-                            </div>
-                            {c.links && c.links.length > 0 && (
-                              <div className="flex flex-wrap justify-end gap-2">
-                                {c.links.map((l) => (
-                                  <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
-                                    {l.label}
-                                  </a>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                          {c.acknowledgement && (
-                            <p className="mt-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:text-amber-200">
-                              {c.acknowledgement.zh}
-                            </p>
-                          )}
-                          {c.works && c.works.length > 0 && (
-                            <ul className="mt-2 space-y-1 text-xs text-gray-600 dark:text-gray-400">
-                              {c.works.map((work) => (
-                                <li key={work.zh} className="flex items-start gap-2">
-                                  <span className="mt-[5px] h-1 w-1 rounded-full bg-blue-500 flex-shrink-0" />
-                                  <span>{work.zh}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                      ))}
-                  </div>
-
-                  <div className="font-semibold text-gray-900 dark:text-white mt-5 mb-2">合作主题</div>
-                  <ul className="space-y-1 text-gray-600 dark:text-gray-400">
-                    {group.topics.map((topic) => (
-                      <li key={topic}>• {topic}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ))}
-          </div>
+        {/* ------------------------------------------------------------------ */}
+        {/* Beyond research                                                     */}
+        {/* ------------------------------------------------------------------ */}
+        <section className="border-b border-[color:var(--rule)] py-10">
+          <h2 className="section-label">科研之外</h2>
+          <p className="text-sm leading-relaxed text-[color:var(--ink-soft)]">
+            平时喜欢运动，是陈奕迅和张敬轩的忠实歌迷，也爱玩 NBA 2K、FIFA 等体育类电子游戏。
+            相信好的研究和好的生活一样，需要节奏感。
+          </p>
         </section>
 
-        <section className="mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <div className="mb-2 inline-flex rounded-full bg-cyan-100 px-2.5 py-1 text-xs font-semibold text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-200">
-                  ARIS-in-AI-Offer 整合
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">AI 知识库</h2>
-                <p className="mt-2 max-w-3xl text-gray-600 dark:text-gray-300 leading-relaxed">
-                  28 个 AI / LLM / 多模态 / Diffusion / Agent 面试知识点，支持分类浏览、关键词搜索和中英文切换。
-                </p>
-              </div>
-              <Link href="/ai-knowledge" className="self-start rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700">
-                打开知识库
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        <footer className="text-center text-gray-400 dark:text-gray-500 text-sm py-8">
-          <p>&copy; 2024-2025 Zhihao Lin | 使用 Next.js & Tailwind CSS 构建</p>
+        <footer className="pt-10 text-xs text-[color:var(--ink-faint)]">
+          <p>© 2024–2025 Zhihao Lin · Built with Next.js &amp; Tailwind CSS</p>
         </footer>
       </main>
     </div>

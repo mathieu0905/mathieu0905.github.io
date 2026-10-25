@@ -8,9 +8,9 @@ export function NewPostButton() {
     <Link
       href="/admin?action=new"
       aria-label="新建文章"
-      className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-blue-700 sm:px-4"
+      className="inline-flex flex-shrink-0 items-center gap-1.5 text-xs text-[color:var(--ink-faint)] transition-colors hover:text-[color:var(--ink)]"
     >
-      <FaPlus className="text-xs" /> <span className="hidden sm:inline">New Post</span>
+      <FaPlus className="text-[10px]" /> 新建
     </Link>
   );
 }
@@ -19,9 +19,10 @@ export function EditPostButton({ slug }: { slug: string }) {
   return (
     <Link
       href={`/admin?action=edit&slug=${slug}`}
-      className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+      className="inline-flex items-center gap-1.5 text-xs text-[color:var(--ink-faint)] transition-colors hover:text-[color:var(--ink)]"
+      title="编辑这篇文章"
     >
-      <FaPen className="text-xs" /> Edit
+      <FaPen className="text-[10px]" /> 编辑
     </Link>
   );
 }
